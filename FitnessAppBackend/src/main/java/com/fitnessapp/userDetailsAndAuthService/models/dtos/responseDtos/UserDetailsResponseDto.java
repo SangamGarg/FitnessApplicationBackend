@@ -1,5 +1,6 @@
 package com.fitnessapp.userDetailsAndAuthService.models.dtos.responseDtos;
 
+
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.UserDetailsDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,11 +11,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserGetDetailsResponseDto {
+public class UserDetailsResponseDto {
     private String status;
     private Integer statusCode;
-    private String id;
-    private String email;
+    private String jwtToken;
     private UserDetailsDto userDetailsDto;
-
 }

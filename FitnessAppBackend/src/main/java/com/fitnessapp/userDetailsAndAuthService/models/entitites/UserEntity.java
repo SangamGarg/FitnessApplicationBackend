@@ -31,7 +31,7 @@ public class UserEntity {
 // the corresponding UserDetailsEntity record will be deleted from the database.
 // `fetch = FetchType.LAZY` means UserDetailsEntity will not be loaded from DB until accessed.
 // `@JsonManagedReference` is used to manage JSON serialization (avoids infinite recursion).
-    @OneToOne(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private UserDetailsEntity userDetailsEntity;
 

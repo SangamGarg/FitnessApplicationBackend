@@ -7,7 +7,6 @@ import lombok.*;
 @Data
 @Builder
 public class UserRegisterResponseDto {
-
     private String status;
     private Integer statusCode;
     private String jwtToken;

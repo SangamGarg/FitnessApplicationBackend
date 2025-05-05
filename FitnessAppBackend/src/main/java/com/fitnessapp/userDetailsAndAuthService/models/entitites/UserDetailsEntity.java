@@ -3,6 +3,7 @@ package com.fitnessapp.userDetailsAndAuthService.models.entitites;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,23 +15,24 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UserDetailsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_detail_id")
+    @Column(name = "user_details_id")
     private Long id;
 
-    //    @Column(nullable = false, unique = true)
-    //    private List<String> firebaseCloudMessagingToken = new ArrayList<>();
 
-    // Optional: Store tokens differently; a List<String> can't be mapped directly.
-    // Consider using a separate entity or @ElementCollection
-//    @ElementCollection
-//    @CollectionTable(name = "fcm_tokens", joinColumns = @JoinColumn(name = "user_details_id"))
-//    @Column(name = "token")
-//    private List<String> firebaseCloudMessagingToken = new ArrayList<>();
+    //If your entity has a list, set, or map of simple or embeddable objects that don’t need to be standalone entities (with their own primary key), you use @ElementCollection.
+    @ElementCollection(fetch = FetchType.LAZY)
+    @Column(nullable = false, unique = true)
+    @CollectionTable(name = "fcm_tokens", joinColumns = @JoinColumn(name = "user_details_id"))
+    private List<String> firebaseCloudMessagingToken = new ArrayList<>();
 
+
+    @Column(unique = true)
+    private String email;
     private String name;
     private String gender;
     private Integer age;
@@ -55,6 +57,6 @@ public class UserDetailsEntity {
 // Marks this side of the relationship as the inverse side for JSON serialization.
 // Prevents infinite recursion when converting entities to JSON by skipping this field during serialization.
     @JsonBackReference
-    private UserEntity users;
+    private UserEntity user;
 
 }

@@ -1,5 +1,6 @@
 package com.fitnessapp.userDetailsAndAuthService.controller;
 
+import com.fitnessapp.userDetailsAndAuthService.models.dtos.requestDtos.UserPatchRequestDto;
 import com.fitnessapp.userDetailsAndAuthService.userDetailsAndAuthServiceUtilities.AppConstantsUserAndAuthService;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.UserDetailsDto;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.requestDtos.UserLoginOrRegisterRequestDto;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(AppConstantsUserAndAuthService.API_PREFIX)
 public class UserController {
 
-    private UserService userService;
+    private final UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -24,13 +25,25 @@ public class UserController {
         return userService.loginOrRegisterUser(registerRequestDto);
     }
 
-    @PutMapping("/add-details")
+    @PostMapping("/add-details")
     public ResponseEntity<?> addDetailsOfUser(@RequestBody @Valid UserDetailsDto userDetailsDto) {
         return userService.fillUserDetails(userDetailsDto);
     }
 
-    @GetMapping("/details")
+    @PatchMapping("/patch-details")
+    public ResponseEntity<?> patchDetailsOfUser(@RequestBody @Valid UserPatchRequestDto userDetailsDto) {
+        return userService.patchUserDetails(userDetailsDto);
+    }
+
+    // in this particular, user details will be fetched, and the uid will be got from the jwt token
+    @GetMapping("/get-details")
     public ResponseEntity<?> getUserDetails() {
         return userService.getUserDetails();
     }
+
+
+//    @DeleteMapping("/delete")
+//    public ResponseEntity<?> deleteUser() {
+//        return userService.deleteUser(userDetailsDto);
+//    }
 }
