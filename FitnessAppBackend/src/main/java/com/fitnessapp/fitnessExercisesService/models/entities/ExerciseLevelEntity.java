@@ -20,6 +20,7 @@ public class ExerciseLevelEntity {
     @Column(name = "exercise_level_id")
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String level; // Beginner, Intermediate, Advanced
 
     @ManyToOne

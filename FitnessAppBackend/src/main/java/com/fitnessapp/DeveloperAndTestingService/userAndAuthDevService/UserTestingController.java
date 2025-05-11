@@ -14,21 +14,19 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class UserTestingController {
 
-    private UserTestingService userTestingService;
+    private final UserTestingService userTestingService;
 
     public UserTestingController(UserTestingService userTestingService) {
         this.userTestingService = userTestingService;
     }
 
-    @GetMapping("/test-getjwt")
-    public ResponseEntity<?> getTestJwt(@RequestHeader(name = "APIKEY")
-                                        @NotBlank(message = "ApiKey cannot be blank")
-                                        String apiKey,
-                                        @NotBlank(message = "Id cannot be blank")
-                                        @RequestParam String id,
-                                        @Email(message = "Not valid email")
-                                        @NotBlank(message = "Email cannot be blank")
-                                        @RequestParam String email) {
-        return userTestingService.getJwtToken(apiKey, id, email);
+    @GetMapping("/save")
+    public ResponseEntity<?> saveUserForDevAndTest(@RequestParam @NotBlank(message = "Name Cannot be blank or null") String name) {
+        return userTestingService.saveUserForDevAndTest(name);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteUserForDevAndTest(@RequestParam @NotBlank(message = "Name Cannot be blank or null") String name) {
+        return userTestingService.deleteUserForDevAndTest(name);
     }
 }

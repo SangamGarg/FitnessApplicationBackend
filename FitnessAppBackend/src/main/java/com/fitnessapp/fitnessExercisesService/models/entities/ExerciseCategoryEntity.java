@@ -19,6 +19,7 @@ public class ExerciseCategoryEntity {
     @Column(name = "exercise_category_id")
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String name;
 
     private String imageUrl;

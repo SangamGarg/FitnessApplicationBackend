@@ -10,5 +10,7 @@ import java.util.List;
 @Repository
 public interface ExerciseSubCategoryRepository extends JpaRepository<ExerciseSubCategoryEntity, Long> {
     List<ExerciseSubCategoryEntity> findByLevelId(Long levelId);
+
+    List<ExerciseSubCategoryEntity> findByLevelIdAndNameStartingWithIgnoreCase(Long levelId, String namePrefix);
 }
 

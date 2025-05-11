@@ -100,7 +100,7 @@ public class ExerciseServiceImpl implements ExerciseService {
             List<ExerciseDetailResponseDto> dtos = exercises.stream().map(d ->
                     ExerciseDetailResponseDto.builder()
                             .id(d.getId())
-                            .title(d.getTitle())
+                            .name(d.getName())
                             .description(d.getDescription())
                             .videoUrl(d.getVideoUrl())
                             .imageUrl(d.getImageUrl())
@@ -149,11 +149,10 @@ public class ExerciseServiceImpl implements ExerciseService {
     @Override
     public ResponseEntity<?> getExerciseSubCategoriesSuggestion(Long levelId, String query) {
         try {
-            var subCategories = subCategoryRepository.findByLevelId(levelId);
+            var subCategories = subCategoryRepository.findByLevelIdAndNameStartingWithIgnoreCase(levelId, query);
 
             List<String> names = subCategories.stream()
                     .map(ExerciseSubCategoryEntity::getName)
-                    .filter(name -> name != null && name.toLowerCase().startsWith(query.toLowerCase()))
                     .toList();
 
             if (names.isEmpty()) {
@@ -170,11 +169,9 @@ public class ExerciseServiceImpl implements ExerciseService {
     @Override
     public ResponseEntity<?> getExercisesDetailSuggestion(Long subCategoryId, String query) {
         try {
-            var exercises = exerciseRepository.findBySubCategoryId(subCategoryId);
-//            System.out.println("tatatata   " + exercises.getFirst().getTitle());
+            var exercises = exerciseRepository.findBySubCategoryIdAndNameStartingWithIgnoreCase(subCategoryId, query);
             List<String> names = exercises.stream()
-                    .map(ExerciseDetailEntity::getTitle)
-                    .filter(title -> title != null && title.toLowerCase().startsWith(query.toLowerCase()))
+                    .map(ExerciseDetailEntity::getName)
                     .toList();
             if (names.isEmpty()) {
                 return ResponseEntity.ok(List.of());

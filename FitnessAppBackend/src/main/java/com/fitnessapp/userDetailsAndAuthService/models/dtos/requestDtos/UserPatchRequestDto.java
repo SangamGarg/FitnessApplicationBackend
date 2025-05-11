@@ -16,7 +16,7 @@ public class UserPatchRequestDto {
 
     private String name;
 
-    private List< String> firebaseCloudMessagingToken;
+    private List<String> firebaseCloudMessagingToken;
 
 
     //^	Start of the string
@@ -37,22 +37,33 @@ public class UserPatchRequestDto {
 
     @Positive(message = "Height must be positive")
     @Max(value = 300, message = "Height must be at most 300cm")
-    private float heightCm;
+    private Float heightCm;
 
     @Positive(message = "Weight must be positive")
     @Max(value = 300, message = "Weight must be at most 300kg")
-    private float weightKg;
+    private Float weightKg;
 
+    @Pattern(
+            regexp = "^(?i)(level_1|level_2|level_3|level_4|level_5)$",
+            message = "Activity level must be one of: level_1, level_2, level_3, level_4, level_5"
+    )
     private String activityLevel;
 
+    @Pattern(
+            regexp = "^(?i)(Maintain weight|Mild weight loss|Weight loss|Extreme weight loss|Mild weight gain|Weight gain|Extreme weight gain)$",
+            message = "Goal must be one of: Maintain weight, Mild weight loss, Weight loss, Extreme weight loss, Mild weight gain, Weight gain, Extreme weight gain"
+    )
     private String goal;
 
     @Positive(message = "Hip measurement must be positive")
-    private float hip;
+    @Max(value = 300, message = "Hip must be at most 300cm")
+    private Float hip;
 
     @Positive(message = "Neck measurement must be positive")
-    private float neck;
+    @Max(value = 100, message = "Neck must be at most 100cm")
+    private Float neck;
 
     @Positive(message = "Waist measurement must be positive")
-    private float waist;
+    @Max(value = 150, message = "Waist must be at most 150 cm")
+    private Float waist;
 }

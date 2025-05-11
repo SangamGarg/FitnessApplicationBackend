@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ExerciseDetailResponseDto {
     private Long id;
-    private String title;
+    private String name;
     private String description;
     private String videoUrl;
     private String imageUrl;

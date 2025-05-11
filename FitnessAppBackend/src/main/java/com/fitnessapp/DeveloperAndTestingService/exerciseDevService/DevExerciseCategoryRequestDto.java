@@ -18,7 +18,7 @@ import java.util.List;
 public class DevExerciseCategoryRequestDto {
 
     @NotBlank(message = "Category name must not be blank")
-    private String name;
+    private String name; // Yoga, Strength, Warmup, Cardio, etc.
 
     @NotBlank(message = "Image URL must not be blank")
     @URL(message = "Invalid image URL format")

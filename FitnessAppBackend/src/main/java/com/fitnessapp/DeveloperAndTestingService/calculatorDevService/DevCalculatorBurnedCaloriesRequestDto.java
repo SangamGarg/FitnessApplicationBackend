@@ -1,5 +1,6 @@
 package com.fitnessapp.DeveloperAndTestingService.calculatorDevService;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -18,9 +19,9 @@ public class DevCalculatorBurnedCaloriesRequestDto {
     private String name;
 
     @Positive(message = "MET value must be greater than zero")
+    @Max(value = 30, message = "MET value must be less than 30")
     private Double metValue;
 
-    @NotBlank(message = "ImageUrl must not be blank")
     @URL(message = "Not valid url")
     private String imageUrl;
 

@@ -1,6 +1,5 @@
 package com.fitnessapp.fitnessExercisesService.controllers;
 
-import com.fitnessapp.fitnessCalculatorsService.calculatorServiceUtilities.AppConstantsCalculatorService;
 import com.fitnessapp.fitnessExercisesService.exerciseServiceUtilities.AppConstantsExerciseService;
 import com.fitnessapp.fitnessExercisesService.services.ExerciseService;
 import jakarta.validation.constraints.Min;
@@ -64,5 +63,4 @@ public class ExerciseController {
     ) {
         return exerciseService.getExercisesDetailSuggestion(subCategoryId, query);
     }
-
 }

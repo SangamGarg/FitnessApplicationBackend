@@ -30,6 +30,8 @@ public class UserDetailsEntity {
     @CollectionTable(name = "fcm_tokens", joinColumns = @JoinColumn(name = "user_details_id"))
     private List<String> firebaseCloudMessagingToken = new ArrayList<>();
 
+    @Embedded
+    private UserBodyDetails userBodyDetails;
 
     @Column(unique = true)
     private String email;
@@ -37,13 +39,13 @@ public class UserDetailsEntity {
     private String gender;
     private Integer age;
     private String profileImageUrl;
-    private float height;
-    private float weight;
+    private Float height;
+    private Float weight;
     private String activityLevel;
     private String goal;
-    private float hip;
-    private float neck;
-    private float waist;
+    private Float hip;
+    private Float neck;
+    private Float waist;
 
     // Establishes a one-to-one relationship with the UserEntity class.
 // `optional = false` means this association is mandatory —
@@ -58,5 +60,4 @@ public class UserDetailsEntity {
 // Prevents infinite recursion when converting entities to JSON by skipping this field during serialization.
     @JsonBackReference
     private UserEntity user;
-
 }

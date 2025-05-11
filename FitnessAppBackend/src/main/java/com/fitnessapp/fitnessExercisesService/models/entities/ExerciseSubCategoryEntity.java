@@ -21,6 +21,7 @@ public class ExerciseSubCategoryEntity {
     @Column(name = "exercise_subCategory_id")
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String name; // e.g., Arms, Chest
 
     private String imageUrl;

@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
 
     @Override
-    public ResponseEntity<?> sendNotificationToDevice(SendNotificationRequestDto requestDto) {
+    public ResponseEntity<?> sendNotification(SendNotificationRequestDto requestDto) {
         if (hasMoreThanOneTarget(requestDto)) {
             return ResponseEntity.badRequest().body("Only one of deviceTokens, deviceGroupKey, topic, or condition should be provided.");
         }
@@ -132,13 +132,12 @@ public class NotificationServiceImpl implements NotificationService {
                     }
                 }
             }
-
             return ResponseEntity.ok(
 
                     SendNotificationResponseDto.builder()
                             .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
                             .statusCode(200)
-                            .target("Devices")
+                            .target("Device Token")
                             .message(
                                     Map.of(
                                             "successCount", response.getSuccessCount(),

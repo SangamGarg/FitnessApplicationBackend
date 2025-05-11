@@ -12,6 +12,8 @@ import com.fitnessapp.userDetailsAndAuthService.models.entitites.UserEntity;
 import com.fitnessapp.userDetailsAndAuthService.repository.UserRepository;
 import com.fitnessapp.userDetailsAndAuthService.services.firebaseService.FirebaseService;
 import com.fitnessapp.userDetailsAndAuthService.services.jwtService.JwtService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -27,25 +29,31 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserDetailRepository userDetailRepository;
-    private final FirebaseService firebaseService;
     private final JwtService jwtService;
 
-    public UserServiceImpl(UserRepository userRepository, UserDetailRepository userDetailRepository, FirebaseService firebaseService, JwtService jwtService) {
+    public UserServiceImpl(UserRepository userRepository, UserDetailRepository userDetailRepository, JwtService jwtService) {
         this.userRepository = userRepository;
         this.userDetailRepository = userDetailRepository;
-        this.firebaseService = firebaseService;
         this.jwtService = jwtService;
     }
 
     @Override
     public ResponseEntity<?> loginOrRegisterUser(UserLoginOrRegisterRequestDto registerRequestDto) {
 
-        ResponseEntity<?> responseEntity = firebaseService.verifyFirebaseIdToken(registerRequestDto.getFirebaseIdToken());
         String id = "";
         String email = "";
-        if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.getBody() instanceof FirebaseToken decodedToken) {
+        try {
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(registerRequestDto.getFirebaseIdToken());
             id = decodedToken.getUid();
             email = decodedToken.getEmail();
+        } catch (FirebaseAuthException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    ErrorDto.builder()
+                            .status(AppConstantsUserAndAuthService.ERROR_API_STATUS)
+                            .errorMessage("Invalid Firebase token")
+                            .statusCode(401)
+                            .build()
+            );
         }
 
         if (!id.isBlank() && !email.isBlank()) {
@@ -60,25 +68,14 @@ public class UserServiceImpl implements UserService {
             } catch (Exception e) {
                 return ResponseEntity.internalServerError().body(AppConstantsUserAndAuthService.errorDto(e));
             }
-
         } else {
-            ErrorDto errorDto = ErrorDto
-                    .builder()
-                    .errorImageUrl("")
-                    .status(AppConstantsUserAndAuthService.ERROR_API_STATUS)
-                    .errorMessage("Error : Please Try Again")
-                    .statusCode(500)
-                    .build();
-
-            return ResponseEntity.internalServerError().body(errorDto);
+            return ResponseEntity.internalServerError().body(AppConstantsUserAndAuthService.errorDto(new Exception("Id or Email is Blank")));
         }
     }
 
     @Transactional
     private ResponseEntity<?> loginUser(String id, String jwtToken) {
         try {
-
-
             UserDetailsEntity user = userDetailRepository.findByUserId(id);
             if (user != null) {
 
@@ -119,21 +116,6 @@ public class UserServiceImpl implements UserService {
             UserEntity userEntity = new UserEntity();
             userEntity.setId(id);
             userEntity.setEmail(email);
-//            userEntity.setUserDetailsEntity(UserDetailsEntity.builder()
-//                    .email(email)
-//                    .firebaseCloudMessagingToken(new ArrayList<>())
-//                    .name(userDetailsDto.getName())
-//                    .gender(userDetailsDto.getGender())
-//                    .age(userDetailsDto.getAge())
-//                    .profileImageUrl(userDetailsDto.getProfileImageUrl())
-//                    .height(userDetailsDto.getHeight())
-//                    .weight(userDetailsDto.getWeight())
-//                    .activityLevel(userDetailsDto.getActivityLevel())
-//                    .goal(userDetailsDto.getGoal())
-//                    .hip(userDetailsDto.getHip())
-//                    .neck(userDetailsDto.getNeck())
-//                    .waist(userDetailsDto.getWaist())
-//                    .build());
             log.info("Response Register User Entity {}", userEntity);
             userRepository.save(userEntity);
             return ResponseEntity.ok(UserRegisterResponseDto
@@ -152,7 +134,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> getUserDetails() {
         try {
-            String id = getUserIdFromTokenInHeader();
+            String id = UserServiceUtilities.getUserIdFromTokenInHeader();
             log.info("TOKEN11 {}", id);
             UserEntity userEntity = userRepository.findById(id).orElse(null);
             if (userEntity == null) {
@@ -183,7 +165,7 @@ public class UserServiceImpl implements UserService {
 
                 return ResponseEntity.ok(loginResponseDto);
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User Not Found with given id");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User Details Not Found with given id");
             }
         } catch (Exception e) {
 
@@ -196,12 +178,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> fillUserDetails(UserDetailsDto userDetailsDto) {
         try {
-            String id = getUserIdFromTokenInHeader();
+            String id = UserServiceUtilities.getUserIdFromTokenInHeader();
             log.info("TOKEN222 {}", id);
             // Fetch user from DB
             UserEntity user = userRepository.findById(id).orElse(null);
             if (user == null) {
                 return ResponseEntity.status(404).body("User not found");
+            }
+            // Fetch existing user details
+            UserDetailsEntity existingUserDetails = userDetailRepository.findByUserId(id);
+
+            if (existingUserDetails != null && existingUserDetails.getUser().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User Details With Given Id Already Exists");
             }
             // Update user details
             UserDetailsEntity userEntity = UserDetailsEntity
@@ -242,7 +230,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> patchUserDetails(UserPatchRequestDto userDetailsDto) {
         try {
-            String id = getUserIdFromTokenInHeader(); // should be userId (Long or String)
+            String id = UserServiceUtilities.getUserIdFromTokenInHeader(); // should be userId (Long or String)
             log.info("TOKEN333 {}", id);
 
             // Fetch existing user details
@@ -301,10 +289,23 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public ResponseEntity<?> deleteUser() {
+        try {
+            String id = UserServiceUtilities.getUserIdFromTokenInHeader();
+            UserEntity userEntity = userRepository.findById(id).orElse(null);
+            if (userEntity == null) {
+                return ResponseEntity.status(404).body("User not found");
+            }
+            userRepository.deleteById(id);
 
-    private static String getUserIdFromTokenInHeader() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName(); // This is the Firebase UID from the token
+            return ResponseEntity.ok("User With Id : " + id + " Deleted Successfully");
+
+        } catch (Exception e) {
+
+            return ResponseEntity.internalServerError().body(AppConstantsUserAndAuthService.errorDto(e));
+
+        }
     }
 
 

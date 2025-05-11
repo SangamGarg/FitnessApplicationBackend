@@ -19,14 +19,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailServiceImpl implements EmailService {
 
-    ///
     /// //
     /// /
     /// /This I have to do
     /// /Add HTML Template And also add attachment functionality
     /// /
     /// /
-    ///
 
     private final JavaMailSender mailSender;
 
@@ -51,13 +49,15 @@ public class EmailServiceImpl implements EmailService {
                     """, emailRequestDto.getEmail(), emailRequestDto.getName(), emailRequestDto.getSubject(), emailRequestDto.getBody());
             //  message.setSentDate(date);
             message.setTo("sangamgarg17@gmail.com"); // here set the receiver like (contact.fitnessapp@app.in) this email receives the email send by user
-            message.setSubject("Query From User: " + emailRequestDto.getSubject());
+            message.setSubject("Query From User Fitness Application: " + emailRequestDto.getSubject());
             message.setText(body);
             mailSender.send(message);
 
             return ResponseEntity.ok(EmailFromUseResponseDto.builder()
+                    .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
+                    .statusCode(200)
                     .message("We have received your email and will contact you soon")
-                    .imageUrl("")
+                    .imageUrl("https://mailtrap.io/wp-content/uploads/2019/09/How-to-Send-an-Email-Using-Windows-PowerShell_API_transparent.png")
                     .build());
 
         } catch (Exception e) {
@@ -74,7 +74,7 @@ public class EmailServiceImpl implements EmailService {
 
             message.setTo(emailToOneUserRequestDto.getEmail());
             message.setSubject(emailToOneUserRequestDto.getSubject());
-            message.setText(emailToOneUserRequestDto.getBody());
+            message.setText("Dear " + emailToOneUserRequestDto.getName() + " ,\n" + emailToOneUserRequestDto.getBody());
 
 
             mailSender.send(message);

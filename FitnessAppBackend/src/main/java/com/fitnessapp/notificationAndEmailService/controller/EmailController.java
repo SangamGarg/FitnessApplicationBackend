@@ -9,10 +9,7 @@ import com.fitnessapp.notificationAndEmailService.services.emailService.EmailSer
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(AppConstantsNotificationAndEmailService.API_PREFIX_EMAIL)
@@ -24,27 +21,8 @@ public class EmailController {
         this.emailService = emailService;
     }
 
-    @GetMapping("from-user")
+    @PostMapping("from-user")
     public ResponseEntity<?> getMailFromUser(@RequestBody @Valid EmailFromUseRequestDto emailRequestDto) throws MessagingException {
         return emailService.getMailFromUser(emailRequestDto);
-    }
-
-    @GetMapping("send-email-one-user")
-
-    public ResponseEntity<?> sendEmailToOneUser(@RequestBody @Valid EmailToOneUserRequestDto emailToOneUserRequestDto) throws MessagingException{
-        return emailService.sendEmailToOneUser(emailToOneUserRequestDto);
-    }
-
-    @GetMapping("send-email-all-user")
-
-    public ResponseEntity<?> sendEmailToAllUsers(@RequestBody @Valid EmailToAllUsersRequestDto emailToAllUsersRequestDto) throws MessagingException{
-        return emailService.sendEmailToAllUsers(emailToAllUsersRequestDto);
-
-    }
-
-    @GetMapping("send-email-more-user")
-    public ResponseEntity<?> sendEmailToMoreThanOneUser(@RequestBody @Valid EmailToMoreThanOneUserRequestDto emailToMoreThanOneUserRequestDto) throws MessagingException{
-        return emailService.sendEmailToMoreThanOneUser(emailToMoreThanOneUserRequestDto);
-
     }
 }

@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface ExerciseDetailsRepository extends JpaRepository<ExerciseDetailEntity, Long> {
     List<ExerciseDetailEntity> findBySubCategoryId(Long subCategoryId);
+    List<ExerciseDetailEntity> findBySubCategoryIdAndNameStartingWithIgnoreCase(Long subCategoryId, String namePrefix);
+
 }

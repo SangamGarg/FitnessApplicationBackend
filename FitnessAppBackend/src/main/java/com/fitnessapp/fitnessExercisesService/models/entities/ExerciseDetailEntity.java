@@ -16,9 +16,11 @@ import java.util.List;
 public class ExerciseDetailEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "exercise_detail_id")
     private Long id;
 
-    private String title;
+    @Column(unique = true, nullable = false)
+    private String name;
     private String description;
     private String videoUrl;
     private String imageUrl;
@@ -26,7 +28,10 @@ public class ExerciseDetailEntity {
     private Integer repetitions;
     private Integer sets;
     private String category;
-    private List<String> muscleGroups;
+    //    @ElementCollection(fetch = FetchType.LAZY)
+    //    @Column(nullable = false, unique = true)
+    //    @CollectionTable(name = "fcm_tokens", joinColumns = @JoinColumn(name = "user_details_id"))
+    private List<String> muscleGroups; //=new ArrayList<>();
     private String equipment;
     private String difficulty;
     private List<String> benefits;

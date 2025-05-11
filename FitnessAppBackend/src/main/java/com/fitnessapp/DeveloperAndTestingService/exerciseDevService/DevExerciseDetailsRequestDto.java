@@ -17,8 +17,8 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class DevExerciseDetailsRequestDto {
-    @NotBlank(message = "Title must not be blank")
-    private String title;
+    @NotBlank(message = "Name must not be blank")
+    private String name;
 
     @NotBlank(message = "Description must not be blank")
     private String description;
@@ -32,12 +32,15 @@ public class DevExerciseDetailsRequestDto {
     private String imageUrl;
 
     @Positive(message = "Duration must be greater than 0")
+    @NotNull(message = "Duration In Seconds must not be null")
     private Integer durationInSeconds;
 
     @Positive(message = "Repetitions must be greater than 0")
+    @NotNull(message = "Repetitions must not be null")
     private Integer repetitions;
 
     @Positive(message = "Sets must be greater than 0")
+    @NotNull(message = "Sets must not be null")
     private Integer sets;
 
     @NotBlank(message = "Category must not be blank")

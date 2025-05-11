@@ -50,7 +50,7 @@ public final class DailyCaloriesCalculatorUtilities {
     private static Map<String, Object> createGoalsMap(int dailyCalories) {
         // Create a goal map with different weight goals and corresponding calorie requirements
         Map<String, Object> goalsMap = new LinkedHashMap<>();
-        goalsMap.put("maintain weight", dailyCalories);
+        goalsMap.put("Maintain weight", dailyCalories);
         goalsMap.put("Mild weight loss", createWeightLossMap("0.25 kg", dailyCalories - 250));
         goalsMap.put("Weight loss", createWeightLossMap("0.50 kg", dailyCalories - 500));
         goalsMap.put("Extreme weight loss", createWeightLossMap("1 kg", dailyCalories - 1000));

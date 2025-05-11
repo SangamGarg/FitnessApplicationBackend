@@ -12,8 +12,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class DevExerciseServiceImpl implements DevExerciseService {
 
@@ -102,7 +100,7 @@ public class DevExerciseServiceImpl implements DevExerciseService {
             }
 
             ExerciseDetailEntity exerciseEntity = new ExerciseDetailEntity();
-            exerciseEntity.setTitle(devExerciseDetailsRequestDto.getTitle());
+            exerciseEntity.setName(devExerciseDetailsRequestDto.getName());
             exerciseEntity.setDescription(devExerciseDetailsRequestDto.getDescription());
             exerciseEntity.setVideoUrl(devExerciseDetailsRequestDto.getVideoUrl());
             exerciseEntity.setImageUrl(devExerciseDetailsRequestDto.getImageUrl());
@@ -121,7 +119,18 @@ public class DevExerciseServiceImpl implements DevExerciseService {
 
             exerciseDetailRepository.save(exerciseEntity);
 
-            return ResponseEntity.ok("Exercise uploaded successfully!");
+            String category = subCategoryEntity.getLevel().getCategory().getName();
+            String level = subCategoryEntity.getLevel().getLevel();
+            String subcategory = subCategoryEntity.getName();
+            String exercise = exerciseEntity.getName();
+
+            String responseMessage = String.format(
+                    "Exercise uploaded successfully!\nCategory: %s\nLevel: %s\nSubcategory: %s\nExercise: %s",
+                    category, level, subcategory, exercise
+            );
+
+            return ResponseEntity.ok(responseMessage);
+
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error uploading exercise: " + e.getMessage());
         }

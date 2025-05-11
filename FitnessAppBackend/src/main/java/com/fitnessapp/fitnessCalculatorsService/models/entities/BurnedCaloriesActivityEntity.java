@@ -17,6 +17,7 @@ public class BurnedCaloriesActivityEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String name;
     private Double metValue;
     private String imageUrl;

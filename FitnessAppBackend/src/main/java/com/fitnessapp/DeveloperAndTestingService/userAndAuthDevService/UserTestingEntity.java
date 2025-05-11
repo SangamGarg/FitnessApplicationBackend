@@ -1,4 +1,4 @@
-package com.fitnessapp.fitnessCalculatorsService.models.entities;
+package com.fitnessapp.DeveloperAndTestingService.userAndAuthDevService;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,13 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @Entity
-@Table(name = "calculator_image_and_about")
-public class CalculatorImageAndAboutEntity {
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "user_testing_dev")
+public class UserTestingEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +20,7 @@ public class CalculatorImageAndAboutEntity {
 
     @Column(unique = true, nullable = false)
     private String name;
-    private String imageUrl;
-    private String about;
 
+    @Column(nullable = false, unique = true)
+    private String key;
 }

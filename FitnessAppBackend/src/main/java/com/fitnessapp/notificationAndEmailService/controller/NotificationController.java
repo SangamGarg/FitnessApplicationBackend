@@ -14,27 +14,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(AppConstantsNotificationAndEmailService.API_PREFIX_NOTIFICATION)
 public class NotificationController {
-    private final NotificationService notificationService;
 
-    public NotificationController(NotificationService notificationService) {
-        this.notificationService = notificationService;
-    }
-
-    /**
-     * Endpoint for sending notification to device/devices
-     */
-    @PostMapping("/send")
-    public ResponseEntity<?> sendNotificationToOneDevice(@RequestBody @Valid SendNotificationRequestDto sendNotificationRequestDto) {
-        // Handle single device notification
-        return notificationService.sendNotificationToDevice(sendNotificationRequestDto);
-    }
-
-    /**
-     * Endpoint for sending batch notifications to multiple devices
-     */
-    @PostMapping("/send/batch")
-    public ResponseEntity<?> sendBatchNotification(@RequestBody SendBatchNotificationRequestDto sendBatchNotificationRequestDto) {
-        // Handle batch notification
-        return notificationService.sendBatchNotification(sendBatchNotificationRequestDto);
-    }
 }

@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 @Service
@@ -28,13 +29,20 @@ public class DevCalculatorServiceImpl implements DevCalculatorService {
 
     @Transactional
     @Override
-    public ResponseEntity<?> uploadCalculatorImageAndAbout(DevCalculatorUploadImageAndAboutRequestDto uploadCalculatorImageAndAboutRequestDto) {
+    public ResponseEntity<?> uploadCalculatorImageAndAbout(DevCalculatorUploadImageAndAboutRequestDto dto) {
+
+        if (dto.getAbout() == null || dto.getAbout().isBlank()) {
+            return ResponseEntity.badRequest().body("About is Null or Blank");
+        }
+        if (dto.getImageUrl() == null || dto.getImageUrl().isBlank()) {
+            return ResponseEntity.badRequest().body("Image Url is Null or Blank");
+        }
         try {
             imageAndAboutRepository.save(CalculatorImageAndAboutEntity.
                     builder()
-                    .name(uploadCalculatorImageAndAboutRequestDto.getName())
-                    .imageUrl(uploadCalculatorImageAndAboutRequestDto.getImageUrl())
-                    .about(uploadCalculatorImageAndAboutRequestDto.getAbout())
+                    .name(dto.getName())
+                    .imageUrl(dto.getImageUrl())
+                    .about(dto.getAbout())
                     .build());
             return ResponseEntity.ok("Uploaded Successfully");
         } catch (Exception e) {
@@ -71,9 +79,26 @@ public class DevCalculatorServiceImpl implements DevCalculatorService {
 
     @Transactional
     @Override
-    public ResponseEntity<?> uploadCalculatorCaloriesInFood(List<DevCalculatorUploadCaloriesInFoodRequestDto> devCalculatorCaloriesInFoodRequestDto) {
+    public ResponseEntity<?> uploadCalculatorCaloriesInFood(List<DevCalculatorUploadCaloriesInFoodRequestDto> requestDto) {
+        for (DevCalculatorUploadCaloriesInFoodRequestDto dto : requestDto) {
+            for (Field field : DevCalculatorUploadCaloriesInFoodRequestDto.class.getDeclaredFields()) {
+                field.setAccessible(true); // in case the field is private
+                try {
+                    Object value = field.get(dto);
+                    if (value instanceof String && ((String) value).isBlank()) {
+                        return ResponseEntity.badRequest().body(field.getName() + " is Null or Blank");
+                    }
+                    if (value == null) {
+                        return ResponseEntity.badRequest().body(field.getName() + " is Null");
+                    }
+                } catch (IllegalAccessException e) {
+                    return ResponseEntity.internalServerError().body(e.getLocalizedMessage());
+                }
+            }
+        }
+
         try {
-            List<CaloriesInFoodEntity> caloriesInFoodEntities = devCalculatorCaloriesInFoodRequestDto.stream()
+            List<CaloriesInFoodEntity> caloriesInFoodEntities = requestDto.stream()
                     .map(dto -> CaloriesInFoodEntity.builder()
                             .name(dto.getName())
                             .calories(dto.getCalories())
@@ -136,6 +161,15 @@ public class DevCalculatorServiceImpl implements DevCalculatorService {
     @Transactional
     @Override
     public ResponseEntity<?> uploadCalculatorBurnedCalories(List<DevCalculatorBurnedCaloriesRequestDto> requestDto) {
+        for (DevCalculatorBurnedCaloriesRequestDto dto : requestDto) {
+            if (dto.getMetValue() == null) {
+                return ResponseEntity.badRequest().body("Met Value is Null");
+            }
+            if (dto.getImageUrl() == null || dto.getImageUrl().isBlank()) {
+                return ResponseEntity.badRequest().body("Image Url is Null or Blank");
+            }
+        }
+
         try {
             List<BurnedCaloriesActivityEntity> burnedCaloriesActivityEntities = requestDto.stream()
                     .map(dto -> BurnedCaloriesActivityEntity.builder()

@@ -7,10 +7,13 @@ import org.springframework.http.ResponseEntity;
 
 public interface UserService {
     ResponseEntity<?> loginOrRegisterUser(UserLoginOrRegisterRequestDto registerRequestDto);
+
     ResponseEntity<?> getUserDetails();
 
     ResponseEntity<?> fillUserDetails(UserDetailsDto userDetailsDto);
 
 
     ResponseEntity<?> patchUserDetails(UserPatchRequestDto userDetailsDto);
+
+    ResponseEntity<?> deleteUser();
 }

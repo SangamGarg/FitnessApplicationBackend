@@ -12,20 +12,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class FirebaseServiceImpl implements FirebaseService {
 
-    @Override
-    public ResponseEntity<?> verifyFirebaseIdToken(String firebaseIdToken) {
-        try {
-            //It returns the decoded token...from this we can get user details in firebase like uid, email, etc.
-            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(firebaseIdToken);
-            return ResponseEntity.ok(decodedToken);
-        } catch (FirebaseAuthException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    ErrorDto.builder()
-                            .status(AppConstantsUserAndAuthService.ERROR_API_STATUS)
-                            .errorMessage("Invalid Firebase token")
-                            .statusCode(401)
-                            .build()
-            );
-        }
-    }
+//    @Override
+//    public FirebaseToken verifyFirebaseIdToken(String firebaseIdToken) {
+//        //It returns the decoded token...from this we can get user details in firebase like uid, email, etc.
+//        FirebaseToken decodedToken = null;
+//        try {
+//            decodedToken = FirebaseAuth.getInstance().verifyIdToken(firebaseIdToken);
+//        } catch (FirebaseAuthException e) {
+//            throw new RuntimeException(e);
+//        }
+//        return decodedToken;
+//    }
 }
