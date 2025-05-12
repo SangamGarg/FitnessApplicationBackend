@@ -35,13 +35,13 @@ public class UserPatchRequestDto {
     )
     private String profileImageUrl;
 
-    @Positive(message = "Height must be positive")
+    @PositiveOrZero(message = "Height must be positive")
     @Max(value = 300, message = "Height must be at most 300cm")
-    private Float heightCm;
+    private float heightCm;
 
-    @Positive(message = "Weight must be positive")
+    @PositiveOrZero(message = "Weight must be positive")
     @Max(value = 300, message = "Weight must be at most 300kg")
-    private Float weightKg;
+    private float weightKg;
 
     @Pattern(
             regexp = "^(?i)(level_1|level_2|level_3|level_4|level_5)$",
@@ -55,15 +55,15 @@ public class UserPatchRequestDto {
     )
     private String goal;
 
-    @Positive(message = "Hip measurement must be positive")
+    @PositiveOrZero(message = "Hip measurement must be positive")
     @Max(value = 300, message = "Hip must be at most 300cm")
-    private Float hip;
+    private float hipCm;
 
-    @Positive(message = "Neck measurement must be positive")
+    @PositiveOrZero(message = "Neck measurement must be positive")
     @Max(value = 100, message = "Neck must be at most 100cm")
-    private Float neck;
+    private float neckCm;
 
-    @Positive(message = "Waist measurement must be positive")
+    @PositiveOrZero(message = "Waist measurement must be positive")
     @Max(value = 150, message = "Waist must be at most 150 cm")
-    private Float waist;
+    private float waistCm;
 }

@@ -35,8 +35,8 @@ public class SecurityConfig {
                                 //→ Allows anyone (even unauthenticated users) to access the /login and /register endpoints.
                                 .requestMatchers(
                                         AppConstantsUserAndAuthService.API_PREFIX + "/loginRegister",
-                                        "/api/v1/dev/**",
-                                        "/**"
+                                        AppConstantsUserAndAuthService.API_PREFIX + "/refresh-token",
+                                        "/api/v1/dev/**"
                                 )
                                 .permitAll()
                                 .anyRequest()

@@ -39,13 +39,13 @@ public class UserDetailsEntity {
     private String gender;
     private Integer age;
     private String profileImageUrl;
-    private Float height;
-    private Float weight;
+    private Float heightCm;
+    private Float weightKg;
     private String activityLevel;
     private String goal;
-    private Float hip;
-    private Float neck;
-    private Float waist;
+    private Float hipCm;
+    private Float neckCm;
+    private Float waistCm;
 
     // Establishes a one-to-one relationship with the UserEntity class.
 // `optional = false` means this association is mandatory —

@@ -15,5 +15,6 @@ public class UserDetailsResponseDto {
     private String status;
     private Integer statusCode;
     private String jwtToken;
+    private String refreshToken;
     private UserDetailsDto userDetailsDto;
 }

@@ -1,6 +1,5 @@
 package com.fitnessapp.DeveloperAndTestingService.userAndAuthDevService;
 
-import com.fitnessapp.userDetailsAndAuthService.services.jwtService.JwtService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;

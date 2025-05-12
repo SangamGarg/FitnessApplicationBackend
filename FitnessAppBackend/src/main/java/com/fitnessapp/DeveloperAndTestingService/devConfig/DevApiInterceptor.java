@@ -2,7 +2,6 @@ package com.fitnessapp.DeveloperAndTestingService.devConfig;
 
 import com.fitnessapp.DeveloperAndTestingService.userAndAuthDevService.UserTestingEntity;
 import com.fitnessapp.DeveloperAndTestingService.userAndAuthDevService.UserTestingService;
-import com.fitnessapp.userDetailsAndAuthService.services.jwtService.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;

@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 //import org.springframework.security.core.userdetails.UserDetails;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+@Slf4j
 @Service
 public class JwtService {
 
@@ -44,16 +46,25 @@ public class JwtService {
         return Jwts.builder()
                 .subject(id)
                 .claim("email", email)
-                .claim("token_type", "refresh")
+//                .claim("token_type", "refresh")
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + jwtConfig.getExpirationMs()))
+                .expiration(new Date(System.currentTimeMillis() + jwtConfig.getRefreshExpirationMs()))
                 .signWith(getJwtKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
-    public boolean isRefreshToken(String token) {
+//    public boolean isRefreshTokenValid(String token) {
+//        try {
+//            return "refresh".equals(extractAllClaims(token).get("token_type"));
+//        } catch (JwtException e) {
+//            return false;
+//        }
+//    }
+
+    public boolean isRefreshTokenValid(String refreshToken, UserDetails userDetails) {
         try {
-            return "refresh".equals(extractAllClaims(token).get("token_type"));
+            final String id = extractId(refreshToken);
+            return (id.equals(userDetails.getUsername()) && !isTokenExpired(refreshToken));
         } catch (JwtException e) {
             return false;
         }
@@ -89,6 +100,7 @@ public class JwtService {
             final String id = extractId(token);
             return (id.equals(userDetails.getUsername()) && !isTokenExpired(token));
         } catch (JwtException e) {
+            log.error("Not Valid Token{}", e.getLocalizedMessage());
             return false;
         }
     }

@@ -10,4 +10,5 @@ public class UserRegisterResponseDto {
     private String status;
     private Integer statusCode;
     private String jwtToken;
+    private String refreshToken;
 }

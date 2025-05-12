@@ -1,5 +1,6 @@
 package com.fitnessapp.userDetailsAndAuthService.controller;
 
+import com.fitnessapp.userDetailsAndAuthService.models.dtos.requestDtos.RefreshTokenRequestDto;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.requestDtos.UserPatchRequestDto;
 import com.fitnessapp.userDetailsAndAuthService.userDetailsAndAuthServiceUtilities.AppConstantsUserAndAuthService;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.UserDetailsDto;
@@ -45,5 +46,10 @@ public class UserController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteUser() {
         return userService.deleteUser();
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
+        return userService.refreshToken(refreshTokenRequestDto);
     }
 }

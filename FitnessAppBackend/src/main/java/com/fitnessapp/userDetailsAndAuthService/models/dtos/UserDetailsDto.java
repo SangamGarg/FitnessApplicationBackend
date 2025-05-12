@@ -68,13 +68,13 @@ public class UserDetailsDto {
 
     @Positive(message = "Hip measurement must be positive")
     @Max(value = 300, message = "Hip must be at most 300cm")
-    private Float hip;
+    private Float hipCm;
 
     @Positive(message = "Neck measurement must be positive")
     @Max(value = 100, message = "Neck must be at most 100cm")
-    private Float neck;
+    private Float neckCm;
 
     @Positive(message = "Waist measurement must be positive")
     @Max(value = 150, message = "Waist must be at most 150 cm")
-    private Float waist;
+    private Float waistCm;
 }
