@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "calculator_image_and_about")
-public class CalculatorImageAndAboutEntity {
+@Table(name = "image_and_about")
+public class ImageAndAboutEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

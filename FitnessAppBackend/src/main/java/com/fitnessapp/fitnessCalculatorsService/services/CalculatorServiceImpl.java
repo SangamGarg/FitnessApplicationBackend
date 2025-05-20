@@ -6,11 +6,11 @@ import com.fitnessapp.fitnessCalculatorsService.models.dtos.requestDto.BurnedCal
 import com.fitnessapp.fitnessCalculatorsService.models.dtos.requestDto.DailyCaloriesRequestDto;
 import com.fitnessapp.fitnessCalculatorsService.models.dtos.responseDto.*;
 import com.fitnessapp.fitnessCalculatorsService.models.entities.BurnedCaloriesActivityEntity;
-import com.fitnessapp.fitnessCalculatorsService.models.entities.CalculatorImageAndAboutEntity;
+import com.fitnessapp.fitnessCalculatorsService.models.entities.ImageAndAboutEntity;
 import com.fitnessapp.fitnessCalculatorsService.models.entities.CaloriesInFoodEntity;
 import com.fitnessapp.fitnessCalculatorsService.repositories.BurnedCaloriesFromActivityRepository;
 import com.fitnessapp.fitnessCalculatorsService.repositories.CaloriesInFoodRepository;
-import com.fitnessapp.fitnessCalculatorsService.repositories.CalculatorImageAndAboutRepository;
+import com.fitnessapp.fitnessCalculatorsService.repositories.ImageAndAboutRepository;
 import com.fitnessapp.fitnessCalculatorsService.services.calculatorServiceUtilities.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +23,10 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     private final BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository;
     private final CaloriesInFoodRepository caloriesInFoodRepository;
-    private final CalculatorImageAndAboutRepository imageAndAboutRepository;
+    private final ImageAndAboutRepository imageAndAboutRepository;
 
     @Autowired
-    public CalculatorServiceImpl(BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository, CaloriesInFoodRepository caloriesInFoodRepository, CalculatorImageAndAboutRepository imageAndAboutRepository) {
+    public CalculatorServiceImpl(BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository, CaloriesInFoodRepository caloriesInFoodRepository, ImageAndAboutRepository imageAndAboutRepository) {
         this.burnedCaloriesFromActivityRepository = burnedCaloriesFromActivityRepository;
         this.caloriesInFoodRepository = caloriesInFoodRepository;
         this.imageAndAboutRepository = imageAndAboutRepository;
@@ -36,7 +36,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     public ResponseEntity<?> getBmi(float weightKg, float heightCm) {
         try {
 
-            CalculatorImageAndAboutEntity bmiData = getImageUrlAndAbout("Bmi");
+            ImageAndAboutEntity bmiData = getImageUrlAndAbout("Bmi");
 
             float h = heightCm / 100;
             float bmi = Float.parseFloat(String.format("%.1f", weightKg / (h * h)));
@@ -62,7 +62,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getBodyFat(BodyFatRequestDto bodyFatRequestDto) {
         try {
-            CalculatorImageAndAboutEntity bodyFatData = getImageUrlAndAbout("BodyFat");
+            ImageAndAboutEntity bodyFatData = getImageUrlAndAbout("BodyFat");
 
             BodyFatResponseDto dailyCaloriesResponseDto = BodyFatResponseDto
                     .builder()
@@ -83,7 +83,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getBurnedCaloriesFromActivity(BurnedCaloriesFromActivityRequestDto burnedCaloriesFromActivityRequestDto) {
         try {
-            CalculatorImageAndAboutEntity burnedActivityData = getImageUrlAndAbout("BurnedActivity");
+            ImageAndAboutEntity burnedActivityData = getImageUrlAndAbout("BurnedActivity");
 
             BurnedCaloriesFromActivityResponseDto dailyCaloriesResponseDto = BurnedCaloriesFromActivityResponseDto
                     .builder()
@@ -123,7 +123,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getCaloriesInFood(String query, double quantityGm) {
         try {
-            CalculatorImageAndAboutEntity caloriesInFoodData = getImageUrlAndAbout("CaloriesInFood");
+            ImageAndAboutEntity caloriesInFoodData = getImageUrlAndAbout("CaloriesInFood");
 
             CaloriesInFoodResponseDto dailyCaloriesResponseDto = CaloriesInFoodResponseDto
                     .builder()
@@ -162,7 +162,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getDailyCalories(DailyCaloriesRequestDto dailyCaloriesRequestDto) {
         try {
-            CalculatorImageAndAboutEntity dailyCaloriesData = getImageUrlAndAbout("DailyCalories");
+            ImageAndAboutEntity dailyCaloriesData = getImageUrlAndAbout("DailyCalories");
 
             DailyCaloriesResponseDto dailyCaloriesResponseDto = DailyCaloriesResponseDto
                     .builder()
@@ -181,7 +181,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getIdealWeight(String gender, float height) {
         try {
-            CalculatorImageAndAboutEntity idealWeightData = getImageUrlAndAbout("IdealWeight");
+            ImageAndAboutEntity idealWeightData = getImageUrlAndAbout("IdealWeight");
 
             IdealWeightResponseDto idealWeightResponseDto = IdealWeightResponseDto
                     .builder()
@@ -198,11 +198,11 @@ public class CalculatorServiceImpl implements CalculatorService {
     }
 
 
-    private CalculatorImageAndAboutEntity getImageUrlAndAbout(String name) {
+    private ImageAndAboutEntity getImageUrlAndAbout(String name) {
         try {
             return imageAndAboutRepository.findByNameIgnoreCase(name).orElseThrow(() -> new RuntimeException("Item not found"));
         } catch (Exception e) {
-            return new CalculatorImageAndAboutEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
+            return new ImageAndAboutEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
         }
     }
 

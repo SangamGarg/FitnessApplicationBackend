@@ -32,5 +32,9 @@ public class DailyCaloriesRequestDto {
     private Float heightCm;
 
     @NotBlank(message = "Activity level must not be blank")
+    @Pattern(
+            regexp = "^(?i)(level_1|level_2|level_3|level_4|level_5)$",
+            message = "Activity level must be one of: level_1, level_2, level_3, level_4, level_5"
+    )
     private String activityLevel;
 }

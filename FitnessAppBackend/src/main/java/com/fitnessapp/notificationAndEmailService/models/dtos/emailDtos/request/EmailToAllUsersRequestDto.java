@@ -2,12 +2,14 @@ package com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.File;
 import java.util.List;
 
 @Data
@@ -31,4 +33,7 @@ public class EmailToAllUsersRequestDto {
     @Size(max = 1000, message = "Body should not exceed 1000 characters")
     private String body;
 
+    @NotBlank(message = "Html Body is required")
+    @Pattern(regexp = ".*<[^>]+>.*", message = "Html Body must contain at least one HTML tag")
+    private String htmlBody;
 }

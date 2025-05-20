@@ -15,6 +15,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class AppInfoServiceImpl implements AppInfoService {
 
+    //set the id as 1 L so the single ifd is created,
+    // and later I can also add faqs and url to the entity so it can be expanded
+
+
     private final AppInfoRepository appInfoRepository;
 
     public AppInfoServiceImpl(AppInfoRepository appInfoRepository) {

@@ -1,10 +1,10 @@
 package com.fitnessapp.DeveloperAndTestingService.calculatorDevService;
 
 import com.fitnessapp.fitnessCalculatorsService.models.entities.BurnedCaloriesActivityEntity;
-import com.fitnessapp.fitnessCalculatorsService.models.entities.CalculatorImageAndAboutEntity;
+import com.fitnessapp.fitnessCalculatorsService.models.entities.ImageAndAboutEntity;
 import com.fitnessapp.fitnessCalculatorsService.models.entities.CaloriesInFoodEntity;
 import com.fitnessapp.fitnessCalculatorsService.repositories.BurnedCaloriesFromActivityRepository;
-import com.fitnessapp.fitnessCalculatorsService.repositories.CalculatorImageAndAboutRepository;
+import com.fitnessapp.fitnessCalculatorsService.repositories.ImageAndAboutRepository;
 import com.fitnessapp.fitnessCalculatorsService.repositories.CaloriesInFoodRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +16,11 @@ import java.util.List;
 @Service
 public class DevCalculatorServiceImpl implements DevCalculatorService {
 
-    private final CalculatorImageAndAboutRepository imageAndAboutRepository;
+    private final ImageAndAboutRepository imageAndAboutRepository;
     private final CaloriesInFoodRepository caloriesInFoodRepository;
     private final BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository;
 
-    public DevCalculatorServiceImpl(CalculatorImageAndAboutRepository imageAndAboutRepository, CaloriesInFoodRepository caloriesInFoodRepository, BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository) {
+    public DevCalculatorServiceImpl(ImageAndAboutRepository imageAndAboutRepository, CaloriesInFoodRepository caloriesInFoodRepository, BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository) {
 
         this.imageAndAboutRepository = imageAndAboutRepository;
         this.caloriesInFoodRepository = caloriesInFoodRepository;
@@ -38,7 +38,7 @@ public class DevCalculatorServiceImpl implements DevCalculatorService {
             return ResponseEntity.badRequest().body("Image Url is Null or Blank");
         }
         try {
-            imageAndAboutRepository.save(CalculatorImageAndAboutEntity.
+            imageAndAboutRepository.save(ImageAndAboutEntity.
                     builder()
                     .name(dto.getName())
                     .imageUrl(dto.getImageUrl())
@@ -59,7 +59,7 @@ public class DevCalculatorServiceImpl implements DevCalculatorService {
                 return ResponseEntity.badRequest().body("Calculator with the given name not found");
             }
 
-            CalculatorImageAndAboutEntity entity = existing.get();
+            ImageAndAboutEntity entity = existing.get();
 
             if (dto.getImageUrl() != null && !dto.getImageUrl().isBlank()) {
                 entity.setImageUrl(dto.getImageUrl());

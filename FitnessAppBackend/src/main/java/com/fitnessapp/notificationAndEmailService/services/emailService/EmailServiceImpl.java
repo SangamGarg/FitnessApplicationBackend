@@ -1,5 +1,7 @@
 package com.fitnessapp.notificationAndEmailService.services.emailService;
 
+import com.fitnessapp.fitnessCalculatorsService.models.entities.ImageAndAboutEntity;
+import com.fitnessapp.fitnessCalculatorsService.repositories.ImageAndAboutRepository;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailFromUseRequestDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailToAllUsersRequestDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailToMoreThanOneUserRequestDto;
@@ -10,9 +12,11 @@ import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.response
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.response.EmailToOneUserResponseDto;
 import com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities.AppConstantsNotificationAndEmailService;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 
@@ -27,37 +31,92 @@ public class EmailServiceImpl implements EmailService {
     /// /
 
     private final JavaMailSender mailSender;
+    private final ImageAndAboutRepository imageAndAboutRepository;
 
-    public EmailServiceImpl(JavaMailSender mailSender) {
+
+    public EmailServiceImpl(JavaMailSender mailSender, ImageAndAboutRepository imageAndAboutRepository) {
         this.mailSender = mailSender;
+        this.imageAndAboutRepository = imageAndAboutRepository;
     }
 
     @Override
     public ResponseEntity<?> getMailFromUser(EmailFromUseRequestDto emailRequestDto) {
-//        LocalDateTime myDateObj = LocalDateTime.now();
-//        DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-//        String formattedDate = myDateObj.format(myFormatObj);
-//        Date date = Date.from(myDateObj.atZone(ZoneId.systemDefault()).toInstant());
-//
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            String body = String.format("""
-                    Email: %s
-                    Name: %s
-                    Subject: %s
-                    Message: %s
-                    """, emailRequestDto.getEmail(), emailRequestDto.getName(), emailRequestDto.getSubject(), emailRequestDto.getBody());
-            //  message.setSentDate(date);
-            message.setTo("sangamgarg17@gmail.com"); // here set the receiver like (contact.fitnessapp@app.in) this email receives the email send by user
-            message.setSubject("Query From User Fitness Application: " + emailRequestDto.getSubject());
-            message.setText(body);
-            mailSender.send(message);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo("sangamgarg17@gmail.com"); // here set the receiver like (contact.fitnessapp@app.in) this email receives the email send by user
+            helper.setSubject("Query From User Fitness Application: " + emailRequestDto.getSubject());
+
+            String htmlContent = """
+        <html>
+            <head>
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        background-color: #f4f6f8;
+                        padding: 20px;
+                        color: #333;
+                    }
+                    .email-container {
+                        background-color: #ffffff;
+                        padding: 30px;
+                        border-radius: 10px;
+                        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                        max-width: 700px;
+                        margin: auto;
+                    }
+                    h2 {
+                        color: #007bff;
+                    }
+                    .info-label {
+                        font-weight: bold;
+                        margin-top: 10px;
+                    }
+                    .footer {
+                        margin-top: 40px;
+                        font-size: 13px;
+                        color: #888;
+                        text-align: center;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <h2>User Query from Fitness App</h2>
+                    <p><span class="info-label">Name:</span> %s</p>
+                    <p><span class="info-label">Email:</span> %s</p>
+                    <p><span class="info-label">Subject:</span> %s</p>
+                    <p><span class="info-label">Message:</span> %s</p>
+                    <br/>
+                    <p>Regards,<br/><strong>Fitness App Team</strong></p>
+                </div>
+                <div class="footer">
+                    &copy; 2025 Fitness App. All rights reserved.
+                </div>
+            </body>
+        </html>
+        """.formatted(
+                    emailRequestDto.getName(),
+                    emailRequestDto.getEmail(),
+                    emailRequestDto.getSubject(),
+                    emailRequestDto.getBody()
+            );
+
+
+            helper.setText(htmlContent, true); // true = isHtml
+
+//            if (emailToOneUserRequestDto.getAttachment() != null) {
+//                helper.addAttachment(emailToOneUserRequestDto.getAttachment().getName(), emailToOneUserRequestDto.getAttachment());
+//            }
+
+            mailSender.send(mimeMessage);
 
             return ResponseEntity.ok(EmailFromUseResponseDto.builder()
                     .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
                     .statusCode(200)
                     .message("We have received your email and will contact you soon")
-                    .imageUrl("https://mailtrap.io/wp-content/uploads/2019/09/How-to-Send-an-Email-Using-Windows-PowerShell_API_transparent.png")
+                    .imageUrl(getImageUrlAndAbout().getImageUrl())
                     .build());
 
         } catch (Exception e) {
@@ -70,14 +129,58 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public ResponseEntity<?> sendEmailToOneUser(EmailToOneUserRequestDto emailToOneUserRequestDto) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            message.setTo(emailToOneUserRequestDto.getEmail());
-            message.setSubject(emailToOneUserRequestDto.getSubject());
-            message.setText("Dear " + emailToOneUserRequestDto.getName() + " ,\n" + emailToOneUserRequestDto.getBody());
+            helper.setTo(emailToOneUserRequestDto.getEmail());
+            helper.setSubject(emailToOneUserRequestDto.getSubject());
 
+            String htmlContent = """
+                    <html>
+                        <head>
+                            <style>
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    background-color: #f9f9f9;
+                                    padding: 20px;
+                                    color: #333;
+                                }
+                                .email-container {
+                                    background-color: #ffffff;
+                                    padding: 20px;
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                                    max-width: 600px;
+                                    margin: auto;
+                                }
+                                .footer {
+                                    margin-top: 30px;
+                                    font-size: 14px;
+                                    color: #777;
+                                    text-align: center;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="email-container">
+                                <h2>Dear %s,</h2>
+                                <p>%s</p>
+                                <p style="margin-top: 40px;">Regards,<br/><strong>Fitness App Team</strong></p>
+                            </div>
+                            <div class="footer">
+                                &copy; 2025 Fitness App. All rights reserved.
+                            </div>
+                        </body>
+                    </html>
+                    """.formatted(emailToOneUserRequestDto.getName(), emailToOneUserRequestDto.getHtmlBody());
 
-            mailSender.send(message);
+            helper.setText(htmlContent, true); // true = isHtml
+
+//            if (emailToOneUserRequestDto.getAttachment() != null) {
+//                helper.addAttachment(emailToOneUserRequestDto.getAttachment().getName(), emailToOneUserRequestDto.getAttachment());
+//            }
+
+            mailSender.send(mimeMessage);
 
             return ResponseEntity.ok(EmailToOneUserResponseDto.builder()
                     .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
@@ -98,12 +201,60 @@ public class EmailServiceImpl implements EmailService {
     public ResponseEntity<?> sendEmailToAllUsers(EmailToAllUsersRequestDto emailToAllUsersRequestDto) {
         try {
             String[] emails = emailToAllUsersRequestDto.getEmails().toArray(new String[0]);
-            SimpleMailMessage message = new SimpleMailMessage();
 
-            message.setTo(emails);
-            message.setSubject(emailToAllUsersRequestDto.getSubject());
-            message.setText(emailToAllUsersRequestDto.getBody());
-            mailSender.send(message);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo(emails);
+            helper.setSubject(emailToAllUsersRequestDto.getSubject());
+
+            String htmlContent = """
+                    <html>
+                        <head>
+                            <style>
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    background-color: #f9f9f9;
+                                    padding: 20px;
+                                    color: #333;
+                                }
+                                .email-container {
+                                    background-color: #ffffff;
+                                    padding: 20px;
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                                    max-width: 600px;
+                                    margin: auto;
+                                }
+                                .footer {
+                                    margin-top: 30px;
+                                    font-size: 14px;
+                                    color: #777;
+                                    text-align: center;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="email-container">
+                                <h2>Dear %s,</h2>
+                                <p>%s</p>
+                                <p style="margin-top: 40px;">Regards,<br/><strong>Fitness App Team</strong></p>
+                            </div>
+                            <div class="footer">
+                                &copy; 2025 Fitness App. All rights reserved.
+                            </div>
+                        </body>
+                    </html>
+                    """.formatted("User", emailToAllUsersRequestDto.getHtmlBody());
+
+            helper.setText(htmlContent, true); // true = isHtml
+
+//            if (emailToOneUserRequestDto.getAttachment() != null) {
+//                helper.addAttachment(emailToOneUserRequestDto.getAttachment().getName(), emailToOneUserRequestDto.getAttachment());
+//            }
+
+            mailSender.send(mimeMessage);
+
 
             return ResponseEntity.ok(EmailToAllUsersResponseDto.builder()
                     .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
@@ -124,12 +275,61 @@ public class EmailServiceImpl implements EmailService {
         try {
 
             String[] emails = emailToMoreThanOneUserRequestDto.getEmails().toArray(new String[0]);
-            SimpleMailMessage message = new SimpleMailMessage();
 
-            message.setTo(emails);
-            message.setSubject(emailToMoreThanOneUserRequestDto.getSubject());
-            message.setText(emailToMoreThanOneUserRequestDto.getBody());
-            mailSender.send(message);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setTo(emails);
+            helper.setSubject(emailToMoreThanOneUserRequestDto.getSubject());
+
+            String htmlContent = """
+                    <html>
+                        <head>
+                            <style>
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    background-color: #f9f9f9;
+                                    padding: 20px;
+                                    color: #333;
+                                }
+                                .email-container {
+                                    background-color: #ffffff;
+                                    padding: 20px;
+                                    border-radius: 8px;
+                                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                                    max-width: 600px;
+                                    margin: auto;
+                                }
+                                .footer {
+                                    margin-top: 30px;
+                                    font-size: 14px;
+                                    color: #777;
+                                    text-align: center;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="email-container">
+                                <h2>Dear %s,</h2>
+                                <p>%s</p>
+                                <p style="margin-top: 40px;">Regards,<br/><strong>Fitness App Team</strong></p>
+                            </div>
+                            <div class="footer">
+                                &copy; 2025 Fitness App. All rights reserved.
+                            </div>
+                        </body>
+                    </html>
+                    """.formatted("User", emailToMoreThanOneUserRequestDto.getHtmlBody());
+
+            helper.setText(htmlContent, true); // true = isHtml
+
+//            if (emailToOneUserRequestDto.getAttachment() != null) {
+//                helper.addAttachment(emailToOneUserRequestDto.getAttachment().getName(), emailToOneUserRequestDto.getAttachment());
+//            }
+
+            mailSender.send(mimeMessage);
+
+
 
             return ResponseEntity.ok(EmailToMoreThanOneUserResponseDto.builder()
                     .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
@@ -144,4 +344,13 @@ public class EmailServiceImpl implements EmailService {
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
     }
+
+    private ImageAndAboutEntity getImageUrlAndAbout() {
+        try {
+            return imageAndAboutRepository.findByNameIgnoreCase("email").orElse(ImageAndAboutEntity.builder().imageUrl("Not Found").build());
+        } catch (Exception e) {
+            return new ImageAndAboutEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
+        }
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.fitnessapp.DeveloperAndTestingService.exerciseDevService;
+package com.fitnessapp.DeveloperAndTestingService.exerciseDevService.models;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

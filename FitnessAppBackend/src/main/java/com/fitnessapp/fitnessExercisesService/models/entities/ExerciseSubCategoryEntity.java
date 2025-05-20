@@ -31,7 +31,7 @@ public class ExerciseSubCategoryEntity {
     @JsonBackReference
     private ExerciseLevelEntity level;
 
-    @OneToMany(mappedBy = "subCategory", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "subCategory", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ExerciseDetailEntity> exercises;
 }

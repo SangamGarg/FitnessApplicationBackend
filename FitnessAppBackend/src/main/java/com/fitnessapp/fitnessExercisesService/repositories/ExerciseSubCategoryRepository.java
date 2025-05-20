@@ -1,6 +1,6 @@
 package com.fitnessapp.fitnessExercisesService.repositories;
 
-import com.fitnessapp.fitnessExercisesService.models.entities.ExerciseDetailEntity;
+import com.fitnessapp.fitnessExercisesService.models.entities.ExerciseLevelEntity;
 import com.fitnessapp.fitnessExercisesService.models.entities.ExerciseSubCategoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,5 +12,7 @@ public interface ExerciseSubCategoryRepository extends JpaRepository<ExerciseSub
     List<ExerciseSubCategoryEntity> findByLevelId(Long levelId);
 
     List<ExerciseSubCategoryEntity> findByLevelIdAndNameStartingWithIgnoreCase(Long levelId, String namePrefix);
+
+    ExerciseSubCategoryEntity findByNameIgnoreCaseAndLevel(String name, ExerciseLevelEntity level);
 }
 
