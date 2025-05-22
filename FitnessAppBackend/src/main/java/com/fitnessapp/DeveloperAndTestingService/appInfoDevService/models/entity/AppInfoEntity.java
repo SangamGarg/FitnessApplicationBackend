@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "app_info")
@@ -18,7 +19,16 @@ public class AppInfoEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "app_info_id")
     private Long id;
+
+    @ElementCollection
+    @CollectionTable(name = "app_links", joinColumns = @JoinColumn(name = "app_info_id"))
+    private List<AppInfoLinks> appInfoLinks;
+
+    @ElementCollection
+    @CollectionTable(name = "app_faqs", joinColumns = @JoinColumn(name = "app_info_id"))
+    private List<AppInfoFaqs> appInfoFaqs;
 
     @Embedded
     @AttributeOverride(name = "content", column = @Column(name = "about_us_content"))
@@ -29,13 +39,10 @@ public class AppInfoEntity {
     @Embedded
     @AttributeOverride(name = "content", column = @Column(name = "privacy_policy_content"))
     private AppInfoPrivacyPolicy appInfoPrivacyPolicy;
-//
-//    private String lastUpdatedBy;
-//
-//    private String version;
-//
-//    private LocalDateTime createdAt;
-//
-//    private LocalDateTime updatedAt;
 
+
+    private String createdAt;
+
+    @Column(name = "version")
+    private String version;
 }

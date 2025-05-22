@@ -1,9 +1,9 @@
 package com.fitnessapp.DeveloperAndTestingService.appInfoDevService.service;
 
-import com.fitnessapp.DeveloperAndTestingService.appInfoDevService.models.dto.AppInfoAboutUsRequestDto;
-import com.fitnessapp.DeveloperAndTestingService.appInfoDevService.models.dto.AppInfoPrivacyPolicyRequestDto;
-import com.fitnessapp.DeveloperAndTestingService.appInfoDevService.models.dto.AppInfoTermsAndConditionRequestDto;
+import com.fitnessapp.DeveloperAndTestingService.appInfoDevService.models.dto.*;
 import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 
 public interface AppInfoService {
 
@@ -18,5 +18,18 @@ public interface AppInfoService {
     ResponseEntity<?> patchPrivacyPolicy(AppInfoPrivacyPolicyRequestDto appInfoPrivacyPolicyRequestDto);
 
     ResponseEntity<?> patchTermsAndCondition(AppInfoTermsAndConditionRequestDto appInfoTermsAndConditionRequestDto);
+
+
+    ResponseEntity<?> uploadAppLinksUrl(List<AppInfoLinksRequestDto> appInfoLinksRequestDto);
+
+
+    ResponseEntity<?> patchAppLinksUrl(AppInfoLinksRequestDto appInfoLinksRequestDto);
+
+
+
+    ResponseEntity<?> uploadAppFqs(List<AppInfoFaqsRequestDto> appInfoFaqsRequestDto);
+
+
+    ResponseEntity<?> patchAppFaqs(AppInfoFaqsRequestDto appInfoFaqsRequestDto, Long id);
 
 }
