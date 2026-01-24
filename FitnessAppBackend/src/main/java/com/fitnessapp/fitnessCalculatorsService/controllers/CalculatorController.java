@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(AppConstantsCalculatorService.API_PREFIX)
 @Validated
 public class CalculatorController {
-    private CalculatorService calculatorService;
+    private final CalculatorService calculatorService;
 
     public CalculatorController(CalculatorService calculatorService) {
         this.calculatorService = calculatorService;

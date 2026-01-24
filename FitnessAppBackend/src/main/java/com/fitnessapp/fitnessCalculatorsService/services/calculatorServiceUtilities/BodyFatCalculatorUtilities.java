@@ -8,7 +8,7 @@ import java.util.Map;
 public final class BodyFatCalculatorUtilities {
     public static Map<String, Object> createMap(BodyFatRequestDto bodyFatRequestDto) {
         // Calculate body fat using the U.S. Navy Method
-        float bodyFatPercentage = calculateBodyFat(bodyFatRequestDto.getGender(), bodyFatRequestDto.getWeightKg(), bodyFatRequestDto.getHeightCm(), bodyFatRequestDto.getWaist(), bodyFatRequestDto.getHip(), bodyFatRequestDto.getNeck());
+        float bodyFatPercentage = calculateBodyFat(bodyFatRequestDto.getGender(), bodyFatRequestDto.getWeightKg(), bodyFatRequestDto.getHeightCm(), bodyFatRequestDto.getWaistCm(), bodyFatRequestDto.getHipCm(), bodyFatRequestDto.getNeckCm());
 
         // Calculate body fat mass
         float bodyFatMass = calculateFatBodyMass(bodyFatRequestDto.getWeightKg(), bodyFatPercentage);

@@ -8,7 +8,6 @@ public final class AppConstantsCalculatorService {
     public static final String ERROR_API_STATUS = "Error";
     public static final String API_PREFIX = "/api/v1/calculator";
 
-
     public static ErrorDto errorDto(Exception e) {
         return ErrorDto
                 .builder()

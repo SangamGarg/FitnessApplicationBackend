@@ -6,11 +6,11 @@ import com.fitnessapp.fitnessCalculatorsService.models.dtos.requestDto.BurnedCal
 import com.fitnessapp.fitnessCalculatorsService.models.dtos.requestDto.DailyCaloriesRequestDto;
 import com.fitnessapp.fitnessCalculatorsService.models.dtos.responseDto.*;
 import com.fitnessapp.fitnessCalculatorsService.models.entities.BurnedCaloriesActivityEntity;
-import com.fitnessapp.fitnessCalculatorsService.models.entities.ImageAndAboutEntity;
+import com.fitnessapp.imageAndAboutService.models.ImageAndAboutEntity;
 import com.fitnessapp.fitnessCalculatorsService.models.entities.CaloriesInFoodEntity;
 import com.fitnessapp.fitnessCalculatorsService.repositories.BurnedCaloriesFromActivityRepository;
 import com.fitnessapp.fitnessCalculatorsService.repositories.CaloriesInFoodRepository;
-import com.fitnessapp.fitnessCalculatorsService.repositories.ImageAndAboutRepository;
+import com.fitnessapp.imageAndAboutService.repository.ImageAndAboutRepository;
 import com.fitnessapp.fitnessCalculatorsService.services.calculatorServiceUtilities.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -147,10 +147,10 @@ public class CalculatorServiceImpl implements CalculatorService {
             List<String> names = results.stream()
                     .map(CaloriesInFoodEntity::getName)
                     .toList();
-
             if (names.isEmpty()) {
                 return ResponseEntity.ok(List.of());
             } else {
+
                 return ResponseEntity.ok(names);
             }
 

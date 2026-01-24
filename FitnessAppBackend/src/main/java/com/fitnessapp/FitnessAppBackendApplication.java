@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class FitnessAppBackendApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FitnessAppBackendApplication.class, args);
+        SpringApplication. run(FitnessAppBackendApplication.class, args);
         System.out.println("Server Started...");
     }
 }

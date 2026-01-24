@@ -32,4 +32,8 @@ public interface AppInfoService {
 
     ResponseEntity<?> patchAppFaqs(AppInfoFaqsRequestDto appInfoFaqsRequestDto, Long id);
 
+
+
+
+
 }

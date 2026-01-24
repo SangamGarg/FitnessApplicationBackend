@@ -1,15 +1,12 @@
 package com.fitnessapp.DeveloperAndTestingService.calculatorDevService;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
+import com.fitnessapp.imageAndAboutService.models.UploadImageAndAboutRequestDto;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 public interface DevCalculatorService {
-    ResponseEntity<?> uploadCalculatorImageAndAbout(DevCalculatorUploadImageAndAboutRequestDto uploadCalculatorImageAndAboutRequestDto);
 
-    ResponseEntity<?> patchCalculatorImageAndAbout(DevCalculatorUploadImageAndAboutRequestDto uploadCalculatorImageAndAboutRequestDto);
 
     ResponseEntity<?> uploadCalculatorCaloriesInFood(List<DevCalculatorUploadCaloriesInFoodRequestDto> devCalculatorCaloriesInFoodRequestDto);
 

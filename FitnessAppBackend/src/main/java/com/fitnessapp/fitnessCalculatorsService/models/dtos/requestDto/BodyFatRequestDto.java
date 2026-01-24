@@ -29,12 +29,12 @@ public class BodyFatRequestDto {
     private Float heightCm;
 
     @Positive(message = "Waist measurement must be greater than 0")
-    private Float waist;
+    private Float waistCm;
 
     @Positive(message = "Hip measurement must be greater than 0")
-    private Float hip;
+    private Float hipCm;
 
     @Positive(message = "Neck measurement must be greater than 0")
-    private Float neck;
+    private Float neckCm;
 
 }

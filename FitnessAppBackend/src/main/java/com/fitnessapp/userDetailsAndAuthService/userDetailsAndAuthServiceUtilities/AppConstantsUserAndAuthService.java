@@ -1,6 +1,6 @@
 package com.fitnessapp.userDetailsAndAuthService.userDetailsAndAuthServiceUtilities;
 
-import com.fitnessapp.userDetailsAndAuthService.models.dtos.ErrorDto;
+import com.fitnessapp.userDetailsAndAuthService.models.dtos.ErrorDtoUserDetailsAndAuth;
 
 public final class AppConstantsUserAndAuthService {
     public static final String SUCCESS_API_STATUS = "Success";
@@ -8,8 +8,8 @@ public final class AppConstantsUserAndAuthService {
     public static final String API_PREFIX = "/api/v1/user";
 
 
-    public static ErrorDto errorDto(Exception e) {
-        return ErrorDto
+    public static ErrorDtoUserDetailsAndAuth errorDtoUserDetailAndAuth(Exception e) {
+        return ErrorDtoUserDetailsAndAuth
                 .builder()
                 .errorImageUrl("")
                 .status(AppConstantsUserAndAuthService.ERROR_API_STATUS)

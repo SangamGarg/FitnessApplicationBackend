@@ -1,7 +1,7 @@
 package com.fitnessapp.notificationAndEmailService.services.emailService;
 
-import com.fitnessapp.fitnessCalculatorsService.models.entities.ImageAndAboutEntity;
-import com.fitnessapp.fitnessCalculatorsService.repositories.ImageAndAboutRepository;
+import com.fitnessapp.imageAndAboutService.models.ImageAndAboutEntity;
+import com.fitnessapp.imageAndAboutService.repository.ImageAndAboutRepository;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailFromUseRequestDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailToAllUsersRequestDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailToMoreThanOneUserRequestDto;
@@ -11,10 +11,8 @@ import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.response
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.response.EmailToMoreThanOneUserResponseDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.response.EmailToOneUserResponseDto;
 import com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities.AppConstantsNotificationAndEmailService;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;

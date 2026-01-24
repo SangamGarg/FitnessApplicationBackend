@@ -77,4 +77,9 @@ public class UserDetailsDto {
     @Positive(message = "Waist measurement must be positive")
     @Max(value = 150, message = "Waist must be at most 150 cm")
     private Float waistCm;
+
+    private Float bmi;
+    private Float dailyCalories;
+    private Float idealWeight;
+    private Float bodyFat;
 }

@@ -1,6 +1,7 @@
 package com.fitnessapp.DeveloperAndTestingService.calculatorDevService;
 
 import com.fitnessapp.DeveloperAndTestingService.devAndTestingServiceUtilities.DevAndTestingServiceUtility;
+import com.fitnessapp.imageAndAboutService.models.UploadImageAndAboutRequestDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import org.springframework.http.ResponseEntity;
@@ -17,17 +18,6 @@ public class DevCalculatorController {
     public DevCalculatorController(DevCalculatorService devCalculatorService) {
         this.devCalculatorService = devCalculatorService;
     }
-
-    @PostMapping("/upload-image-about")
-    public ResponseEntity<?> uploadImageAndAbout(@RequestBody @Valid DevCalculatorUploadImageAndAboutRequestDto requestDto) {
-        return devCalculatorService.uploadCalculatorImageAndAbout(requestDto);
-    }
-
-    @PatchMapping("/patch-image-about")
-    public ResponseEntity<?> patchImageAndAbout(@RequestBody @Valid DevCalculatorUploadImageAndAboutRequestDto requestDto) {
-        return devCalculatorService.patchCalculatorImageAndAbout(requestDto);
-    }
-
 
     @PostMapping("/upload-calories-in-food")
     public ResponseEntity<?> uploadCaloriesInFood(@RequestBody @Valid @NotEmpty(message = "List Cannot be empty") List<DevCalculatorUploadCaloriesInFoodRequestDto> requestDto) {

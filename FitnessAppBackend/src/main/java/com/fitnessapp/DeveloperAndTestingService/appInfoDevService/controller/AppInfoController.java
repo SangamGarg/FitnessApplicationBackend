@@ -71,4 +71,6 @@ public class AppInfoController {
     public ResponseEntity<?> patchAppFaqs(@RequestBody @Valid AppInfoFaqsRequestDto requestDto, @PathVariable Long id) {
         return appInfoService.patchAppFaqs(requestDto, id);
     }
+
+
 }

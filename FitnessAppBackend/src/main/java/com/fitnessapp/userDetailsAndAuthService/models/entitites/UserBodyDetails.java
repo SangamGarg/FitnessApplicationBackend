@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @Embeddable
 public class UserBodyDetails {
-    private Float bmi;
-    private Integer dailyCalories;
-    private Float idealWeight;
-    private Float bodyFat;
+    private float bmi;
+    private float dailyCalories;
+    private float idealWeight;
+    private float bodyFat;
 }
