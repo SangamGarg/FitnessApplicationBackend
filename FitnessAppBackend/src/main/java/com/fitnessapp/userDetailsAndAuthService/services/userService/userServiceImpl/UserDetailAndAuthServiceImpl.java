@@ -23,6 +23,7 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -34,12 +35,14 @@ public class UserDetailAndAuthServiceImpl implements UserDetailAndAuthService {
     private final UserDetailAndAuthRepository userDetailRepository;
     private final JwtService jwtService;
     private final CalculatorService calculatorService;
+    private final JavaMailSender mailSender;
 
-    public UserDetailAndAuthServiceImpl(UserRepository userRepository, UserDetailAndAuthRepository userDetailRepository, JwtService jwtService, CalculatorService calculatorService) {
+    public UserDetailAndAuthServiceImpl(UserRepository userRepository, UserDetailAndAuthRepository userDetailRepository, JwtService jwtService, CalculatorService calculatorService, JavaMailSender mailSender) {
         this.userRepository = userRepository;
         this.userDetailRepository = userDetailRepository;
         this.jwtService = jwtService;
         this.calculatorService = calculatorService;
+        this.mailSender = mailSender;
     }
 
     @Override
@@ -148,6 +151,8 @@ public class UserDetailAndAuthServiceImpl implements UserDetailAndAuthService {
             userEntity.setEmail(email);
             log.info("Response Register User Entity {}", userEntity);
             userRepository.save(userEntity);
+            //This method sends the mail to the user after successful registration.
+            UserDetailAndAuthServiceUtilities.sendSuccessfulRegistrationMailToUser(mailSender, "Fitness Freak", email);
             return ResponseEntity.ok(UserRegisterResponseDto
                     .builder()
                     .status(AppConstantsUserAndAuthService.SUCCESS_API_STATUS)

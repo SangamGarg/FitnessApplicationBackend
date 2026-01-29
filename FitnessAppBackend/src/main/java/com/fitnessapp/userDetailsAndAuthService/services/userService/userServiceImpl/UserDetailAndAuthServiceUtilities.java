@@ -10,7 +10,11 @@ import com.fitnessapp.fitnessCalculatorsService.services.CalculatorService;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.UserDetailsDto;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.requestDtos.UserPatchRequestDto;
 import com.fitnessapp.userDetailsAndAuthService.models.entitites.UserDetailsEntity;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -138,5 +142,86 @@ public final class UserDetailAndAuthServiceUtilities {
             }
         }
         return 0;
+    }
+
+    public static void sendSuccessfulRegistrationMailToUser(JavaMailSender mailSender, String name, String email) throws MessagingException {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+        helper.setTo(email);
+        helper.setSubject("Welcome Aboard! You’ve Successfully Registered and Assigned as Developer");
+
+        String htmlContent = """
+                <html>
+                        <head>
+                            <style>
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    background-color: #f4f6f8;
+                                    padding: 20px;
+                                    color: #333;
+                                }
+                                .container {
+                                    background-color: #ffffff;
+                                    padding: 30px;
+                                    border-radius: 10px;
+                                    max-width: 600px;
+                                    margin: auto;
+                                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                                }
+                                h2 {
+                                    color: #2E7D32;
+                                    margin-bottom: 10px;
+                                }
+                                .welcome-box {
+                                    background-color: #E8F5E9;
+                                    padding: 15px;
+                                    border-left: 5px solid #2E7D32;
+                                    margin: 20px 0;
+                                    font-size: 15px;
+                                }
+                                .button {
+                                    display: inline-block;
+                                    margin-top: 20px;
+                                    padding: 12px 20px;
+                                    background-color: #2E7D32;
+                                    color: #fff;
+                                    text-decoration: none;
+                                    border-radius: 6px;
+                                    font-weight: bold;
+                                }
+                                .footer {
+                                    margin-top: 30px;
+                                    font-size: 13px;
+                                    color: #888;
+                                    text-align: center;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <h2>Welcome to Fitness App, %s! 🎉</h2>
+                                <p>Your registration was successful, and your account is now ready to use.</p>
+                
+                                <div class="welcome-box">
+                                    You can now explore workouts, track your progress, and achieve your fitness goals with us.
+                                </div>
+                
+                                <p>We're excited to have you on board. Start your fitness journey today!</p>
+                
+                                <p style="margin-top: 40px;">Stay active,<br/><strong>The Fitness App Team</strong></p>
+                            </div>
+                
+                            <div class="footer">
+                                © 2026 Fitness App • All rights reserved
+                            </div>
+                        </body>
+                        </html>
+                """.formatted(name);
+
+
+        helper.setText(htmlContent, true); // true = isHtml
+
+        mailSender.send(mimeMessage);
     }
 }
