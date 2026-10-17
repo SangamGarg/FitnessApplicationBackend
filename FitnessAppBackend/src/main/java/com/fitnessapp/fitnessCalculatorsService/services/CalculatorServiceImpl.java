@@ -1,5 +1,6 @@
 package com.fitnessapp.fitnessCalculatorsService.services;
 
+import lombok.extern.slf4j.Slf4j;
 import com.fitnessapp.fitnessCalculatorsService.calculatorServiceUtilities.AppConstantsCalculatorService;
 import com.fitnessapp.fitnessCalculatorsService.models.dtos.requestDto.BodyFatRequestDto;
 import com.fitnessapp.fitnessCalculatorsService.models.dtos.requestDto.BurnedCaloriesFromActivityRequestDto;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Slf4j
 public class CalculatorServiceImpl implements CalculatorService {
 
     private final BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository;
@@ -54,6 +56,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
             return ResponseEntity.ok(bmiCalculateResponse);
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
         }
     }
@@ -76,6 +79,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .build();
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
         }
     }
@@ -95,6 +99,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .build();
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
         }
     }
@@ -116,6 +121,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             }
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
         }
     }
@@ -135,6 +141,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .build();
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
         }
     }
@@ -155,6 +162,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             }
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
         }
     }
@@ -174,6 +182,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .build();
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
         }
     }
@@ -193,6 +202,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .build();
             return ResponseEntity.ok(idealWeightResponseDto);
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
         }
     }

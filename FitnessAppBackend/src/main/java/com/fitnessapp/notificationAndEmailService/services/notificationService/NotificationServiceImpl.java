@@ -1,5 +1,6 @@
 package com.fitnessapp.notificationAndEmailService.services.notificationService;
 
+import lombok.extern.slf4j.Slf4j;
 import com.fitnessapp.notificationAndEmailService.models.dtos.notificationDtos.request.SendBatchNotificationRequestDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.notificationDtos.request.SendNotificationRequestDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.notificationDtos.response.SendNotificationResponseDto;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
 
     @Override
@@ -62,6 +64,7 @@ public class NotificationServiceImpl implements NotificationService {
                             .build()
             );
         } catch (FirebaseMessagingException e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
     }
@@ -89,6 +92,7 @@ public class NotificationServiceImpl implements NotificationService {
                             .build()
             );
         } catch (FirebaseMessagingException e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
     }
@@ -105,6 +109,7 @@ public class NotificationServiceImpl implements NotificationService {
                             .build()
             );
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
     }
@@ -147,6 +152,7 @@ public class NotificationServiceImpl implements NotificationService {
                             .build()
             );
         } catch (FirebaseMessagingException e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
     }
@@ -206,6 +212,7 @@ public class NotificationServiceImpl implements NotificationService {
                             .build()
             );
         } catch (FirebaseMessagingException e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
     }

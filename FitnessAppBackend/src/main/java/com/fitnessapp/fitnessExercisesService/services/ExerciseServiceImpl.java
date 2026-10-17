@@ -1,5 +1,6 @@
 package com.fitnessapp.fitnessExercisesService.services;
 
+import lombok.extern.slf4j.Slf4j;
 import com.fitnessapp.fitnessExercisesService.exerciseServiceUtilities.AppConstantsExerciseService;
 import com.fitnessapp.fitnessExercisesService.models.dtos.response.ExerciseCategoryResponseDto;
 import com.fitnessapp.fitnessExercisesService.models.dtos.response.ExerciseDetailResponseDto;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Slf4j
 public class ExerciseServiceImpl implements ExerciseService {
 
     private final ExerciseCategoryRepository categoryRepository;
@@ -50,6 +52,7 @@ public class ExerciseServiceImpl implements ExerciseService {
             // return ResponseEntity.ok(mapper.toCategoryDTOs(categories));
             return ResponseEntity.ok(dtos);
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsExerciseService.errorDto(e));
         }
     }
@@ -70,6 +73,7 @@ public class ExerciseServiceImpl implements ExerciseService {
 
 //            return ResponseEntity.ok(mapper.toLevelDTOs(levels));
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsExerciseService.errorDto(e));
         }
     }
@@ -89,6 +93,7 @@ public class ExerciseServiceImpl implements ExerciseService {
             return ResponseEntity.ok(dtos);
             // return ResponseEntity.ok(mapper.toSubCategoryDTOs(subCategories));
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsExerciseService.errorDto(e));
         }
     }
@@ -121,6 +126,7 @@ public class ExerciseServiceImpl implements ExerciseService {
             return ResponseEntity.ok(dtos);
             // return ResponseEntity.ok(mapper.toExerciseDTOs(exercises));
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsExerciseService.errorDto(e));
         }
     }
@@ -141,6 +147,7 @@ public class ExerciseServiceImpl implements ExerciseService {
                 return ResponseEntity.ok(names);
             }
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsExerciseService.errorDto(e));
         }
     }
@@ -161,6 +168,7 @@ public class ExerciseServiceImpl implements ExerciseService {
                 return ResponseEntity.ok(names);
             }
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsExerciseService.errorDto(e));
         }
     }
@@ -179,6 +187,7 @@ public class ExerciseServiceImpl implements ExerciseService {
                 return ResponseEntity.ok(names);
             }
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsExerciseService.errorDto(e));
         }
     }

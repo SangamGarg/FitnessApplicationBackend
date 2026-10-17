@@ -1,5 +1,6 @@
 package com.fitnessapp.imageAndAboutService.service;
 
+import lombok.extern.slf4j.Slf4j;
 import com.fitnessapp.imageAndAboutService.models.ImageAndAboutEntity;
 import com.fitnessapp.imageAndAboutService.models.UploadImageAndAboutRequestDto;
 import com.fitnessapp.imageAndAboutService.repository.ImageAndAboutRepository;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class ImageAndAboutServiceImpl implements ImageAndAboutService {
 
     private final ImageAndAboutRepository imageAndAboutRepository;
@@ -35,6 +37,7 @@ public class ImageAndAboutServiceImpl implements ImageAndAboutService {
                     .build());
             return ResponseEntity.ok("Uploaded Successfully");
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(e.getLocalizedMessage());
         }
     }
@@ -62,6 +65,7 @@ public class ImageAndAboutServiceImpl implements ImageAndAboutService {
             return ResponseEntity.ok("Updated Successfully");
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(e.getLocalizedMessage());
         }
     }

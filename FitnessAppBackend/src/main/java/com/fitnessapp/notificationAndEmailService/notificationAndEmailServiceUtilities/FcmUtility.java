@@ -1,5 +1,6 @@
 package com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities;
 
+import lombok.extern.slf4j.Slf4j;
 import com.fitnessapp.notificationAndEmailService.models.dtos.notificationDtos.request.SendNotificationRequestDto;
 import com.google.auth.oauth2.GoogleCredentials;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public final class FcmUtility {
 
 
@@ -74,6 +76,7 @@ public final class FcmUtility {
                     .toEntity(String.class)
                     ;
         } catch (IOException e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body("Sending Message Failed" + e.getLocalizedMessage());
         }
     }

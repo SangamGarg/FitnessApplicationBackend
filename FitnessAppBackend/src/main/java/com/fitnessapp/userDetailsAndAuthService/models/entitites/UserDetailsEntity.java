@@ -2,10 +2,7 @@ package com.fitnessapp.userDetailsAndAuthService.models.entitites;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +20,13 @@ public class UserDetailsEntity {
     @Column(name = "user_details_id")
     private Long id;
 
-
-    //If your entity has a list, set, or map of simple or embeddable objects that don’t need to be standalone entities (with their own primary key), you use @ElementCollection.
+    // A simple list of strings stored in its own table "fcm_tokens".
+    // NOT unique: the same phone token may briefly exist on two accounts; the service removes it from
+    // other users whenever it is registered (see UserDetailAndAuthRepository.removeTokensFromOtherUsers).
     @ElementCollection(fetch = FetchType.LAZY)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     @CollectionTable(name = "fcm_tokens", joinColumns = @JoinColumn(name = "user_details_id"))
+    @Builder.Default
     private List<String> firebaseCloudMessagingToken = new ArrayList<>();
 
     @Embedded
@@ -47,17 +46,12 @@ public class UserDetailsEntity {
     private Float neckCm;
     private Float waistCm;
 
-    // Establishes a one-to-one relationship with the UserEntity class.
-// `optional = false` means this association is mandatory —
-// a UserDetailsEntity cannot exist without being linked to a UserEntity.
+    // Mandatory one-to-one link to UserEntity (foreign key column "user_id").
+    // Excluded from toString/equals/hashCode to avoid infinite recursion with UserEntity.
     @OneToOne(optional = false)
-
-// Specifies the foreign key column in the "users_details" table that references the primary key of the "users" table.
-// The column will be named "user_id" and cannot be null, enforcing the one-to-one link at the database level.
     @JoinColumn(name = "user_id", nullable = false)
-
-// Marks this side of the relationship as the inverse side for JSON serialization.
-// Prevents infinite recursion when converting entities to JSON by skipping this field during serialization.
     @JsonBackReference
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private UserEntity user;
 }

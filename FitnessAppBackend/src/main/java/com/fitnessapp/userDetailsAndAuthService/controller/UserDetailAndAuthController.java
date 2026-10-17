@@ -48,14 +48,14 @@ public class UserDetailAndAuthController {
         return userService.getUserDetails();
     }
 
-//To delete the particular user, and the uid will be got from the jwt token to identify the user and fetch its details from the database
+    //To delete the particular user, and the uid will be got from the jwt token to identify the user and fetch its details from the database
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteUser() {
         return userService.deleteUser();
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
+    public ResponseEntity<?> refreshToken(@RequestBody @Valid RefreshTokenRequestDto refreshTokenRequestDto) {
         return userService.refreshToken(refreshTokenRequestDto);
     }
 }

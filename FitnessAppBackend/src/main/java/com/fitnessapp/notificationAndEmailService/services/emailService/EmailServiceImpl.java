@@ -1,5 +1,6 @@
 package com.fitnessapp.notificationAndEmailService.services.emailService;
 
+import lombok.extern.slf4j.Slf4j;
 import com.fitnessapp.imageAndAboutService.models.ImageAndAboutEntity;
 import com.fitnessapp.imageAndAboutService.repository.ImageAndAboutRepository;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailFromUseRequestDto;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 
 @Service
+@Slf4j
 public class EmailServiceImpl implements EmailService {
 
     /// //
@@ -118,6 +120,7 @@ public class EmailServiceImpl implements EmailService {
                     .build());
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
 
@@ -191,6 +194,7 @@ public class EmailServiceImpl implements EmailService {
                     .build());
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
     }
@@ -264,6 +268,7 @@ public class EmailServiceImpl implements EmailService {
                     .build());
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
     }
@@ -339,6 +344,7 @@ public class EmailServiceImpl implements EmailService {
                     .build());
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
         }
     }

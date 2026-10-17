@@ -17,6 +17,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.util.HtmlUtils;
 
 import java.util.Map;
 
@@ -97,7 +98,6 @@ public final class UserDetailAndAuthServiceUtilities {
                         .build()
         );
 
-        System.out.println("DAILYCALORIES  " + response.getBody());
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() instanceof DailyCaloriesResponseDto body) {
             Map<String, Object> goals = body.getGoals();
             if (goals != null && goals.containsKey(dto.getGoal())) {
@@ -149,7 +149,7 @@ public final class UserDetailAndAuthServiceUtilities {
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
         helper.setTo(email);
-        helper.setSubject("Welcome Aboard! You’ve Successfully Registered and Assigned as Developer");
+        helper.setSubject("Welcome to Fitness App!");
 
         String htmlContent = """
                 <html>
@@ -217,7 +217,7 @@ public final class UserDetailAndAuthServiceUtilities {
                             </div>
                         </body>
                         </html>
-                """.formatted(name);
+                """.formatted(HtmlUtils.htmlEscape(name));
 
 
         helper.setText(htmlContent, true); // true = isHtml

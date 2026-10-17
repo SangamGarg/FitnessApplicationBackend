@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "users")
@@ -12,27 +14,23 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserEntity {
-    // Marks this field as the primary key of the UserEntity table.
-// The actual database column name will be "user_id".
+    // Primary key. The database column is named "user_id".
     @Id
     @Column(name = "user_id")
     private String id; // Firebase UID (unique identifier from Firebase)
 
-    // Declares a column "email" which cannot be null and must be unique across all users.
-// Used to store the user's email address.
+    // Cannot be null and must be unique across all users.
     @Column(nullable = false, unique = true)
     private String email;
 
-    // Establishes a one-to-one bidirectional relationship with UserDetailsEntity.
-// `mappedBy = "user"` tells JPA that the "user" field in UserDetailsEntity owns the relationship.
-// `cascade = CascadeType.ALL` ensures any changes (persist, merge, remove, etc.) in UserEntity
-// will automatically be applied to UserDetailsEntity.
-// `orphanRemoval = true` means if you remove the association (set userDetailsEntity to null),
-// the corresponding UserDetailsEntity record will be deleted from the database.
-// `fetch = FetchType.LAZY` means UserDetailsEntity will not be loaded from DB until accessed.
-// `@JsonManagedReference` is used to manage JSON serialization (avoids infinite recursion).
+    // One-to-one with UserDetailsEntity; "user" in UserDetailsEntity owns the relationship.
+    // cascade ALL + orphanRemoval: deleting a user deletes their details (and FCM tokens).
+    // The relationship is excluded from toString/equals/hashCode: both sides reference each other,
+    // so including it would recurse forever (StackOverflowError).
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private UserDetailsEntity userDetailsEntity;
 
 }

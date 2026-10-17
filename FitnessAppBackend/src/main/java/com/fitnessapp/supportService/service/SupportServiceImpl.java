@@ -1,7 +1,8 @@
 package com.fitnessapp.supportService.service;
 
-import com.fitnessapp.DeveloperAndTestingService.appInfoDevService.models.entity.AppInfoEntity;
-import com.fitnessapp.DeveloperAndTestingService.appInfoDevService.repository.AppInfoRepository;
+import lombok.extern.slf4j.Slf4j;
+import com.fitnessapp.developerAndTestingService.appInfoDevService.models.entity.AppInfoEntity;
+import com.fitnessapp.developerAndTestingService.appInfoDevService.repository.AppInfoRepository;
 import com.fitnessapp.imageAndAboutService.models.ImageAndAboutEntity;
 import com.fitnessapp.imageAndAboutService.repository.ImageAndAboutRepository;
 import com.fitnessapp.supportService.models.dtos.FeedbackRequestDto;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class SupportServiceImpl implements SupportService {
     private final FeedbackRepository feedbackRepository;
     private final AppInfoRepository appInfoRepository;
@@ -39,6 +41,7 @@ public class SupportServiceImpl implements SupportService {
 
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantSupportService.errorDtoSupportService(e));
         }
     }
@@ -66,6 +69,7 @@ public class SupportServiceImpl implements SupportService {
             return ResponseEntity.ok(responseDto);
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantSupportService.errorDtoSupportService(e));
         }
     }
@@ -77,6 +81,7 @@ public class SupportServiceImpl implements SupportService {
             );
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantSupportService.errorDtoSupportService(e));
         }
     }
@@ -98,6 +103,7 @@ public class SupportServiceImpl implements SupportService {
             return ResponseEntity.ok(responseDto);
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantSupportService.errorDtoSupportService(e));
         }
     }
@@ -120,6 +126,7 @@ public class SupportServiceImpl implements SupportService {
             return ResponseEntity.ok(responseDto);
 
         } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(AppConstantSupportService.errorDtoSupportService(e));
         }
     }
