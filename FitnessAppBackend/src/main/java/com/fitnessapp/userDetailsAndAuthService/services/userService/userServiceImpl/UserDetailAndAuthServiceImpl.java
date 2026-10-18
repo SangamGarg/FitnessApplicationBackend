@@ -1,7 +1,7 @@
 package com.fitnessapp.userDetailsAndAuthService.services.userService.userServiceImpl;
 
-import com.fitnessapp.developerAndTestingService.configAppScope.springSecurityConfig.jwt.jwtService.JwtService;
-import com.fitnessapp.fitnessCalculatorsService.services.CalculatorService;
+import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtService;
+import com.fitnessapp.fitnessCalculators.services.CalculatorService;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.ErrorDtoUserDetailsAndAuth;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.UserDetailsDto;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.requestDtos.RefreshTokenRequestDto;

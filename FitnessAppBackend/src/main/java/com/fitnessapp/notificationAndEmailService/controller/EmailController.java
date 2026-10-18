@@ -1,10 +1,9 @@
 package com.fitnessapp.notificationAndEmailService.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailFromUseRequestDto;
-import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailToAllUsersRequestDto;
-import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailToMoreThanOneUserRequestDto;
-import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailToOneUserRequestDto;
-import com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities.AppConstantsNotificationAndEmailService;
+import com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities.AppConstantsEmail;
 import com.fitnessapp.notificationAndEmailService.services.emailService.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
@@ -12,7 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(AppConstantsNotificationAndEmailService.API_PREFIX_EMAIL)
+@RequestMapping(AppConstantsEmail.API_PREFIX_EMAIL)
+@Tag(name = "Email", description = "Endpoints for email")
 public class EmailController {
 
     private final EmailService emailService;
@@ -21,6 +21,9 @@ public class EmailController {
         this.emailService = emailService;
     }
 
+    @Operation(summary = "get Mail From User", description = """
+        Executes the get mail from user operation.
+        """)
     @PostMapping("from-user")
     public ResponseEntity<?> getMailFromUser(@RequestBody @Valid EmailFromUseRequestDto emailRequestDto) throws MessagingException {
         return emailService.getMailFromUser(emailRequestDto);

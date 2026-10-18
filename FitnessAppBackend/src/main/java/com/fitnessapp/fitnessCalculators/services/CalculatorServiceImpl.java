@@ -1,0 +1,219 @@
+package com.fitnessapp.fitnessCalculators.services;
+
+import lombok.extern.slf4j.Slf4j;
+import com.fitnessapp.fitnessCalculators.calculatorServiceUtilities.AppConstantsCalculatorService;
+import com.fitnessapp.fitnessCalculators.models.dtos.requestDto.BodyFatRequestDto;
+import com.fitnessapp.fitnessCalculators.models.dtos.requestDto.BurnedCaloriesFromActivityRequestDto;
+import com.fitnessapp.fitnessCalculators.models.dtos.requestDto.DailyCaloriesRequestDto;
+import com.fitnessapp.fitnessCalculators.models.dtos.responseDto.*;
+import com.fitnessapp.fitnessCalculators.models.entities.BurnedCaloriesActivityEntity;
+import com.fitnessapp.imageAndAbout.models.ImageAndAboutEntity;
+import com.fitnessapp.fitnessCalculators.models.entities.CaloriesInFoodEntity;
+import com.fitnessapp.fitnessCalculators.repositories.BurnedCaloriesFromActivityRepository;
+import com.fitnessapp.fitnessCalculators.repositories.CaloriesInFoodRepository;
+import com.fitnessapp.imageAndAbout.repository.ImageAndAboutRepository;
+import com.fitnessapp.fitnessCalculators.services.calculatorServiceUtilities.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@Slf4j
+public class CalculatorServiceImpl implements CalculatorService {
+
+    private final BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository;
+    private final CaloriesInFoodRepository caloriesInFoodRepository;
+    private final ImageAndAboutRepository imageAndAboutRepository;
+
+    @Autowired
+    public CalculatorServiceImpl(BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository, CaloriesInFoodRepository caloriesInFoodRepository, ImageAndAboutRepository imageAndAboutRepository) {
+        this.burnedCaloriesFromActivityRepository = burnedCaloriesFromActivityRepository;
+        this.caloriesInFoodRepository = caloriesInFoodRepository;
+        this.imageAndAboutRepository = imageAndAboutRepository;
+    }
+
+    @Override
+    public ResponseEntity<?> getBmi(float weightKg, float heightCm) {
+        try {
+
+            ImageAndAboutEntity bmiData = getImageUrlAndAbout("Bmi");
+
+            float h = heightCm / 100;
+            float bmi = Float.parseFloat(String.format("%.1f", weightKg / (h * h)));
+
+            BmiCalculateResponseDto bmiCalculateResponse = BmiCalculateResponseDto
+                    .builder()
+                    .status(AppConstantsCalculatorService.SUCCESS_API_STATUS)
+                    .statusCode(200)
+                    .bmi(bmi)
+                    .healthStatus(BmiCalculatorUtilities.determineHealthStatus(bmi))
+                    .healthy_bmi_range("18.5 - 25")
+                    .imageUrl(bmiData.getImageUrl())
+                    .aboutBmi(bmiData.getAbout())
+                    .build();
+
+            return ResponseEntity.ok(bmiCalculateResponse);
+        } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
+        }
+    }
+
+
+    @Override
+    public ResponseEntity<?> getBodyFat(BodyFatRequestDto bodyFatRequestDto) {
+        try {
+            ImageAndAboutEntity bodyFatData = getImageUrlAndAbout("BodyFat");
+
+            BodyFatResponseDto dailyCaloriesResponseDto = BodyFatResponseDto
+                    .builder()
+                    .status(AppConstantsCalculatorService.SUCCESS_API_STATUS)
+                    .statusCode(200)
+                    .data(BodyFatCalculatorUtilities.createMap(bodyFatRequestDto))
+                    .imageUrl(bodyFatData.getImageUrl())
+                    .maleUrl("test male")
+                    .femaleUrl("test female")
+                    .aboutBodyFat(bodyFatData.getAbout())
+                    .build();
+            return ResponseEntity.ok(dailyCaloriesResponseDto);
+        } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> getBurnedCaloriesFromActivity(BurnedCaloriesFromActivityRequestDto burnedCaloriesFromActivityRequestDto) {
+        try {
+            ImageAndAboutEntity burnedActivityData = getImageUrlAndAbout("BurnedActivity");
+
+            BurnedCaloriesFromActivityResponseDto dailyCaloriesResponseDto = BurnedCaloriesFromActivityResponseDto
+                    .builder()
+                    .status(AppConstantsCalculatorService.SUCCESS_API_STATUS)
+                    .statusCode(200)
+                    .burnedCalories(BurnedCaloriesFromActivityCalculatorUtilities.createMap(burnedCaloriesFromActivityRequestDto, burnedCaloriesFromActivityRepository))
+                    .imageUrl(burnedActivityData.getImageUrl())
+                    .aboutBurnedCalories(burnedActivityData.getAbout())
+                    .build();
+            return ResponseEntity.ok(dailyCaloriesResponseDto);
+        } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> getBurnedCaloriesSuggestion(String query) {
+        try {
+            List<BurnedCaloriesActivityEntity> results = burnedCaloriesFromActivityRepository
+                    .findByNameStartingWithIgnoreCase(query);
+
+            List<String> names = results.stream()
+                    .map(BurnedCaloriesActivityEntity::getName)
+                    .toList();
+
+            if (names.isEmpty()) {
+                return ResponseEntity.ok(List.of());
+            } else {
+                return ResponseEntity.ok(names);
+            }
+
+        } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> getCaloriesInFood(String query, double quantityGm) {
+        try {
+            ImageAndAboutEntity caloriesInFoodData = getImageUrlAndAbout("CaloriesInFood");
+
+            CaloriesInFoodResponseDto dailyCaloriesResponseDto = CaloriesInFoodResponseDto
+                    .builder()
+                    .status(AppConstantsCalculatorService.SUCCESS_API_STATUS)
+                    .statusCode(200)
+                    .foodData(CaloriesInFoodCalculatorUtilities.createMap(query, quantityGm, caloriesInFoodRepository))
+                    .imageUrl(caloriesInFoodData.getImageUrl())
+                    .aboutCaloriesInFood(caloriesInFoodData.getAbout())
+                    .build();
+            return ResponseEntity.ok(dailyCaloriesResponseDto);
+        } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
+        }
+    }
+    @Override
+    public ResponseEntity<?> getCaloriesInFoodSuggestion(String query) {
+        try {
+            List<CaloriesInFoodEntity> results = caloriesInFoodRepository
+                    .findByNameStartingWithIgnoreCase(query);
+
+            List<String> names = results.stream()
+                    .map(CaloriesInFoodEntity::getName)
+                    .toList();
+            if (names.isEmpty()) {
+                return ResponseEntity.ok(List.of());
+            } else {
+
+                return ResponseEntity.ok(names);
+            }
+
+        } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> getDailyCalories(DailyCaloriesRequestDto dailyCaloriesRequestDto) {
+        try {
+            ImageAndAboutEntity dailyCaloriesData = getImageUrlAndAbout("DailyCalories");
+
+            DailyCaloriesResponseDto dailyCaloriesResponseDto = DailyCaloriesResponseDto
+                    .builder()
+                    .status(AppConstantsCalculatorService.SUCCESS_API_STATUS)
+                    .statusCode(200)
+                    .goals(DailyCaloriesCalculatorUtilities.createMap(dailyCaloriesRequestDto))
+                    .imageUrl(dailyCaloriesData.getImageUrl())
+                    .aboutDailyCalories(dailyCaloriesData.getAbout())
+                    .build();
+            return ResponseEntity.ok(dailyCaloriesResponseDto);
+        } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> getIdealWeight(String gender, float height) {
+        try {
+            ImageAndAboutEntity idealWeightData = getImageUrlAndAbout("IdealWeight");
+
+            IdealWeightResponseDto idealWeightResponseDto = IdealWeightResponseDto
+                    .builder()
+                    .status(AppConstantsCalculatorService.SUCCESS_API_STATUS)
+                    .statusCode(200)
+                    .idealWeight(IdealWeightCalculatorUtilities.createMap(gender, height))
+                    .imageUrl(idealWeightData.getImageUrl())
+                    .aboutIdealWeight(idealWeightData.getAbout())
+                    .build();
+            return ResponseEntity.ok(idealWeightResponseDto);
+        } catch (Exception e) {
+            log.error("Request failed: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
+        }
+    }
+
+
+    private ImageAndAboutEntity getImageUrlAndAbout(String name) {
+        try {
+            return imageAndAboutRepository.findByNameIgnoreCase(name).orElseThrow(() -> new RuntimeException("Item not found"));
+        } catch (Exception e) {
+            return new ImageAndAboutEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
+        }
+    }
+
+}

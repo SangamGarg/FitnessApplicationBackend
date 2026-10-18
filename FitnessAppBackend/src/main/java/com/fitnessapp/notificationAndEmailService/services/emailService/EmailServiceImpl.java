@@ -1,8 +1,8 @@
 package com.fitnessapp.notificationAndEmailService.services.emailService;
 
 import lombok.extern.slf4j.Slf4j;
-import com.fitnessapp.imageAndAboutService.models.ImageAndAboutEntity;
-import com.fitnessapp.imageAndAboutService.repository.ImageAndAboutRepository;
+import com.fitnessapp.imageAndAbout.models.ImageAndAboutEntity;
+import com.fitnessapp.imageAndAbout.repository.ImageAndAboutRepository;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailFromUseRequestDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailToAllUsersRequestDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.request.EmailToMoreThanOneUserRequestDto;
@@ -11,7 +11,7 @@ import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.response
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.response.EmailToAllUsersResponseDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.response.EmailToMoreThanOneUserResponseDto;
 import com.fitnessapp.notificationAndEmailService.models.dtos.emailDtos.response.EmailToOneUserResponseDto;
-import com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities.AppConstantsNotificationAndEmailService;
+import com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities.AppConstantsEmail;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -113,7 +113,7 @@ public class EmailServiceImpl implements EmailService {
             mailSender.send(mimeMessage);
 
             return ResponseEntity.ok(EmailFromUseResponseDto.builder()
-                    .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
+                    .status(AppConstantsEmail.SUCCESS_API_STATUS)
                     .statusCode(200)
                     .message("We have received your email and will contact you soon")
                     .imageUrl(getImageUrlAndAbout().getImageUrl())
@@ -121,7 +121,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
+            return ResponseEntity.internalServerError().body(AppConstantsEmail.errorDto(e));
         }
 
 
@@ -184,7 +184,7 @@ public class EmailServiceImpl implements EmailService {
             mailSender.send(mimeMessage);
 
             return ResponseEntity.ok(EmailToOneUserResponseDto.builder()
-                    .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
+                    .status(AppConstantsEmail.SUCCESS_API_STATUS)
                     .statusCode(200)
                     .message("Email Sent Successfully")
                     .email(emailToOneUserRequestDto.getEmail())
@@ -195,7 +195,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
+            return ResponseEntity.internalServerError().body(AppConstantsEmail.errorDto(e));
         }
     }
 
@@ -259,7 +259,7 @@ public class EmailServiceImpl implements EmailService {
 
 
             return ResponseEntity.ok(EmailToAllUsersResponseDto.builder()
-                    .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
+                    .status(AppConstantsEmail.SUCCESS_API_STATUS)
                     .statusCode(200)
                     .message("Email Sent Successfully")
                     .emails(emailToAllUsersRequestDto.getEmails())
@@ -269,7 +269,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
+            return ResponseEntity.internalServerError().body(AppConstantsEmail.errorDto(e));
         }
     }
 
@@ -335,7 +335,7 @@ public class EmailServiceImpl implements EmailService {
 
 
             return ResponseEntity.ok(EmailToMoreThanOneUserResponseDto.builder()
-                    .status(AppConstantsNotificationAndEmailService.SUCCESS_API_STATUS)
+                    .status(AppConstantsEmail.SUCCESS_API_STATUS)
                     .statusCode(200)
                     .message("Email Sent Successfully")
                     .emails(emailToMoreThanOneUserRequestDto.getEmails())
@@ -345,7 +345,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(AppConstantsNotificationAndEmailService.errorDto(e));
+            return ResponseEntity.internalServerError().body(AppConstantsEmail.errorDto(e));
         }
     }
 
