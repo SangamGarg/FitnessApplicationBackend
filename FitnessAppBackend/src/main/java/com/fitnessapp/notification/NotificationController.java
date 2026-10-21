@@ -1,7 +1,7 @@
 package com.fitnessapp.notification;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities.AppConstantsEmail;
+import com.fitnessapp.email.AppConstantsEmail;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 

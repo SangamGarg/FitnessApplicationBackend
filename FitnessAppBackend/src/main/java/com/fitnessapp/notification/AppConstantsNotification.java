@@ -1,7 +1,7 @@
 package com.fitnessapp.notification;
 
-import com.fitnessapp.notificationAndEmailService.models.dtos.ErrorDto;
-import com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities.AppConstantsEmail;
+import com.fitnessapp.shared.ErrorDto;
+import com.fitnessapp.email.AppConstantsEmail;
 
 public class AppConstantsNotification {
     public static final String SUCCESS_API_STATUS = "Success";

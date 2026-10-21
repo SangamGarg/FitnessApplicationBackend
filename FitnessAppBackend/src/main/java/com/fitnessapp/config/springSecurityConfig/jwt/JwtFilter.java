@@ -21,6 +21,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static com.fitnessapp.portal.common.PortalConstants.PORTAL_BASE_URL;
+
 @Component
 @RequiredArgsConstructor
 public class JwtFilter
@@ -36,8 +38,11 @@ public class JwtFilter
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
+        // This filter validates the app/mobile access JWT only. Portal endpoints and
+        // developer-console endpoints use PortalJwtFilter and portal-token claims.
         return path.equals(AppConstantsUserAndAuthService.API_PREFIX + "/loginRegister")
-                || path.equals(AppConstantsUserAndAuthService.API_PREFIX + "/refresh-token");
+                || path.equals(AppConstantsUserAndAuthService.API_PREFIX + "/refresh-token")
+                || path.startsWith(PORTAL_BASE_URL + "/");
     }
 
     @Override

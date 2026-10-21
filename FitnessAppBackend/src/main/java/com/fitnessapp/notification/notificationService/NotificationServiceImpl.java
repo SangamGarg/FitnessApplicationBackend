@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.fitnessapp.notification.notificationDtos.request.SendBatchNotificationRequestDto;
 import com.fitnessapp.notification.notificationDtos.request.SendNotificationRequestDto;
 import com.fitnessapp.notification.notificationDtos.response.SendNotificationResponseDto;
-import com.fitnessapp.notificationAndEmailService.notificationAndEmailServiceUtilities.AppConstantsEmail;
+import com.fitnessapp.email.AppConstantsEmail;
 import com.fitnessapp.notification.FcmUtility;
 import com.google.firebase.messaging.*;
 import org.springframework.http.ResponseEntity;

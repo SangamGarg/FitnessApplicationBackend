@@ -1,8 +1,8 @@
 package com.fitnessapp.supportService.service;
 
 import lombok.extern.slf4j.Slf4j;
-import com.fitnessapp.dev.appInfoDevService.models.entity.AppInfoEntity;
-import com.fitnessapp.dev.appInfoDevService.repository.AppInfoRepository;
+import com.fitnessapp.portal.dev.appInfoDevService.models.entity.AppInfoEntity;
+import com.fitnessapp.portal.dev.appInfoDevService.repository.AppInfoRepository;
 import com.fitnessapp.imageAndAbout.models.ImageAndAboutEntity;
 import com.fitnessapp.imageAndAbout.repository.ImageAndAboutRepository;
 import com.fitnessapp.supportService.models.dtos.FeedbackRequestDto;

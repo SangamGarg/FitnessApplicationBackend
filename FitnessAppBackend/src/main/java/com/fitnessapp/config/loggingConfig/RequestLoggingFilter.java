@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -17,70 +19,93 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
- * Logs one line per HTTP request and tags every log line of that request with a request id (and the
- * user id once the JWT filter has authenticated the caller) through the SLF4J MDC.
+ * Logs one line per HTTP request and tags every log line of that request with a request id
+ * (and the user id once downstream filters authenticate the caller) through SLF4J MDC.
  *
- * Privacy: only the HTTP method, path, status and duration are logged. Query strings, request/response
- * bodies and the Authorization header are never logged (they contain health data and tokens).
+ * <p>Privacy: Only the HTTP method, URI, status, and duration are logged. Query strings,
+ * payloads, and Authorization headers are excluded to safeguard sensitive health data and tokens.
  *
- * The request id is returned in the X-Request-Id response header, so a user report can be matched to the log.
+ * <p>The request ID is attached to the response header {@code X-Request-Id} for tracing.
  */
+@Slf4j
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE) // run before Spring Security so 401/403 responses are logged too
+@Order(Ordered.HIGHEST_PRECEDENCE) // Executes prior to Spring Security to capture 401/403 responses
 public class RequestLoggingFilter extends OncePerRequestFilter {
 
     public static final String REQUEST_ID_HEADER = "X-Request-Id";
     public static final String MDC_REQUEST_ID = "requestId";
     public static final String MDC_USER_ID = "userId";
 
-    private static final Logger accessLog = LoggerFactory.getLogger("http.access");
-    private static final long SLOW_REQUEST_MS = 2000;
-    // Only accept a client supplied id if it is short and harmless (prevents log injection).
-    private static final Pattern SAFE_REQUEST_ID = Pattern.compile("[A-Za-z0-9._-]{1,64}");
+    private static final Logger ACCESS_LOG = LoggerFactory.getLogger("http.access");
+    private static final long SLOW_REQUEST_MS = 2000L;
+    private static final int REQUEST_ID_SUBSTRING_LENGTH = 12;
+
+    // Accepts client-supplied IDs only if short and alphanumeric (prevents log injection / CRLF)
+    private static final Pattern SAFE_REQUEST_ID = Pattern.compile("^[A-Za-z0-9._-]{1,64}$");
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.equals("/favicon.ico");
+        boolean bypass = path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || "/favicon.ico".equals(path);
+
+        if (bypass) {
+            log.trace("Bypassing RequestLoggingFilter for path: {}", path);
+        }
+        return bypass;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        String incoming = request.getHeader(REQUEST_ID_HEADER);
-        String requestId = (incoming != null && SAFE_REQUEST_ID.matcher(incoming).matches())
-                ? incoming
-                : UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        String incomingId = request.getHeader(REQUEST_ID_HEADER);
+        String requestId;
+
+        if (incomingId != null && SAFE_REQUEST_ID.matcher(incomingId).matches()) {
+            requestId = incomingId;
+            log.trace("Using client-provided request ID: {}", requestId);
+        } else {
+            requestId = UUID.randomUUID().toString().replace("-", "").substring(0, REQUEST_ID_SUBSTRING_LENGTH);
+            log.trace("Generated internal request ID: {}", requestId);
+        }
 
         MDC.put(MDC_REQUEST_ID, requestId);
         response.setHeader(REQUEST_ID_HEADER, requestId);
 
-        long start = System.nanoTime();
+        long startNanos = System.nanoTime();
         Throwable failure = null;
+
         try {
+            log.trace("Incoming HTTP request: {} {}", request.getMethod(), request.getRequestURI());
             filterChain.doFilter(request, response);
         } catch (ServletException | IOException | RuntimeException e) {
             failure = e;
+            log.error("Unhandled exception caught in filter chain for request [{}]: {}", requestId, e.getMessage());
             throw e;
         } finally {
-            long tookMs = (System.nanoTime() - start) / 1_000_000;
+            long durationMs = (System.nanoTime() - startNanos) / 1_000_000L;
             int status = response.getStatus();
             String method = request.getMethod();
             String path = request.getRequestURI();
 
             if (failure != null) {
-                accessLog.error("{} {} -> failed with {} after {} ms", method, path, failure.getClass().getSimpleName(), tookMs, failure);
+                ACCESS_LOG.error("{} {} -> failed with {} after {} ms", method, path, failure.getClass().getSimpleName(), durationMs, failure);
             } else if (status >= 500) {
-                accessLog.error("{} {} -> {} ({} ms)", method, path, status, tookMs);
+                ACCESS_LOG.error("{} {} -> {} ({} ms)", method, path, status, durationMs);
             } else if (status >= 400) {
-                accessLog.warn("{} {} -> {} ({} ms)", method, path, status, tookMs);
-            } else if (tookMs >= SLOW_REQUEST_MS) {
-                accessLog.warn("{} {} -> {} SLOW ({} ms)", method, path, status, tookMs);
+                ACCESS_LOG.warn("{} {} -> {} ({} ms)", method, path, status, durationMs);
+            } else if (durationMs >= SLOW_REQUEST_MS) {
+                ACCESS_LOG.warn("{} {} -> {} SLOW ({} ms)", method, path, status, durationMs);
             } else {
-                accessLog.info("{} {} -> {} ({} ms)", method, path, status, tookMs);
+                ACCESS_LOG.info("{} {} -> {} ({} ms)", method, path, status, durationMs);
             }
 
+            // Prevent thread-pool leakage in multi-tenant/async servlet environments
             MDC.remove(MDC_USER_ID);
             MDC.remove(MDC_REQUEST_ID);
         }
