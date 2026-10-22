@@ -1,7 +1,7 @@
 package com.fitnessapp.userDetailsAndAuthService.services.userService.userServiceImpl;
 
-import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtService;
-import com.fitnessapp.fitnessCalculators.services.CalculatorService;
+import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtTokenService;
+import com.fitnessapp.fitnessCalculators.service.CalculatorService;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.ErrorDtoUserDetailsAndAuth;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.UserDetailsDto;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.requestDtos.RefreshTokenRequestDto;
@@ -40,14 +40,14 @@ public class UserDetailAndAuthServiceImpl implements UserDetailAndAuthService {
 
     private final UserRepository userRepository;
     private final UserDetailAndAuthRepository userDetailRepository;
-    private final JwtService jwtService;
+    private final JwtTokenService jwtTokenService;
     private final CalculatorService calculatorService;
     private final JavaMailSender mailSender;
 
-    public UserDetailAndAuthServiceImpl(UserRepository userRepository, UserDetailAndAuthRepository userDetailRepository, JwtService jwtService, CalculatorService calculatorService, JavaMailSender mailSender) {
+    public UserDetailAndAuthServiceImpl(UserRepository userRepository, UserDetailAndAuthRepository userDetailRepository, JwtTokenService jwtTokenService, CalculatorService calculatorService, JavaMailSender mailSender) {
         this.userRepository = userRepository;
         this.userDetailRepository = userDetailRepository;
-        this.jwtService = jwtService;
+        this.jwtTokenService = jwtTokenService;
         this.calculatorService = calculatorService;
         this.mailSender = mailSender;
     }
@@ -79,8 +79,8 @@ public class UserDetailAndAuthServiceImpl implements UserDetailAndAuthService {
 
         try {
             log.info("Login/register for user id {}", id);
-            String jwtToken = jwtService.generateToken(id, email);
-            String refreshToken = jwtService.generateRefreshToken(id, email);
+            String jwtToken = jwtTokenService.generateToken(id, email);
+            String refreshToken = jwtTokenService.generateRefreshToken(id, email);
             if (!userRepository.existsById(id)) {
                 return registerUser(id, email, decodedToken.getName(), jwtToken, refreshToken);
             } else {
@@ -158,7 +158,7 @@ public class UserDetailAndAuthServiceImpl implements UserDetailAndAuthService {
         String refreshToken = refreshTokenRequestDto.getRefreshToken();
         try {
             // Throws JwtException when the token is malformed, tampered with or expired.
-            String id = jwtService.extractId(refreshToken);
+            String id = jwtTokenService.extractId(refreshToken);
             if (id == null) {
                 return unauthorizedString("Invalid refresh token");
             }
@@ -172,11 +172,11 @@ public class UserDetailAndAuthServiceImpl implements UserDetailAndAuthService {
                     user.getId(), "", Collections.emptyList());
 
             // Only a REFRESH token is accepted here, an access token is rejected.
-            if (!jwtService.isRefreshTokenValid(refreshToken, userDetails)) {
+            if (!jwtTokenService.isRefreshTokenValid(refreshToken, userDetails)) {
                 return unauthorizedString("Invalid refresh token");
             }
 
-            String newAccessToken = jwtService.generateToken(user.getId(), user.getEmail());
+            String newAccessToken = jwtTokenService.generateToken(user.getId(), user.getEmail());
             log.debug("Access token refreshed for user {}", user.getId());
             return ResponseEntity.ok(RefreshTokenResponseDto.builder()
                     .accessToken(newAccessToken)

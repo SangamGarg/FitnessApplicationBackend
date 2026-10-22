@@ -3,7 +3,7 @@ package com.fitnessapp.portal.dev.feedbackDev;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import com.fitnessapp.portal.dev.shared.DevUtils;
-import com.fitnessapp.supportService.service.SupportService;
+import com.fitnessapp.support.service.SupportService;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

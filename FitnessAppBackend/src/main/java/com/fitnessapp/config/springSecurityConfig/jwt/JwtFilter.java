@@ -1,6 +1,6 @@
 package com.fitnessapp.config.springSecurityConfig.jwt;
 
-import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtService;
+import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtTokenService;
 import com.fitnessapp.userDetailsAndAuthService.userDetailsAndAuthServiceUtilities.AppConstantsUserAndAuthService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -28,7 +28,7 @@ import static com.fitnessapp.portal.common.PortalUtils.PORTAL_BASE_URL;
 public class JwtFilter
         extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final JwtTokenService jwtTokenService;
     private final UserDetailsService userDetailsService;
 
     /**
@@ -55,11 +55,11 @@ public class JwtFilter
                 return;
             }
             String token = authHeader.substring(7);
-            String id = jwtService.extractId(token);
+            String id = jwtTokenService.extractId(token);
             if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(id);
                 // validToken only accepts ACCESS tokens, so a refresh token cannot be used here.
-                if (jwtService.validToken(token, userDetails)) {
+                if (jwtTokenService.validToken(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);

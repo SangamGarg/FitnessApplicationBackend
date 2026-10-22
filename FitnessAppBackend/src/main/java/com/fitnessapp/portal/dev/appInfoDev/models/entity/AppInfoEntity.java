@@ -26,7 +26,8 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "app_info")
-public class AppInfoEntity {
+public class
+AppInfoEntity {
 
     @Id
     private Long id;

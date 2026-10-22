@@ -11,7 +11,7 @@ public final class DevUtils {
     public static final String API_PREFIX_NOTIFICATION = PORTAL_BASE_URL + "/dev/notification";
     public static final String API_PREFIX_APP_INFO = PORTAL_BASE_URL + "/dev/app-info";
     public static final String API_PREFIX_FEEDBACK = PORTAL_BASE_URL + "/dev/feedback";
-    public static final String API_PREFIX_IMAGE_AND_ABOUT = PORTAL_BASE_URL + "/dev/assets";
+    public static final String API_PREFIX_ASSETS = PORTAL_BASE_URL + "/dev/assets";
 
 
 }

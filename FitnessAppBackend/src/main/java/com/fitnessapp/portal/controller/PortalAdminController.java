@@ -30,7 +30,7 @@ import static com.fitnessapp.portal.common.PortalUtils.PORTAL_ADMIN_DEVELOPER_BA
 @RequiredArgsConstructor
 @RequestMapping(PORTAL_ADMIN_DEVELOPER_BASE_REQUEST_URL)
 @Tag(name = "Admin - Developers", description = "Admin-only developer account lifecycle management")
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "bearerAuth") // Swagger UI
 public class PortalAdminController {
 
     private final DeveloperAdminService developers;
