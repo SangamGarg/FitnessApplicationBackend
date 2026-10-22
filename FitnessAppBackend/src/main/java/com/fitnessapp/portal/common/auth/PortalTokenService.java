@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 
-import static com.fitnessapp.portal.common.PortalConstants.*;
+import static com.fitnessapp.portal.common.PortalUtils.*;
 
 @Slf4j
 @Service

@@ -8,8 +8,8 @@ import com.fitnessapp.email.dto.response.EmailFromUseResponseDto;
 import com.fitnessapp.email.dto.response.EmailToAllUsersResponseDto;
 import com.fitnessapp.email.dto.response.EmailToMoreThanOneUserResponseDto;
 import com.fitnessapp.email.dto.response.EmailToOneUserResponseDto;
-import com.fitnessapp.imageAndAbout.models.ImageAndAboutEntity;
-import com.fitnessapp.imageAndAbout.repository.ImageAndAboutRepository;
+import com.fitnessapp.portal.dev.imagesUploadDev.models.AppMediaAssetEntity;
+import com.fitnessapp.portal.dev.imagesUploadDev.AppMediaAssetRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -34,13 +34,13 @@ public class EmailServiceImpl implements EmailService {
     private static final int CURRENT_YEAR = Year.now().getValue();
 
     private final JavaMailSender mailSender;
-    private final ImageAndAboutRepository imageAndAboutRepository;
+    private final AppMediaAssetRepository imageAndAboutRepository;
 
     //here set the receiver like (contact.fitnessapp@app.in) this email receives the email send by user
     @Value("${app.mail.support-email:sangamgarg17@gmail.com}")
     private String supportEmail;
 
-    public EmailServiceImpl(JavaMailSender mailSender, ImageAndAboutRepository imageAndAboutRepository) {
+    public EmailServiceImpl(JavaMailSender mailSender, AppMediaAssetRepository imageAndAboutRepository) {
         this.mailSender = mailSender;
         this.imageAndAboutRepository = imageAndAboutRepository;
     }
@@ -209,18 +209,20 @@ public class EmailServiceImpl implements EmailService {
     /**
      * Retrieves application branding image and metadata, providing a fallback on failure.
      */
-    private ImageAndAboutEntity getImageUrlAndAbout() {
-        try {
-            log.trace("Fetching email branding image metadata from repository");
-            return imageAndAboutRepository.findByNameIgnoreCase("email")
-                    .orElseGet(() -> {
-                        log.debug("No branding entity found with name 'email'; using default fallback");
-                        return ImageAndAboutEntity.builder().imageUrl("Not Found").build();
-                    });
-        } catch (Exception e) {
-            log.warn("Could not retrieve branding image metadata from DB: {}", e.getMessage());
-            return new ImageAndAboutEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
-        }
+    private AppMediaAssetEntity getImageUrlAndAbout() {
+//        try {
+//            log.trace("Fetching email branding image metadata from repository");
+//            return imageAndAboutRepository.findByAssetKeyAndIsActiveTrue("email")
+//                    .orElseGet(() -> {
+//                        log.debug("No branding entity found with name 'email'; using default fallback");
+//                        return AppMediaAssetEntity.builder().imageUrl("Not Found").build();
+//                    });
+//        } catch (Exception e) {
+//            log.warn("Could not retrieve branding image metadata from DB: {}", e.getMessage());
+//            return new AppMediaAssetEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
+//        }
+
+        return null;
     }
 
     // =========================================================================

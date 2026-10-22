@@ -1,6 +1,6 @@
 package com.fitnessapp.portal.controller;
 
-import com.fitnessapp.portal.common.PortalConstants;
+import com.fitnessapp.portal.common.PortalUtils;
 import com.fitnessapp.portal.dto.LoginRequestDto;
 import com.fitnessapp.portal.dto.SetupRequestDto;
 import com.fitnessapp.portal.service.PortalAuthService;
@@ -31,7 +31,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(PortalConstants.PORTAL_AUTH_BASE_REQUEST_URL)
+@RequestMapping(PortalUtils.PORTAL_AUTH_BASE_REQUEST_URL)
 @Tag(name = "Portal Authentication", description = "Admin and developer portal login, onboarding and session refresh")
 public class PortalAuthController {
 

@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
-import static com.fitnessapp.portal.common.PortalConstants.PORTAL_ADMIN_DEVELOPER_BASE_REQUEST_URL;
+import static com.fitnessapp.portal.common.PortalUtils.PORTAL_ADMIN_DEVELOPER_BASE_REQUEST_URL;
 
 @Slf4j
 @RestController

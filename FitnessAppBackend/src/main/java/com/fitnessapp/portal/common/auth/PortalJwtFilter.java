@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-import static com.fitnessapp.portal.common.PortalConstants.*;
+import static com.fitnessapp.portal.common.PortalUtils.*;
 
 @Slf4j
 @Component

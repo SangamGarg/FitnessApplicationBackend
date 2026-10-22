@@ -1,6 +1,6 @@
 package com.fitnessapp.portal.service;
 
-import com.fitnessapp.portal.common.PortalConstants;
+import com.fitnessapp.portal.common.PortalUtils;
 import com.fitnessapp.portal.common.auth.PortalRefreshTokenEntity;
 import com.fitnessapp.portal.common.auth.PortalRefreshTokenRepository;
 import com.fitnessapp.portal.common.auth.PortalTokenService;
@@ -36,7 +36,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PortalAuthService {
 
-    public static final long ACCESS_TOKEN_TTL_SECONDS = PortalConstants.EXPIRATION_SECONDS;
+    public static final long ACCESS_TOKEN_TTL_SECONDS = PortalUtils.EXPIRATION_SECONDS;
     public static final long REFRESH_TOKEN_TTL_SECONDS = 14L * 24 * 60 * 60; // 14 days in seconds
 
     private static final int MIN_PASSWORD_LENGTH = 12;
@@ -209,7 +209,7 @@ public class PortalAuthService {
         Map<String, Object> result = new LinkedHashMap<>();
 
         result.put("accessToken", tokens.create(account));
-        result.put("tokenType", PortalConstants.BEARER_PREFIX.trim());
+        result.put("tokenType", PortalUtils.BEARER_PREFIX.trim());
         result.put("expiresIn", ACCESS_TOKEN_TTL_SECONDS);
         result.put("role", role.name());
         result.put("roleId", role.getId());

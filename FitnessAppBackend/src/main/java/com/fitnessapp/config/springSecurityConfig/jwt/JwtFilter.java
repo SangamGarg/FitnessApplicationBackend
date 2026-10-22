@@ -21,7 +21,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static com.fitnessapp.portal.common.PortalConstants.PORTAL_BASE_URL;
+import static com.fitnessapp.portal.common.PortalUtils.PORTAL_BASE_URL;
 
 @Component
 @RequiredArgsConstructor

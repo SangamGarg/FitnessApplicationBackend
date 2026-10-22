@@ -7,11 +7,11 @@ import com.fitnessapp.fitnessCalculators.models.dtos.requestDto.BurnedCaloriesFr
 import com.fitnessapp.fitnessCalculators.models.dtos.requestDto.DailyCaloriesRequestDto;
 import com.fitnessapp.fitnessCalculators.models.dtos.responseDto.*;
 import com.fitnessapp.fitnessCalculators.models.entities.BurnedCaloriesActivityEntity;
-import com.fitnessapp.imageAndAbout.models.ImageAndAboutEntity;
+import com.fitnessapp.portal.dev.imagesUploadDev.models.AppMediaAssetEntity;
 import com.fitnessapp.fitnessCalculators.models.entities.CaloriesInFoodEntity;
 import com.fitnessapp.fitnessCalculators.repositories.BurnedCaloriesFromActivityRepository;
 import com.fitnessapp.fitnessCalculators.repositories.CaloriesInFoodRepository;
-import com.fitnessapp.imageAndAbout.repository.ImageAndAboutRepository;
+import com.fitnessapp.portal.dev.imagesUploadDev.AppMediaAssetRepository;
 import com.fitnessapp.fitnessCalculators.services.calculatorServiceUtilities.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,10 +25,10 @@ public class CalculatorServiceImpl implements CalculatorService {
 
     private final BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository;
     private final CaloriesInFoodRepository caloriesInFoodRepository;
-    private final ImageAndAboutRepository imageAndAboutRepository;
+    private final AppMediaAssetRepository imageAndAboutRepository;
 
     @Autowired
-    public CalculatorServiceImpl(BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository, CaloriesInFoodRepository caloriesInFoodRepository, ImageAndAboutRepository imageAndAboutRepository) {
+    public CalculatorServiceImpl(BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository, CaloriesInFoodRepository caloriesInFoodRepository, AppMediaAssetRepository imageAndAboutRepository) {
         this.burnedCaloriesFromActivityRepository = burnedCaloriesFromActivityRepository;
         this.caloriesInFoodRepository = caloriesInFoodRepository;
         this.imageAndAboutRepository = imageAndAboutRepository;
@@ -38,7 +38,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     public ResponseEntity<?> getBmi(float weightKg, float heightCm) {
         try {
 
-            ImageAndAboutEntity bmiData = getImageUrlAndAbout("Bmi");
+            AppMediaAssetEntity bmiData = getImageUrlAndAbout("Bmi");
 
             float h = heightCm / 100;
             float bmi = Float.parseFloat(String.format("%.1f", weightKg / (h * h)));
@@ -51,7 +51,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .healthStatus(BmiCalculatorUtilities.determineHealthStatus(bmi))
                     .healthy_bmi_range("18.5 - 25")
                     .imageUrl(bmiData.getImageUrl())
-                    .aboutBmi(bmiData.getAbout())
+                    //      .aboutBmi(bmiData.getAbout())
                     .build();
 
             return ResponseEntity.ok(bmiCalculateResponse);
@@ -65,7 +65,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getBodyFat(BodyFatRequestDto bodyFatRequestDto) {
         try {
-            ImageAndAboutEntity bodyFatData = getImageUrlAndAbout("BodyFat");
+            AppMediaAssetEntity bodyFatData = getImageUrlAndAbout("BodyFat");
 
             BodyFatResponseDto dailyCaloriesResponseDto = BodyFatResponseDto
                     .builder()
@@ -75,7 +75,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .imageUrl(bodyFatData.getImageUrl())
                     .maleUrl("test male")
                     .femaleUrl("test female")
-                    .aboutBodyFat(bodyFatData.getAbout())
+                    //       .aboutBodyFat(bodyFatData.getAbout())
                     .build();
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
@@ -87,7 +87,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getBurnedCaloriesFromActivity(BurnedCaloriesFromActivityRequestDto burnedCaloriesFromActivityRequestDto) {
         try {
-            ImageAndAboutEntity burnedActivityData = getImageUrlAndAbout("BurnedActivity");
+            AppMediaAssetEntity burnedActivityData = getImageUrlAndAbout("BurnedActivity");
 
             BurnedCaloriesFromActivityResponseDto dailyCaloriesResponseDto = BurnedCaloriesFromActivityResponseDto
                     .builder()
@@ -95,7 +95,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .statusCode(200)
                     .burnedCalories(BurnedCaloriesFromActivityCalculatorUtilities.createMap(burnedCaloriesFromActivityRequestDto, burnedCaloriesFromActivityRepository))
                     .imageUrl(burnedActivityData.getImageUrl())
-                    .aboutBurnedCalories(burnedActivityData.getAbout())
+                    //             .aboutBurnedCalories(burnedActivityData.getAbout())
                     .build();
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
@@ -129,7 +129,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getCaloriesInFood(String query, double quantityGm) {
         try {
-            ImageAndAboutEntity caloriesInFoodData = getImageUrlAndAbout("CaloriesInFood");
+            AppMediaAssetEntity caloriesInFoodData = getImageUrlAndAbout("CaloriesInFood");
 
             CaloriesInFoodResponseDto dailyCaloriesResponseDto = CaloriesInFoodResponseDto
                     .builder()
@@ -137,7 +137,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .statusCode(200)
                     .foodData(CaloriesInFoodCalculatorUtilities.createMap(query, quantityGm, caloriesInFoodRepository))
                     .imageUrl(caloriesInFoodData.getImageUrl())
-                    .aboutCaloriesInFood(caloriesInFoodData.getAbout())
+                    //   .aboutCaloriesInFood(caloriesInFoodData.getAbout())
                     .build();
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
@@ -145,6 +145,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             return ResponseEntity.internalServerError().body(AppConstantsCalculatorService.errorDto(e));
         }
     }
+
     @Override
     public ResponseEntity<?> getCaloriesInFoodSuggestion(String query) {
         try {
@@ -170,7 +171,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getDailyCalories(DailyCaloriesRequestDto dailyCaloriesRequestDto) {
         try {
-            ImageAndAboutEntity dailyCaloriesData = getImageUrlAndAbout("DailyCalories");
+            AppMediaAssetEntity dailyCaloriesData = getImageUrlAndAbout("DailyCalories");
 
             DailyCaloriesResponseDto dailyCaloriesResponseDto = DailyCaloriesResponseDto
                     .builder()
@@ -178,7 +179,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .statusCode(200)
                     .goals(DailyCaloriesCalculatorUtilities.createMap(dailyCaloriesRequestDto))
                     .imageUrl(dailyCaloriesData.getImageUrl())
-                    .aboutDailyCalories(dailyCaloriesData.getAbout())
+                    //   .aboutDailyCalories(dailyCaloriesData.getAbout())
                     .build();
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
@@ -190,7 +191,7 @@ public class CalculatorServiceImpl implements CalculatorService {
     @Override
     public ResponseEntity<?> getIdealWeight(String gender, float height) {
         try {
-            ImageAndAboutEntity idealWeightData = getImageUrlAndAbout("IdealWeight");
+            AppMediaAssetEntity idealWeightData = getImageUrlAndAbout("IdealWeight");
 
             IdealWeightResponseDto idealWeightResponseDto = IdealWeightResponseDto
                     .builder()
@@ -198,7 +199,7 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .statusCode(200)
                     .idealWeight(IdealWeightCalculatorUtilities.createMap(gender, height))
                     .imageUrl(idealWeightData.getImageUrl())
-                    .aboutIdealWeight(idealWeightData.getAbout())
+                    //      .aboutIdealWeight(idealWeightData.getAbout())
                     .build();
             return ResponseEntity.ok(idealWeightResponseDto);
         } catch (Exception e) {
@@ -208,12 +209,12 @@ public class CalculatorServiceImpl implements CalculatorService {
     }
 
 
-    private ImageAndAboutEntity getImageUrlAndAbout(String name) {
-        try {
-            return imageAndAboutRepository.findByNameIgnoreCase(name).orElseThrow(() -> new RuntimeException("Item not found"));
-        } catch (Exception e) {
-            return new ImageAndAboutEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
-        }
+    private AppMediaAssetEntity getImageUrlAndAbout(String name) {
+//        try {
+//            return imageAndAboutRepository.findByNameIgnoreCase(name).orElseThrow(() -> new RuntimeException("Item not found"));
+//        } catch (Exception e) {
+//            return new AppMediaAssetEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
+//        }
+        return null;
     }
-
 }

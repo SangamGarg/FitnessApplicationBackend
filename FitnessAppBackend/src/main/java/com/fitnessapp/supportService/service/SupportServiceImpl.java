@@ -1,10 +1,10 @@
 package com.fitnessapp.supportService.service;
 
 import lombok.extern.slf4j.Slf4j;
-import com.fitnessapp.portal.dev.appInfoDevService.models.entity.AppInfoEntity;
-import com.fitnessapp.portal.dev.appInfoDevService.repository.AppInfoRepository;
-import com.fitnessapp.imageAndAbout.models.ImageAndAboutEntity;
-import com.fitnessapp.imageAndAbout.repository.ImageAndAboutRepository;
+import com.fitnessapp.portal.dev.appInfoDev.models.entity.AppInfoEntity;
+import com.fitnessapp.portal.dev.appInfoDev.AppInfoRepository;
+import com.fitnessapp.portal.dev.imagesUploadDev.models.AppMediaAssetEntity;
+import com.fitnessapp.portal.dev.imagesUploadDev.AppMediaAssetRepository;
 import com.fitnessapp.supportService.models.dtos.FeedbackRequestDto;
 import com.fitnessapp.supportService.models.dtos.FeedbackResponseDto;
 import com.fitnessapp.supportService.models.entities.FeedbackEntity;
@@ -21,9 +21,9 @@ import java.util.Optional;
 public class SupportServiceImpl implements SupportService {
     private final FeedbackRepository feedbackRepository;
     private final AppInfoRepository appInfoRepository;
-    private final ImageAndAboutRepository imageAndAboutRepository;
+    private final AppMediaAssetRepository imageAndAboutRepository;
 
-    public SupportServiceImpl(FeedbackRepository feedbackRepository, AppInfoRepository appInfoRepository, ImageAndAboutRepository imageAndAboutRepository) {
+    public SupportServiceImpl(FeedbackRepository feedbackRepository, AppInfoRepository appInfoRepository, AppMediaAssetRepository imageAndAboutRepository) {
         this.feedbackRepository = feedbackRepository;
         this.appInfoRepository = appInfoRepository;
         this.imageAndAboutRepository = imageAndAboutRepository;
@@ -132,12 +132,14 @@ public class SupportServiceImpl implements SupportService {
     }
 
 
-    private ImageAndAboutEntity getImageUrlAndAbout() {
-        try {
-            return imageAndAboutRepository.findByNameIgnoreCase("feedback").orElse(ImageAndAboutEntity.builder().imageUrl("Not Found").build());
-        } catch (Exception e) {
-            return new ImageAndAboutEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
-        }
+    private AppMediaAssetEntity getImageUrlAndAbout() {
+//        try {
+//            return imageAndAboutRepository.findByNameIgnoreCase("feedback").orElse(AppMediaAssetEntity.builder().imageUrl("Not Found").build());
+//        } catch (Exception e) {
+//            return new AppMediaAssetEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
+//        }
+        return null;
+
     }
 
 }
