@@ -16,6 +16,10 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicketEnti
 
     Optional<SupportTicketEntity> findByTicketNumber(String ticketNumber);
 
+    long countByUserId(Long userId);
+
+    long countByUserIdAndStatus(Long userId, TicketStatus status);
+
     // For Android client user history
     List<SupportTicketEntity> findAllByUserIdOrderByCreatedAtDesc(Long userId);
 

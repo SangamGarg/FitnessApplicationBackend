@@ -1,12 +1,12 @@
 package com.fitnessapp.userDetailsAndAuthService.services.userService.userServiceImpl;
 
-import com.fitnessapp.fitnessCalculators.model.dtos.requestDto.BodyFatRequestDto;
-import com.fitnessapp.fitnessCalculators.model.dtos.requestDto.DailyCaloriesRequestDto;
-import com.fitnessapp.fitnessCalculators.model.dtos.responseDto.BmiCalculateResponseDto;
-import com.fitnessapp.fitnessCalculators.model.dtos.responseDto.BodyFatResponseDto;
-import com.fitnessapp.fitnessCalculators.model.dtos.responseDto.DailyCaloriesResponseDto;
-import com.fitnessapp.fitnessCalculators.model.dtos.responseDto.IdealWeightResponseDto;
-import com.fitnessapp.fitnessCalculators.service.CalculatorService;
+import com.fitnessapp.calculator.model.dtos.requestDto.BodyFatRequestDto;
+import com.fitnessapp.calculator.model.dtos.requestDto.DailyCaloriesRequestDto;
+import com.fitnessapp.calculator.model.dtos.responseDto.BmiCalculateResponseDto;
+import com.fitnessapp.calculator.model.dtos.responseDto.BodyFatResponseDto;
+import com.fitnessapp.calculator.model.dtos.responseDto.DailyCaloriesResponseDto;
+import com.fitnessapp.calculator.model.dtos.responseDto.IdealWeightResponseDto;
+import com.fitnessapp.calculator.service.CalculatorService;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.UserDetailsDto;
 import com.fitnessapp.userDetailsAndAuthService.models.dtos.requestDtos.UserPatchRequestDto;
 import com.fitnessapp.userDetailsAndAuthService.models.entitites.UserDetailsEntity;

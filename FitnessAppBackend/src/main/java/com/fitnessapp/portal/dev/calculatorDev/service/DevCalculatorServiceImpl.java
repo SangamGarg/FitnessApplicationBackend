@@ -1,9 +1,9 @@
 package com.fitnessapp.portal.dev.calculatorDev.service;
 
-import com.fitnessapp.fitnessCalculators.model.entities.BurnedCaloriesActivityEntity;
-import com.fitnessapp.fitnessCalculators.model.entities.CaloriesInFoodEntity;
-import com.fitnessapp.fitnessCalculators.repo.BurnedCaloriesFromActivityRepository;
-import com.fitnessapp.fitnessCalculators.repo.CaloriesInFoodRepository;
+import com.fitnessapp.calculator.model.entities.BurnedCaloriesActivityEntity;
+import com.fitnessapp.calculator.model.entities.CaloriesInFoodEntity;
+import com.fitnessapp.calculator.repo.BurnedCaloriesFromActivityRepository;
+import com.fitnessapp.calculator.repo.CaloriesInFoodRepository;
 import com.fitnessapp.portal.dev.calculatorDev.DevCalculatorExceptionHandler;
 import com.fitnessapp.portal.dev.calculatorDev.model.DevCalculatorUploadCaloriesInFoodRequestDto;
 import com.fitnessapp.portal.dev.calculatorDev.model.DevCalculatorBurnedCaloriesRequestDto;
