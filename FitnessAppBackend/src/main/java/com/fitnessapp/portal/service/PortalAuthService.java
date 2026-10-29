@@ -1,6 +1,7 @@
 package com.fitnessapp.portal.service;
 
-import com.fitnessapp.portal.common.PortalUtils;
+import com.fitnessapp.utils.portalUtil.PortalUtil;
+import com.fitnessapp.portal.common.auth.PortalLoginRateLimiter;
 import com.fitnessapp.portal.common.auth.PortalRefreshTokenEntity;
 import com.fitnessapp.portal.common.auth.PortalRefreshTokenRepository;
 import com.fitnessapp.portal.common.auth.PortalTokenService;
@@ -36,7 +37,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PortalAuthService {
 
-    public static final long ACCESS_TOKEN_TTL_SECONDS = PortalUtils.EXPIRATION_SECONDS;
+    public static final long ACCESS_TOKEN_TTL_SECONDS = PortalUtil.EXPIRATION_SECONDS;
     public static final long REFRESH_TOKEN_TTL_SECONDS = 14L * 24 * 60 * 60; // 14 days in seconds
 
     private static final int MIN_PASSWORD_LENGTH = 12;
@@ -48,6 +49,7 @@ public class PortalAuthService {
     private final PortalRefreshTokenRepository refreshTokens;
     private final PasswordEncoder passwords;
     private final PortalTokenService tokens;
+    private final PortalLoginRateLimiter loginRateLimiter;
     private final SecureRandom random = new SecureRandom();
 
     /**
@@ -55,46 +57,58 @@ public class PortalAuthService {
      * invalidates prior sessions, and issues a new access/refresh token pair.
      */
     @Transactional
-    public Map<String, Object> login(String email, String password) {
+    public Map<String, Object> login(String email, String password, String clientAddress) {
         String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
         log.debug("Processing login attempt for email: [{}]", normalizedEmail);
+        String rateLimitKey = sha256(normalizedEmail + '\u0000'
+                + (clientAddress == null || clientAddress.isBlank() ? "unknown" : clientAddress));
+        loginRateLimiter.assertAllowed(rateLimitKey);
 
-        // Purge expired tokens across the database
-        refreshTokens.deleteByExpiresAtBefore(Instant.now());
+        try {
+            // Purge expired tokens across the database
+            refreshTokens.deleteByExpiresAtBefore(Instant.now());
 
-        PortalAccountEntity account = accounts.findByEmailIgnoreCase(normalizedEmail)
-                .orElseThrow(() -> {
-                    log.warn("Login rejected: Account not found for email [{}]", normalizedEmail);
-                    return unauthorized();
-                });
+            PortalAccountEntity account = accounts.findByEmailIgnoreCase(normalizedEmail)
+                    .orElseThrow(() -> {
+                        log.warn("Login rejected: Account not found for email [{}]", normalizedEmail);
+                        return unauthorized();
+                    });
 
-        if (!account.isEnabled()) {
-            log.warn("Login rejected: Account [{}] is disabled", normalizedEmail);
-            throw unauthorized();
+            if (!account.isEnabled()) {
+                log.warn("Login rejected: Account [{}] is disabled", normalizedEmail);
+                throw unauthorized();
+            }
+
+            if (account.getPasswordHash() == null) {
+                log.warn("Login rejected: Account [{}] has no password set (setup pending)", normalizedEmail);
+                throw unauthorized();
+            }
+
+            String rawPassword = password == null ? "" : password;
+            if (!passwords.matches(rawPassword, account.getPasswordHash())) {
+                log.warn("Login rejected: Password mismatch for email [{}]", normalizedEmail);
+                throw unauthorized();
+            }
+
+            // Revoke prior active sessions for single-session enforcement
+            revokeAll(account);
+
+            String rawRefreshToken = newRefreshToken();
+            String tokenHash = sha256(rawRefreshToken);
+            Instant expiresAt = Instant.now().plusSeconds(REFRESH_TOKEN_TTL_SECONDS);
+
+            refreshTokens.save(new PortalRefreshTokenEntity(account, tokenHash, expiresAt));
+            log.info("Portal login successful: accountId={}, role={}", account.getId(), account.getRole());
+
+            Map<String, Object> session = sessionResponse(account, rawRefreshToken);
+            loginRateLimiter.recordSuccess(rateLimitKey);
+            return session;
+        } catch (ResponseStatusException ex) {
+            if (ex.getStatusCode().value() == HttpStatus.UNAUTHORIZED.value()) {
+                loginRateLimiter.recordFailure(rateLimitKey);
+            }
+            throw ex;
         }
-
-        if (account.getPasswordHash() == null) {
-            log.warn("Login rejected: Account [{}] has no password set (setup pending)", normalizedEmail);
-            throw unauthorized();
-        }
-
-        String rawPassword = password == null ? "" : password;
-        if (!passwords.matches(rawPassword, account.getPasswordHash())) {
-            log.warn("Login rejected: Password mismatch for email [{}]", normalizedEmail);
-            throw unauthorized();
-        }
-
-        // Revoke prior active sessions for single-session enforcement
-        revokeAll(account);
-
-        String rawRefreshToken = newRefreshToken();
-        String tokenHash = sha256(rawRefreshToken);
-        Instant expiresAt = Instant.now().plusSeconds(REFRESH_TOKEN_TTL_SECONDS);
-
-        refreshTokens.save(new PortalRefreshTokenEntity(account, tokenHash, expiresAt));
-        log.info("Portal login successful: accountId={}, role={}", account.getId(), account.getRole());
-
-        return sessionResponse(account, rawRefreshToken);
     }
 
     /**
@@ -209,7 +223,7 @@ public class PortalAuthService {
         Map<String, Object> result = new LinkedHashMap<>();
 
         result.put("accessToken", tokens.create(account));
-        result.put("tokenType", PortalUtils.BEARER_PREFIX.trim());
+        result.put("tokenType", PortalUtil.BEARER_PREFIX.trim());
         result.put("expiresIn", ACCESS_TOKEN_TTL_SECONDS);
         result.put("role", role.name());
         result.put("roleId", role.getId());

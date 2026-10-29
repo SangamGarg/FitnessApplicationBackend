@@ -2,7 +2,7 @@ package com.fitnessapp.config.springSecurityConfig;
 
 import com.fitnessapp.config.springSecurityConfig.jwt.JwtFilter;
 import com.fitnessapp.portal.common.auth.PortalJwtFilter;
-import com.fitnessapp.userDetailsAndAuthService.userDetailsAndAuthServiceUtilities.AppConstantsUserAndAuthService;
+import com.fitnessapp.appAuth.utils.AppAuthUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -18,6 +18,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import static com.fitnessapp.utils.appUtil.AppUtil.APP_AUTH_ENDPOINT;
+import static com.fitnessapp.utils.appUtil.AppUtil.APP_OTP_ENDPOINT;
 
 @Configuration
 @EnableWebSecurity
@@ -43,8 +46,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/portal/auth/login", "/api/portal/auth/refresh", "/api/portal/auth/logout", "/api/portal/auth/setup").permitAll()
                         .requestMatchers("/api/portal/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/dev/support/**").hasRole("ADMIN")
                         .requestMatchers("/api/portal/**").hasAnyRole("ADMIN", "DEVELOPER")
-                        .requestMatchers(AppConstantsUserAndAuthService.API_PREFIX + "/loginRegister", AppConstantsUserAndAuthService.API_PREFIX + "/refresh-token", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api/health").permitAll()
+                        .requestMatchers(APP_AUTH_ENDPOINT + "/loginRegister", APP_AUTH_ENDPOINT + "/refresh-token", APP_AUTH_ENDPOINT + "/otp/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api/health", APP_OTP_ENDPOINT + "/**").permitAll()
+                        .requestMatchers(APP_AUTH_ENDPOINT + "/logout").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

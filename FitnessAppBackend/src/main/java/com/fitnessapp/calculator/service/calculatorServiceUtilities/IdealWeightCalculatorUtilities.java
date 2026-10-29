@@ -18,6 +18,7 @@ public final class IdealWeightCalculatorUtilities {
         map.put("Devine", devine);
         map.put("Miller", miller);
         map.put("Robinson", robinson);
+        map.put("note", "Formula-based estimates; not a medical target or diagnosis.");
         return map;
     }
 
@@ -29,7 +30,7 @@ public final class IdealWeightCalculatorUtilities {
         } else {
             idealWeight = 45.5f + 2.2f * ((height - 152.4f) / 2.54f);
         }
-        return Float.parseFloat(String.format("%.2f", idealWeight));
+        return round(idealWeight);
     }
 
     private static float calculateDevineIdealWeight(float height, String gender) {
@@ -40,7 +41,7 @@ public final class IdealWeightCalculatorUtilities {
         } else {
             idealWeight = 45.5f + 2.3f * ((height - 152.4f) / 2.54f);
         }
-        return Float.parseFloat(String.format("%.2f", idealWeight));
+        return round(idealWeight);
     }
 
     private static float calculateMillerIdealWeight(float height, String gender) {
@@ -51,7 +52,7 @@ public final class IdealWeightCalculatorUtilities {
         } else {
             idealWeight = 53.1f + 1.36f * ((height - 152.4f) / 2.54f);
         }
-        return Float.parseFloat(String.format("%.2f", idealWeight));
+        return round(idealWeight);
     }
 
     private static float calculateRobinsonIdealWeight(float height, String gender) {
@@ -62,6 +63,10 @@ public final class IdealWeightCalculatorUtilities {
         } else {
             idealWeight = 49f + 1.7f * ((height - 152.4f) / 2.54f);
         }
-        return Float.parseFloat(String.format("%.2f", idealWeight));
+        return round(idealWeight);
+    }
+
+    private static float round(float value) {
+        return Math.round(value * 100f) / 100f;
     }
 }

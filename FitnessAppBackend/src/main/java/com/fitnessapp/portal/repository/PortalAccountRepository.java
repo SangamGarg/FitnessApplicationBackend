@@ -2,13 +2,15 @@ package com.fitnessapp.portal.repository;
 
 import com.fitnessapp.portal.tableEntity.PortalAccountEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PortalAccountRepository extends JpaRepository<PortalAccountEntity, Long> {
+public interface PortalAccountRepository extends JpaRepository<PortalAccountEntity, Long>,
+        JpaSpecificationExecutor<PortalAccountEntity> {
 
     /**
      * Finds a portal account by email address, ignoring case sensitivity.

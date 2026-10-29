@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class DailyCaloriesRequestDto {
-    @Min(value = 0, message = "Age must be a non-negative number")
+    @Min(value = 13, message = "Age must be at least 13 years")
     @Max(value = 150, message = "Age must be realistic (<= 150)")
     @NotNull(message = "Age must not be null")
     private Integer age;
@@ -24,11 +24,15 @@ public class DailyCaloriesRequestDto {
     private String gender;
 
     @Positive(message = "Weight must be greater than 0")
+    @Min(value = 20, message = "Weight must be at least 20kg")
     @Max(value = 300, message = "Weight must be at most 300kg")
+    @NotNull
     private Float weightKg;
 
     @Positive(message = "Height must be greater than 0")
+    @Min(value = 120, message = "Height must be at least 120cm for this adult formula")
     @Max(value = 300, message = "Height must be at most 300cm")
+    @NotNull
     private Float heightCm;
 
     @NotBlank(message = "Activity level must not be blank")

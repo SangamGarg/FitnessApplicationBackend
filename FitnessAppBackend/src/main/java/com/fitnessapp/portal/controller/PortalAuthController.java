@@ -1,6 +1,6 @@
 package com.fitnessapp.portal.controller;
 
-import com.fitnessapp.portal.common.PortalUtils;
+import com.fitnessapp.utils.portalUtil.PortalUtil;
 import com.fitnessapp.portal.dto.LoginRequestDto;
 import com.fitnessapp.portal.dto.SetupRequestDto;
 import com.fitnessapp.portal.service.PortalAuthService;
@@ -31,7 +31,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(PortalUtils.PORTAL_AUTH_BASE_REQUEST_URL)
+@RequestMapping(PortalUtil.PORTAL_AUTH_BASE_REQUEST_URL)
 @Tag(name = "Portal Authentication", description = "Admin and developer portal login, onboarding and session refresh")
 public class PortalAuthController {
 
@@ -44,10 +44,11 @@ public class PortalAuthController {
     @Operation(summary = "Log in to the portal", description = "Returns a short-lived access JWT and stores the refresh token in an HttpOnly cookie.")
     public ResponseEntity<Map<String, Object>> login(
             @Valid @RequestBody LoginRequestDto request,
+            HttpServletRequest servletRequest,
             HttpServletResponse response
     ) {
         log.info("REST request to log in portal user: [{}]", request.email());
-        Map<String, Object> session = auth.login(request.email(), request.password());
+        Map<String, Object> session = auth.login(request.email(), request.password(), servletRequest.getRemoteAddr());
         log.info("User [{}] authenticated successfully", request.email());
         return sessionResponse(session, response);
     }

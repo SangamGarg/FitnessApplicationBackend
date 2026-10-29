@@ -2,6 +2,7 @@ package com.fitnessapp.support.service;
 
 import com.fitnessapp.support.models.CreateSupportTicketRequestDTO;
 import com.fitnessapp.support.models.SupportTicketResponseDTO;
+import com.fitnessapp.support.models.SupportTicketMessageResponseDTO;
 import com.fitnessapp.support.models.TicketCategory;
 import com.fitnessapp.support.models.TicketStatus;
 import com.fitnessapp.support.models.UpdateTicketStatusRequestDTO;
@@ -63,6 +64,23 @@ public interface SupportTicketService {
      * @return Page of matching tickets.
      */
     Page<SupportTicketResponseDTO> getAllTickets(TicketStatus status, TicketCategory category, Pageable pageable);
+
+    Page<SupportTicketResponseDTO> searchTickets(
+            TicketStatus status,
+            TicketCategory category,
+            String query,
+            Pageable pageable
+    );
+
+    SupportTicketResponseDTO getTicketForAdmin(String ticketNumber);
+
+    List<SupportTicketMessageResponseDTO> getTicketMessages(Long userId, String ticketNumber);
+
+    List<SupportTicketMessageResponseDTO> getTicketMessagesForAdmin(String ticketNumber);
+
+    SupportTicketMessageResponseDTO addUserMessage(Long userId, String userEmail, String ticketNumber, String message);
+
+    SupportTicketMessageResponseDTO addAdminMessage(String actorEmail, String ticketNumber, String message, boolean internalNote);
 
     /**
      * Updates status, priority, or resolution notes for an existing ticket.

@@ -1,7 +1,7 @@
 package com.fitnessapp.config.springSecurityConfig.jwt;
 
 import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtTokenService;
-import com.fitnessapp.userDetailsAndAuthService.userDetailsAndAuthServiceUtilities.AppConstantsUserAndAuthService;
+import com.fitnessapp.appAuth.utils.AppAuthUtils;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -21,7 +21,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static com.fitnessapp.portal.common.PortalUtils.PORTAL_BASE_URL;
+import static com.fitnessapp.utils.appUtil.AppUtil.APP_AUTH_ENDPOINT;
+import static com.fitnessapp.utils.appUtil.AppUtil.APP_OTP_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_URL;
 
 @Component
 @RequiredArgsConstructor
@@ -40,8 +42,10 @@ public class JwtFilter
         String path = request.getServletPath();
         // This filter validates the app/mobile access JWT only. Portal endpoints and
         // developer-console endpoints use PortalJwtFilter and portal-token claims.
-        return path.equals(AppConstantsUserAndAuthService.API_PREFIX + "/loginRegister")
-                || path.equals(AppConstantsUserAndAuthService.API_PREFIX + "/refresh-token")
+        return path.equals(APP_AUTH_ENDPOINT + "/loginRegister")
+                || path.equals(APP_AUTH_ENDPOINT + "/refresh-token")
+                || path.startsWith(APP_OTP_ENDPOINT)
+                || path.startsWith("/api/v1/dev/support/")
                 || path.startsWith(PORTAL_BASE_URL + "/");
     }
 

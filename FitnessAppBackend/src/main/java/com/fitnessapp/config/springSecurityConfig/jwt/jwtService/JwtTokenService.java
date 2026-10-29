@@ -58,6 +58,11 @@ public class JwtTokenService {
                 .compact();
     }
 
+
+    public long getRefreshExpirationMs() {
+        return jwtConfig.getRefreshExpirationMs();
+    }
+
     // ---------- validation ----------
 
     /**
@@ -78,7 +83,8 @@ public class JwtTokenService {
         try {
             // parseSignedClaims verifies the signature and throws ExpiredJwtException if expired.
             Claims claims = extractAllClaims(token);
-            return expectedType.equals(claims.get(CLAIM_TOKEN_TYPE, String.class))
+            return userDetails.isEnabled()
+                    && expectedType.equals(claims.get(CLAIM_TOKEN_TYPE, String.class))
                     && claims.getSubject() != null
                     && claims.getSubject().equals(userDetails.getUsername());
         } catch (JwtException | IllegalArgumentException e) {

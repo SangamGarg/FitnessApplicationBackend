@@ -41,7 +41,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             AppMediaAssetEntity bmiData = getImageUrlAndAbout("Bmi");
 
             float h = heightCm / 100;
-            float bmi = Float.parseFloat(String.format("%.1f", weightKg / (h * h)));
+            float bmi = Math.round((weightKg / (h * h)) * 10f) / 10f;
 
             BmiCalculateResponseDto bmiCalculateResponse = BmiCalculateResponseDto
                     .builder()
@@ -73,8 +73,6 @@ public class CalculatorServiceImpl implements CalculatorService {
                     .statusCode(200)
                     .data(BodyFatCalculatorUtilities.createMap(bodyFatRequestDto))
                     .imageUrl(bodyFatData.getImageUrl())
-                    .maleUrl("test male")
-                    .femaleUrl("test female")
                     //       .aboutBodyFat(bodyFatData.getAbout())
                     .build();
             return ResponseEntity.ok(dailyCaloriesResponseDto);

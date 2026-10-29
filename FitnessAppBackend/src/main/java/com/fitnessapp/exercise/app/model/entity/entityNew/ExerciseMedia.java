@@ -1,11 +1,11 @@
 package com.fitnessapp.exercise.app.model.entity.entityNew;
 
+import com.fitnessapp.exercise.app.model.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.http.MediaType;
 
 import java.time.Instant;
 

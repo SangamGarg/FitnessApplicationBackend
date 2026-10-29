@@ -1,7 +1,8 @@
 package com.fitnessapp.support.utils;
 
 import com.fitnessapp.support.models.dtos.ErrorDtoSupport;
-import com.fitnessapp.userDetailsAndAuthService.userDetailsAndAuthServiceUtilities.AppConstantsUserAndAuthService;
+import com.fitnessapp.appAuth.utils.AppAuthUtils;
+import com.fitnessapp.utils.appUtil.AppResponseStatus;
 
 public final class SupportUtils {
 
@@ -15,7 +16,7 @@ public final class SupportUtils {
         return ErrorDtoSupport
                 .builder()
                 .errorImageUrl("")
-                .status(AppConstantsUserAndAuthService.ERROR_API_STATUS)
+                .status(AppResponseStatus.FAILED.name())
                 .errorMessage("Error : Please Try Again " + e.getLocalizedMessage())
                 .build();
     }

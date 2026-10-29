@@ -20,6 +20,7 @@ public class SupportTicketResponseDTO {
     private DeviceDiagnosticInfo diagnosticInfo;
     private List<String> attachmentUrls;
     private String resolutionNotes;
+    private String assignedToEmail;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

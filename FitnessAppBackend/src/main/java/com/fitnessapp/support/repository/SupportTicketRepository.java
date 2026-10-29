@@ -5,6 +5,8 @@ import com.fitnessapp.support.models.TicketCategory;
 import com.fitnessapp.support.models.TicketStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -27,4 +29,31 @@ public interface SupportTicketRepository extends JpaRepository<SupportTicketEnti
     Page<SupportTicketEntity> findAllByStatus(TicketStatus status, Pageable pageable);
 
     Page<SupportTicketEntity> findAllByCategory(TicketCategory category, Pageable pageable);
+
+    @Query(
+            value = """
+                    select t from SupportTicketEntity t
+                    where (:status is null or t.status = :status)
+                      and (:category is null or t.category = :category)
+                      and (:query is null
+                           or lower(t.ticketNumber) like concat('%', lower(:query), '%')
+                           or lower(t.subject) like concat('%', lower(:query), '%')
+                           or lower(t.userEmail) like concat('%', lower(:query), '%'))
+                    """,
+            countQuery = """
+                    select count(t) from SupportTicketEntity t
+                    where (:status is null or t.status = :status)
+                      and (:category is null or t.category = :category)
+                      and (:query is null
+                           or lower(t.ticketNumber) like concat('%', lower(:query), '%')
+                           or lower(t.subject) like concat('%', lower(:query), '%')
+                           or lower(t.userEmail) like concat('%', lower(:query), '%'))
+                    """
+    )
+    Page<SupportTicketEntity> searchForAdmin(
+            @Param("status") TicketStatus status,
+            @Param("category") TicketCategory category,
+            @Param("query") String query,
+            Pageable pageable
+    );
 }

@@ -69,12 +69,15 @@ public class CalculatorController {
     }
 
     @Operation(summary = "get Calories In Food", description = """
-        Executes the get calories in food operation.
+        Estimates nutrients for the requested grams, scaling values from the food item's configured serving size.
         """)
     @GetMapping("/food-calories")
     public ResponseEntity<?> getCaloriesInFood(
             @RequestParam @NotBlank(message = "Query must not be blank") String query,
-            @RequestParam @Positive(message = "Quantity should be greater than 0") double quantityGm
+            @RequestParam
+            @DecimalMin(value = "0.01", message = "Quantity should be greater than 0")
+            @DecimalMax(value = "100000.0", message = "Quantity must not exceed 100000 grams")
+            double quantityGm
     ) {
         return calculatorService.getCaloriesInFood(query, quantityGm);
     }
@@ -108,7 +111,7 @@ public class CalculatorController {
             String gender,
 
             @RequestParam
-            @Positive(message = "Height must be greater than 0")
+            @DecimalMin(value = "120.0", message = "Height must be at least 120cm for these adult formulas")
             @Max(value = 300, message = "Height must be at most 300cm")
             float heightCm) {
         return calculatorService.getIdealWeight(gender, heightCm);

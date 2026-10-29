@@ -1,6 +1,8 @@
 package com.fitnessapp.portal.support.controller;
 
 import com.fitnessapp.support.models.CreateSupportTicketRequestDTO;
+import com.fitnessapp.support.models.SupportTicketMessageRequestDTO;
+import com.fitnessapp.support.models.SupportTicketMessageResponseDTO;
 import com.fitnessapp.support.models.SupportTicketResponseDTO;
 import com.fitnessapp.support.service.SupportTicketService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,5 +73,25 @@ public class ClientSupportController {
             @PathVariable String ticketNumber) {
         log.info("REST request for ticket [{}] by user [{}]", ticketNumber, userId);
         return ResponseEntity.ok(supportTicketService.getTicketByNumber(userId, ticketNumber));
+    }
+
+    @Operation(summary = "Get user-visible support ticket conversation")
+    @GetMapping("/tickets/{ticketNumber}/messages")
+    public ResponseEntity<List<SupportTicketMessageResponseDTO>> getTicketMessages(
+            @RequestAttribute("userId") Long userId,
+            @PathVariable String ticketNumber) {
+        return ResponseEntity.ok(supportTicketService.getTicketMessages(userId, ticketNumber));
+    }
+
+    @Operation(summary = "Reply to a support ticket")
+    @PostMapping("/tickets/{ticketNumber}/messages")
+    public ResponseEntity<SupportTicketMessageResponseDTO> addTicketMessage(
+            @RequestAttribute("userId") Long userId,
+            @RequestAttribute("userEmail") String userEmail,
+            @PathVariable String ticketNumber,
+            @Valid @RequestBody SupportTicketMessageRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                supportTicketService.addUserMessage(userId, userEmail, ticketNumber, request.message())
+        );
     }
 }

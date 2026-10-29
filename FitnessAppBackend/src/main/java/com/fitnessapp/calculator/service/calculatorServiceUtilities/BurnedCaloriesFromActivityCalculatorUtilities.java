@@ -22,14 +22,12 @@ public class BurnedCaloriesFromActivityCalculatorUtilities {
     }
 
     private static Map<String, Object> getStringObjectMap(Integer durationMin, BurnedCaloriesActivityEntity activity, Float weightKg) {
-        double hours = durationMin / 60.0;
-
         double metValue = activity.getMetValue();
-
-        double caloriesPerHour = (metValue * weightKg * 60) / 200;
-
-        // Total calories = MET * weightKg * hours
-        double totalCalories = (metValue * weightKg * durationMin) / 200;
+        if (metValue <= 0) {
+            throw new IllegalStateException("Activity MET value must be positive");
+        }
+        double caloriesPerHour = metValue * 3.5 * weightKg;
+        double totalCalories = caloriesPerHour * (durationMin / 60.0);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("name", activity.getName());

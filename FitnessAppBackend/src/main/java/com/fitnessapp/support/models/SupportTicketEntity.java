@@ -72,6 +72,9 @@ public class SupportTicketEntity {
     @Column(name = "resolution_notes", columnDefinition = "TEXT")
     private String resolutionNotes;
 
+    @Column(name = "assigned_to_email", length = 254)
+    private String assignedToEmail;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

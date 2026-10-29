@@ -1,7 +1,5 @@
 package com.fitnessapp.portal.common.auth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fitnessapp.portal.common.enums.UserRole;
 import com.fitnessapp.portal.dto.ApiErrorResponseDto;
 import com.fitnessapp.portal.repository.PortalAccountRepository;
@@ -22,21 +20,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-import static com.fitnessapp.portal.common.PortalUtils.*;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.*;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PortalJwtFilter extends OncePerRequestFilter {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
-
+    private final ObjectMapper objectMapper;
     private final PortalTokenService tokens;
     private final PortalAccountRepository accounts;
 
@@ -47,7 +44,7 @@ public class PortalJwtFilter extends OncePerRequestFilter {
         // Only portal routes and the developer console use portal JWTs. If this
         // filter runs on ordinary app APIs, a valid app JWT is incorrectly rejected
         // because its token_type is "access", not "portal".
-        boolean portalOrDevRoute = path.startsWith("/api/portal/");
+        boolean portalOrDevRoute = path.startsWith("/api/v1/portal/");
         boolean publicOrDocsRoute = EXCLUDED_PATHS.contains(path)
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui");
@@ -176,6 +173,6 @@ public class PortalJwtFilter extends OncePerRequestFilter {
                 path
         );
 
-        OBJECT_MAPPER.writeValue(response.getOutputStream(), errorPayload);
+        objectMapper.writeValue(response.getOutputStream(), errorPayload);
     }
 }

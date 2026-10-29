@@ -1,6 +1,7 @@
 package com.fitnessapp.portal.service;
 
 import com.fitnessapp.portal.common.enums.UserRole;
+import com.fitnessapp.portal.audit.PortalAuditService;
 import com.fitnessapp.portal.dto.CreateDeveloperRequestDto;
 import com.fitnessapp.portal.repository.PortalAccountRepository;
 import com.fitnessapp.portal.tableEntity.PortalAccountEntity;
@@ -33,6 +34,7 @@ public class DeveloperAdminService {
 
     private final PortalAccountRepository accounts;
     private final JavaMailSender mailSender;
+    private final PortalAuditService audit;
     private final SecureRandom random = new SecureRandom();
 
     @Value("${fitness.portal.base-url:http://localhost:5173}")
@@ -40,10 +42,12 @@ public class DeveloperAdminService {
 
     public DeveloperAdminService(
             PortalAccountRepository accounts,
-            JavaMailSender mailSender
+            JavaMailSender mailSender,
+            PortalAuditService audit
     ) {
         this.accounts = accounts;
         this.mailSender = mailSender;
+        this.audit = audit;
     }
 
     /**
@@ -91,6 +95,7 @@ public class DeveloperAdminService {
                 "Your developer account has been created. Use the link below to set your password."
         );
 
+        audit.record("DEVELOPER_ACCOUNT_CREATED", "PORTAL_ACCOUNT", saved.getId().toString(), "Developer invited");
         log.info("Developer account created successfully: accountId=[{}], email=[{}]", saved.getId(), email);
         return toDeveloperResponse(saved);
     }
@@ -136,6 +141,7 @@ public class DeveloperAdminService {
                 "An administrator has generated a new password setup link for your account."
         );
 
+        audit.record("DEVELOPER_SETUP_LINK_REISSUED", "PORTAL_ACCOUNT", saved.getId().toString(), "Password setup link reissued");
         log.info("Developer setup link regenerated successfully: accountId=[{}]", saved.getId());
         return toDeveloperResponse(saved);
     }
@@ -151,6 +157,12 @@ public class DeveloperAdminService {
         account.setUpdatedAt(Instant.now());
 
         PortalAccountEntity saved = accounts.saveAndFlush(account);
+        audit.record(
+                enabled ? "DEVELOPER_ACCOUNT_ACTIVATED" : "DEVELOPER_ACCOUNT_SUSPENDED",
+                "PORTAL_ACCOUNT",
+                saved.getId().toString(),
+                "Developer account enabled=" + enabled
+        );
         log.info("Developer account status changed: accountId=[{}], enabled=[{}]", saved.getId(), enabled);
 
         return toDeveloperResponse(saved);
@@ -162,6 +174,7 @@ public class DeveloperAdminService {
     @Transactional
     public void deleteDeveloper(Long developerId) {
         PortalAccountEntity account = findDeveloperEntity(developerId);
+        audit.record("DEVELOPER_ACCOUNT_DELETED", "PORTAL_ACCOUNT", developerId.toString(), "Developer account deleted");
         accounts.delete(account);
         log.info("Developer account deleted successfully: accountId=[{}]", developerId);
     }

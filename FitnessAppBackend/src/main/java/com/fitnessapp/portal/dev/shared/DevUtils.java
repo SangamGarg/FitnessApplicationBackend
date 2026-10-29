@@ -1,6 +1,6 @@
 package com.fitnessapp.portal.dev.shared;
 
-import static com.fitnessapp.portal.common.PortalUtils.PORTAL_BASE_URL;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_URL;
 
 public final class DevUtils {
 
