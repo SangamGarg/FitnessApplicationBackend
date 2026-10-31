@@ -1,41 +1,64 @@
 package com.fitnessapp.appAuth.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "app_users")
-@Data
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserEntity {
-    // Primary key. The database column is named "user_id".
+
     @Id
     @Column(name = "user_id")
-    private String id; // Firebase UID (unique identifier from Firebase)
+    private String id; // Firebase UID
 
-    // Cannot be null and must be unique across all users.
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 320)
     private String email;
 
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "account_status", nullable = false, length = 20, columnDefinition = "varchar(20) default 'ACTIVE'")
+    @Column(name = "account_status", nullable = false, length = 20,
+            columnDefinition = "varchar(20) default 'ACTIVE'")
     private MobileAccountStatus accountStatus = MobileAccountStatus.ACTIVE;
 
-    // One-to-one with UserDetailsEntity; "user" in UserDetailsEntity owns the relationship.
-    // cascade ALL + orphanRemoval: deleting a user deletes their details (and FCM tokens).
-    // The relationship is excluded from toString/equals/hashCode: both sides reference each other,
-    // so including it would recurse forever (StackOverflowError).
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,
+            orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private UserDetailsEntity userDetailsEntity;
+
+    /** All app installations currently associated with this account. */
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<UserDeviceEntity> devices = new ArrayList<>();
+
+    public void addDevice(UserDeviceEntity device) {
+        devices.add(device);
+        device.setUser(this);
+    }
+
+    public void removeDevice(UserDeviceEntity device) {
+        devices.remove(device);
+        device.setUser(null);
+    }
 
     @PrePersist
     protected void onCreate() {

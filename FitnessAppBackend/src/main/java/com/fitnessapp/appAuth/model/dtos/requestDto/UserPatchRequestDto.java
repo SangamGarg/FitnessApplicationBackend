@@ -1,69 +1,46 @@
 package com.fitnessapp.appAuth.model.dtos.requestDto;
 
+import com.fitnessapp.appAuth.model.enums.ActivityLevel;
+import com.fitnessapp.appAuth.model.enums.FitnessGoal;
+import com.fitnessapp.appAuth.model.enums.Gender;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.math.BigDecimal;
 
+/** All fields are optional: omitted fields are left unchanged by PATCH. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UserPatchRequestDto {
 
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
 
-    private List<String> firebaseCloudMessagingToken;
+    private Gender gender;
 
-
-    //^	Start of the string
-    //(?i)	Case-insensitive flag (so "Male", "MALE", "male" are all accepted)
-    //$	End of the string
-    @Pattern(regexp = "^(?i)(male|female)$", message = "Gender must be 'male' or 'female'")
-    private String gender;
-
-    @Min(value = 1, message = "Age must be at least 1")
-    @Max(value = 120, message = "Age must be realistic (<=120)")
+    @Min(value = 13, message = "Age must be at least 13")
+    @Max(value = 120, message = "Age cannot exceed 120")
     private Integer age;
 
-    @Pattern(
-            regexp = "^(http|https)://.*$",
-            message = "Profile image URL must be a valid URL"
-    )
+    @Pattern(regexp = "^(https?)://.+$", flags = Pattern.Flag.CASE_INSENSITIVE,
+            message = "Profile image URL must start with http:// or https://")
+    @Size(max = 2048, message = "Profile image URL cannot exceed 2048 characters")
     private String profileImageUrl;
 
-    @PositiveOrZero(message = "Height must be positive")
-    @Max(value = 300, message = "Height must be at most 300cm")
-    private Float heightCm;
+    @DecimalMin(value = "50.0", message = "Height must be at least 50 cm")
+    @DecimalMax(value = "250.0", message = "Height cannot exceed 250 cm")
+    private BigDecimal heightCm;
 
-    @PositiveOrZero(message = "Weight must be positive")
-    @Max(value = 300, message = "Weight must be at most 300kg")
-    private Float weightKg;
+    @DecimalMin(value = "10.0", message = "Weight must be at least 10 kg")
+    @DecimalMax(value = "500.0", message = "Weight cannot exceed 500 kg")
+    private BigDecimal weightKg;
 
-    @Pattern(
-            regexp = "^(?i)(level_1|level_2|level_3|level_4|level_5)$",
-            message = "Activity level must be one of: level_1, level_2, level_3, level_4, level_5"
-    )
-    private String activityLevel;
+    private ActivityLevel activityLevel;
 
-    @Pattern(
-            regexp = "^(?i)(Maintain weight|Mild weight loss|Weight loss|Extreme weight loss|Mild weight gain|Weight gain|Extreme weight gain)$",
-            message = "Goal must be one of: Maintain weight, Mild weight loss, Weight loss, Extreme weight loss, Mild weight gain, Weight gain, Extreme weight gain"
-    )
-    private String goal;
-
-    @PositiveOrZero(message = "Hip measurement must be positive")
-    @Max(value = 300, message = "Hip must be at most 300cm")
-    private Float hipCm;
-
-    @PositiveOrZero(message = "Neck measurement must be positive")
-    @Max(value = 100, message = "Neck must be at most 100cm")
-    private Float neckCm;
-
-    @PositiveOrZero(message = "Waist measurement must be positive")
-    @Max(value = 150, message = "Waist must be at most 150 cm")
-    private Float waistCm;
+    private FitnessGoal goal;
 }

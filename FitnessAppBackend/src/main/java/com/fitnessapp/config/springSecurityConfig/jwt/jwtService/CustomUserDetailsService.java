@@ -1,7 +1,7 @@
 package com.fitnessapp.config.springSecurityConfig.jwt.jwtService;
 
 import com.fitnessapp.appAuth.repo.UserRepo;
-import com.fitnessapp.appAuth.model.entity.MobileAccountStatus;
+import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

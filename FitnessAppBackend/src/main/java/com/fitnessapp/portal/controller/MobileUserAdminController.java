@@ -3,7 +3,7 @@ package com.fitnessapp.portal.controller;
 import com.fitnessapp.portal.dto.MobileUserAdminResponseDto;
 import com.fitnessapp.portal.dto.MobileUserStatusRequestDto;
 import com.fitnessapp.portal.service.MobileUserAdminService;
-import com.fitnessapp.appAuth.model.entity.MobileAccountStatus;
+import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

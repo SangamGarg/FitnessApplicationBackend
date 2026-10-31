@@ -1,4 +1,4 @@
-package com.fitnessapp.appAuth.model.entity;
+package com.fitnessapp.appAuth.model.enums;
 
 public enum MobileAccountStatus {
     ACTIVE,

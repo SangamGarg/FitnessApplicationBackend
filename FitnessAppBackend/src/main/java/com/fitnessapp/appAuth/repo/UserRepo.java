@@ -2,7 +2,7 @@ package com.fitnessapp.appAuth.repo;
 
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.portal.dto.MobileUserAdminResponseDto;
-import com.fitnessapp.appAuth.model.entity.MobileAccountStatus;
+import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import jakarta.persistence.LockModeType;

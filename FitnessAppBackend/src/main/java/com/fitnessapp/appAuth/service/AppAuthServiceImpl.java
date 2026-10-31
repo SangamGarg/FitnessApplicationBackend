@@ -7,6 +7,7 @@ import com.fitnessapp.appAuth.model.dtos.responseDto.RefreshTokenResponseDto;
 import com.fitnessapp.appAuth.model.dtos.responseDto.UserDetailsResponseDto;
 import com.fitnessapp.appAuth.model.dtos.responseDto.UserRegisterResponseDto;
 import com.fitnessapp.appAuth.model.entity.*;
+import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.repo.RefreshTokenRepo;
 import com.fitnessapp.appAuth.repo.UserDetailsRepo;
 import com.fitnessapp.appAuth.repo.UserRepo;
@@ -313,32 +314,21 @@ public class AppAuthServiceImpl implements AppAuthService {
 
             if (existingUserDetails != null && existingUserDetails.getUser().getId().equals(user.getId())) {
                 log.warn("User details already exist");
-                return errorResponseDetails(HttpStatus.NOT_FOUND, "User details already exist");
+                return errorResponseDetails(HttpStatus.CONFLICT, "User details already exist");
             }
 
-            float bmi = AppAuthUtils.getBmi(calculatorService, dto);
-            float dailyCalories = AppAuthUtils.getDailyCalories(calculatorService, dto);
-            float bodyFat = AppAuthUtils.getBodyFat(calculatorService, dto);
-            float idealWeight = AppAuthUtils.getIdealWeight(calculatorService, dto);
+
             // Update user details
-            UserDetailsEntity userEntity = UserDetailsEntity.builder().name(dto.getName()).email(user.getEmail()).firebaseCloudMessagingToken(dto.getFirebaseCloudMessagingToken()).gender(dto.getGender()).age(dto.getAge()).profileImageUrl(dto.getProfileImageUrl()).heightCm(dto.getHeightCm()).weightKg(dto.getWeightKg()).activityLevel(dto.getActivityLevel()).goal(dto.getGoal()).user(user).userBodyDetails(UserBodyDetails.builder().bmi(bmi).dailyCalories(dailyCalories).bodyFat(bodyFat).idealWeight(idealWeight).build())
+            UserDetailsEntity userEntity = UserDetailsEntity.builder().name(dto.getName()).email(user.getEmail()).gender(dto.getGender()).age(dto.getAge()).profileImageUrl(dto.getProfileImageUrl()).heightCm(dto.getHeightCm()).weightKg(dto.getWeightKg()).activityLevel(dto.getActivityLevel()).goal(dto.getGoal()).user(user)
 //                    .hipCm(dto.getHipCm()).neckCm(dto.getNeckCm()).waistCm(dto.getWaistCm())
                     .build();
 
             UserDetailsEntity saved = userDetailsRepo.save(userEntity);
 
-            // A device token belongs to one account only: take it away from any other user.
-            if (dto.getFirebaseCloudMessagingToken() != null && !dto.getFirebaseCloudMessagingToken().isEmpty()) {
-                userDetailsRepo.removeTokensFromOtherUsers(dto.getFirebaseCloudMessagingToken(), saved.getId());
-            }
 
             log.info("User details created for user {}", id);
 
             dto.setEmail(user.getEmail());
-            dto.setBmi(bmi);
-            dto.setBodyFat(bodyFat);
-            dto.setDailyCalories(dailyCalories);
-            dto.setIdealWeight(idealWeight);
 
             UserDetailsResponseDto response = UserDetailsResponseDto.builder().status(AppResponseStatus.SUCCESS.name()).statusCode(HttpStatus.OK.value()).message("Details Updated Successfully").userDetailsDto(dto).build();
 
@@ -365,9 +355,6 @@ public class AppAuthServiceImpl implements AppAuthService {
 
             UserDetailsEntity saved = userDetailsRepo.save(Objects.requireNonNull(AppAuthUtils.patchLogic(userDetailsDto, existingUserDetails)));
 
-            if (userDetailsDto.getFirebaseCloudMessagingToken() != null && !userDetailsDto.getFirebaseCloudMessagingToken().isEmpty()) {
-                userDetailsRepo.removeTokensFromOtherUsers(userDetailsDto.getFirebaseCloudMessagingToken(), saved.getId());
-            }
 
             log.info("User details updated for user {}", id);
 

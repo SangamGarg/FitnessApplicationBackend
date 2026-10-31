@@ -1,13 +1,15 @@
 package com.fitnessapp.appAuth.model.dtos;
 
+import com.fitnessapp.appAuth.model.enums.ActivityLevel;
+import com.fitnessapp.appAuth.model.enums.FitnessGoal;
+import com.fitnessapp.appAuth.model.enums.Gender;
 import jakarta.validation.constraints.*;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
@@ -16,70 +18,37 @@ import java.util.List;
 public class UserDetailsDto {
 
     @NotBlank(message = "Name cannot be empty")
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
 
     private String email;
 
-    @NotNull(message = "FCM token list cannot be null")
-    @NotEmpty(message = "FCM token list cannot be empty")
-    private List<@NotBlank(message = "Each FCM token must be a non-blank string") String> firebaseCloudMessagingToken;
-
-
-    //^	Start of the string
-    //(?i)	Case-insensitive flag (so "Male", "MALE", "male" are all accepted)
-    //$	End of the string
-    @NotBlank(message = "Gender cannot be empty")
-    @Pattern(regexp = "^(?i)(male|female)$", message = "Gender must be 'male' or 'female'")
-    private String gender;
+    @NotNull(message = "Gender cannot be null")
+    private Gender gender;
 
     @NotNull(message = "Age cannot be null")
-    @Min(value = 1, message = "Age must be at least 1")
-    @Max(value = 120, message = "Age must be realistic (<=120)")
+    @Min(value = 13, message = "Minimum age must be 13")
+    @Max(value = 120, message = "Age cannot exceed 120")
     private Integer age;
 
-    @NotBlank(message = "Profile image URL cannot be empty")
-    @Pattern(
-            regexp = "^(http|https)://.*$",
-            message = "Profile image URL must be a valid URL"
-    )
+    @Pattern(regexp = "^(https?)://.+$", flags = Pattern.Flag.CASE_INSENSITIVE,
+            message = "Profile image URL must start with http:// or https://")
+    @Size(max = 2048, message = "Profile image URL cannot exceed 2048 characters")
     private String profileImageUrl;
 
-    @Positive(message = "Height must be positive")
-    @Max(value = 300, message = "Height must be at most 300cm")
-    private Float heightCm;
+    @NotNull(message = "Height cannot be null")
+    @DecimalMin(value = "50.0", message = "Height must be at least 50 cm")
+    @DecimalMax(value = "250.0", message = "Height cannot exceed 250 cm")
+    private BigDecimal heightCm;
 
-    @Positive(message = "Weight must be positive")
-    @Max(value = 300, message = "Weight must be at most 300kg")
-    private Float weightKg;
+    @NotNull(message = "Weight cannot be null")
+    @DecimalMin(value = "10.0", message = "Weight must be at least 10 kg")
+    @DecimalMax(value = "500.0", message = "Weight cannot exceed 500 kg")
+    private BigDecimal weightKg;
 
-    @NotBlank(message = "Activity level cannot be empty")
-    @Pattern(
-            regexp = "^(?i)(level_1|level_2|level_3|level_4|level_5)$",
-            message = "Activity level must be one of: level_1, level_2, level_3, level_4, levyel_5"
-    )
-    private String activityLevel;
+    @NotNull(message = "Activity level cannot be null")
+    private ActivityLevel activityLevel;
 
-    @Pattern(
-            regexp = "^(?i)(Maintain weight|Mild weight loss|Weight loss|Extreme weight loss|Mild weight gain|Weight gain|Extreme weight gain)$",
-            message = "Goal must be one of: Maintain weight, Mild weight loss, Weight loss, Extreme weight loss, Mild weight gain, Weight gain, Extreme weight gain"
-    )
-    @NotBlank(message = "Goal cannot be empty")
-    private String goal;
-
-//    @Positive(message = "Hip measurement must be positive")
-//    @Max(value = 300, message = "Hip must be at most 300cm")
-//    private Float hipCm;
-//
-//    @Positive(message = "Neck measurement must be positive")
-//    @Max(value = 100, message = "Neck must be at most 100cm")
-//    private Float neckCm;
-//
-//    @Positive(message = "Waist measurement must be positive")
-//    @Max(value = 150, message = "Waist must be at most 150 cm")
-//    private Float waistCm;
-
-    private Float bmi;
-    private Float dailyCalories;
-    private Float idealWeight;
-    private Float bodyFat;
+    @NotNull(message = "Goal cannot be null")
+    private FitnessGoal goal;
 }
