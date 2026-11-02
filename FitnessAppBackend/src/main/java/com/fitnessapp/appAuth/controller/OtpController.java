@@ -9,13 +9,14 @@ import com.fitnessapp.utils.appUtil.EmailMasker;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.fitnessapp.utils.appUtil.AppUtil.APP_OTP_ENDPOINT;
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_OTP_ENDPOINT;
 
 @Slf4j
 @RestController
@@ -48,7 +49,7 @@ public class OtpController {
         String email = EmailMasker.maskEmail(request.getEmail());
         log.info("Received request to send forgot-password OTP to email: {}", email);
         ResponseEntity<OtpActionResponseDto> response = appOtpService.sendForgotPasswordOtp(request);
-        log.info("Forgot-password OTP sent successfully to email: {}, status: {}", email, response.getStatusCode());
+        log.info("Forgot-password OTP sent {} to email: {}, status: {}", response.getStatusCode() == HttpStatus.OK ? "Success" : "Failed", email, response.getStatusCode());
         return response;
     }
 

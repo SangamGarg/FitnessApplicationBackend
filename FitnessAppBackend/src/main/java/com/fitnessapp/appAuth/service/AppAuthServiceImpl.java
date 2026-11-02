@@ -27,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,10 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HexFormat;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -84,7 +82,7 @@ public class AppAuthServiceImpl implements AppAuthService {
         try {
             user = userRepo.findById(uid).orElse(null);
             if (user == null) {
-                String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
+                String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
                 // New backend accounts may only be created after the email OTP was verified.
 
 //make sure your Signup flow calls these endpoints in the correct order:
@@ -126,7 +124,7 @@ public class AppAuthServiceImpl implements AppAuthService {
         }
 
         if (user.getAccountStatus() != MobileAccountStatus.ACTIVE) {
-            return errorResponseRegister(HttpStatus.FORBIDDEN, "Account is Suspended or deactivated");
+            return errorResponseRegister(HttpStatus.FORBIDDEN, "Account is Suspended or deactivated, Kindly contact support.");
         }
 
         try {
@@ -184,7 +182,7 @@ public class AppAuthServiceImpl implements AppAuthService {
                 stored.setRevokedAt(now);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
-            UserDetails principal = new org.springframework.security.core.userdetails.User(user.getId(), "", true, true, true, true, Collections.emptyList());
+            UserDetails principal = new User(user.getId(), "", true, true, true, true, Collections.emptyList());
             if (!jwtTokenService.isRefreshTokenValid(rawToken, principal)) {
                 stored.setRevokedAt(now);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -279,35 +277,36 @@ public class AppAuthServiceImpl implements AppAuthService {
     public ResponseEntity<UserDetailsResponseDto> getUserDetails() {
         try {
             String id = AppAuthUtils.getUserIdFromTokenInHeader();
-            UserEntity userEntity = userRepo.findById(id).orElse(null);
+            UserEntity userEntity = userRepo.findById(id != null ? id : "").orElse(null);
             if (userEntity == null) {
-                return errorResponseDetails(HttpStatus.NOT_FOUND, "User Not Found with given id");
+                return errorResponseDetails(HttpStatus.NOT_FOUND, "User not found or exists");
             }
             UserDetailsEntity user = userDetailsRepo.findByUserId(id);
             if (user != null) {
                 UserDetailsDto userDetailsDto = AppAuthUtils.userDetailsEntityToUserDetailsDto(user);
 
-                UserDetailsResponseDto response = UserDetailsResponseDto.builder().status(AppResponseStatus.SUCCESS.name()).statusCode(HttpStatus.OK.value()).message("Details Updated Successfully").userDetailsDto(userDetailsDto).build();
+                UserDetailsResponseDto response = UserDetailsResponseDto.builder().status(AppResponseStatus.SUCCESS.name()).statusCode(HttpStatus.OK.value()).message("Details Fetched Successfully").userDetailsDto(userDetailsDto).build();
 
                 return ResponseEntity.ok(response);
 
             } else {
-                return errorResponseDetails(HttpStatus.NOT_FOUND, "User Not Found with given id");
+                return errorResponseDetails(HttpStatus.NOT_FOUND, "User not found or exists");
             }
         } catch (Exception e) {
-            return errorResponseDetails(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getLocalizedMessage());
+            log.warn("Internal Server Error While Getting User Details: {}", e.getLocalizedMessage());
+            return errorResponseDetails(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error: Please Try Again");
         }
     }
 
     @Transactional
     @Override
-    public ResponseEntity<UserDetailsResponseDto> postUserDetails(UserDetailsDto dto) {
+    public ResponseEntity<UserDetailsResponseDto> addDetailsOfUser(UserDetailsDto dto) {
         try {
             String id = AppAuthUtils.getUserIdFromTokenInHeader();
             // Fetch user from DB
-            UserEntity user = userRepo.findById(id).orElse(null);
+            UserEntity user = userRepo.findById(id != null ? id : "").orElse(null);
             if (user == null) {
-                return errorResponseDetails(HttpStatus.NOT_FOUND, "User Not Found with given id");
+                return errorResponseDetails(HttpStatus.NOT_FOUND, "User not found or exists");
             }
             // Fetch existing user details
             UserDetailsEntity existingUserDetails = userDetailsRepo.findByUserId(id);
@@ -319,14 +318,9 @@ public class AppAuthServiceImpl implements AppAuthService {
 
 
             // Update user details
-            UserDetailsEntity userEntity = UserDetailsEntity.builder().name(dto.getName()).email(user.getEmail()).gender(dto.getGender()).age(dto.getAge()).profileImageUrl(dto.getProfileImageUrl()).heightCm(dto.getHeightCm()).weightKg(dto.getWeightKg()).activityLevel(dto.getActivityLevel()).goal(dto.getGoal()).user(user)
-//                    .hipCm(dto.getHipCm()).neckCm(dto.getNeckCm()).waistCm(dto.getWaistCm())
-                    .build();
+            UserDetailsEntity userEntity = UserDetailsEntity.builder().name(dto.getName()).email(user.getEmail()).gender(dto.getGender()).age(dto.getAge()).profileImageUrl(dto.getProfileImageUrl()).heightCm(dto.getHeightCm()).weightKg(dto.getWeightKg()).activityLevel(dto.getActivityLevel()).goal(dto.getGoal()).user(user).build();
 
             UserDetailsEntity saved = userDetailsRepo.save(userEntity);
-
-
-            log.info("User details created for user {}", id);
 
             dto.setEmail(user.getEmail());
 
@@ -335,13 +329,14 @@ public class AppAuthServiceImpl implements AppAuthService {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            return errorResponseDetails(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getLocalizedMessage());
+            log.warn("Internal Server Error While Adding User Details: {}", e.getLocalizedMessage());
+            return errorResponseDetails(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error: Please Try Again");
         }
     }
 
     @Transactional
     @Override
-    public ResponseEntity<UserDetailsResponseDto> patchUserDetails(UserPatchRequestDto userDetailsDto) {
+    public ResponseEntity<UserDetailsResponseDto> patchDetailsOfUser(UserPatchRequestDto userDetailsDto) {
         try {
             String id = AppAuthUtils.getUserIdFromTokenInHeader();
 
@@ -350,7 +345,7 @@ public class AppAuthServiceImpl implements AppAuthService {
 
             if (existingUserDetails == null) {
                 log.warn("User Not Found with given id");
-                return errorResponseDetails(HttpStatus.NOT_FOUND, "User Not Found with given id");
+                return errorResponseDetails(HttpStatus.NOT_FOUND, "User not found or exists");
             }
 
             UserDetailsEntity saved = userDetailsRepo.save(Objects.requireNonNull(AppAuthUtils.patchLogic(userDetailsDto, existingUserDetails)));
@@ -366,8 +361,8 @@ public class AppAuthServiceImpl implements AppAuthService {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            log.warn("Internal Server Error: {}", e.getLocalizedMessage());
-            return errorResponseDetails(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getLocalizedMessage());
+            log.warn("Internal Server Error While Patching User Details: {}", e.getLocalizedMessage());
+            return errorResponseDetails(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error: Please Try Again");
         }
     }
 
@@ -377,7 +372,7 @@ public class AppAuthServiceImpl implements AppAuthService {
     @Transactional
     public ResponseEntity<Void> deleteUser() {
         String uid = AppAuthUtils.getUserIdFromTokenInHeader();
-        UserEntity user = userRepo.findById(uid).orElse(null);
+        UserEntity user = userRepo.findById(uid != null ? uid : "").orElse(null);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }

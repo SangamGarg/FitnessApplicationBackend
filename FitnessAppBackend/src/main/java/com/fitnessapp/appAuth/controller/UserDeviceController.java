@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.fitnessapp.utils.appUtil.AppUtil.APP_AUTH_ENDPOINT;
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_DEVICES_ENDPOINT;
 
 @Slf4j
 @RestController
-@RequestMapping(APP_AUTH_ENDPOINT + "/devices")
+@RequestMapping(APP_DEVICES_ENDPOINT)
 @RequiredArgsConstructor
 public class UserDeviceController {
 
@@ -44,8 +44,8 @@ public class UserDeviceController {
             @PathVariable String deviceId,
             @RequestBody @Valid DeviceNotificationPreferenceRequestDto request) {
         log.info("Received request to update notification preferences for device: deviceId={}, enabled={}",
-                deviceId, request.getEnabled());
-        UserDeviceResponseDto response = userDeviceService.updateNotificationPreference(deviceId, request.getEnabled());
+                deviceId, request.getNotificationEnabled());
+        UserDeviceResponseDto response = userDeviceService.updateNotificationPreference(deviceId, request.getNotificationEnabled());
         log.info("Notification preference updated successfully for device: deviceId={}", deviceId);
         return ResponseEntity.ok(response);
     }

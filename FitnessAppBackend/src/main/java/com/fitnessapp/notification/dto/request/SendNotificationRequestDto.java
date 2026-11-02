@@ -1,4 +1,4 @@
-package com.fitnessapp.notification.notificationDtos.request;
+package com.fitnessapp.notification.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

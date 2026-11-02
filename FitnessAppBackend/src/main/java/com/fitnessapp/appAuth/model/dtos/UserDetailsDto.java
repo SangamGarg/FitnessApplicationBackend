@@ -17,8 +17,12 @@ import java.math.BigDecimal;
 @Builder
 public class UserDetailsDto {
 
-    @NotBlank(message = "Name cannot be empty")
+    @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    @Pattern(
+            regexp = "^(?=(?:.*[a-zA-Z\\p{L}]){2,})(?!.*\\d)[a-zA-Z\\p{L}][a-zA-Z\\p{L}\\s\\-'.]*$",
+            message = "Name must start with a letter, contain at least 2 letters, no numbers, and only allowed symbols (spaces, hyphens, apostrophes, periods)"
+    )
     private String name;
 
     private String email;
@@ -32,7 +36,7 @@ public class UserDetailsDto {
     private Integer age;
 
     @Pattern(regexp = "^(https?)://.+$", flags = Pattern.Flag.CASE_INSENSITIVE,
-            message = "Profile image URL must start with http:// or https://")
+            message = "Profile image URL must start with https://")
     @Size(max = 2048, message = "Profile image URL cannot exceed 2048 characters")
     private String profileImageUrl;
 

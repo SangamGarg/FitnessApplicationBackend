@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static com.fitnessapp.utils.appUtil.AppUtil.APP_AUTH_ENDPOINT;
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_AUTH_ENDPOINT;
 
 @Slf4j
 @RestController
@@ -54,7 +54,7 @@ public class AppAuthController {
     @PostMapping("/add-details")
     public ResponseEntity<UserDetailsResponseDto> addDetailsOfUser(@RequestBody @Valid UserDetailsDto dto) {
         log.info("Received request to add user details");
-        ResponseEntity<UserDetailsResponseDto> response = authService.postUserDetails(dto);
+        ResponseEntity<UserDetailsResponseDto> response = authService.addDetailsOfUser(dto);
         log.info("User details added with status: {}", response.getStatusCode());
         return response;
     }
@@ -62,7 +62,7 @@ public class AppAuthController {
     @PatchMapping("/patch-details")
     public ResponseEntity<UserDetailsResponseDto> patchDetailsOfUser(@RequestBody @Valid UserPatchRequestDto dto) {
         log.info("Received request to patch user details");
-        ResponseEntity<UserDetailsResponseDto> response = authService.patchUserDetails(dto);
+        ResponseEntity<UserDetailsResponseDto> response = authService.patchDetailsOfUser(dto);
         log.info("User details patched with status: {}", response.getStatusCode());
         return response;
     }

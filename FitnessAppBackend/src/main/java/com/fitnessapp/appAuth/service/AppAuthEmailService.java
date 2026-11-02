@@ -19,8 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.fitnessapp.utils.appUtil.AppUtil.APP_NAME;
-import static com.fitnessapp.utils.appUtil.AppUtil.APP_URL;
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_NAME;
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_URL;
 
 @Service
 @RequiredArgsConstructor

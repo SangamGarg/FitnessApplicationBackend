@@ -10,6 +10,12 @@ import java.time.Instant;
 @Value
 @Builder
 public class UserDeviceResponseDto {
+    String status;
+    Integer statusCode;
+    String message;
+    @Builder.Default
+    Instant timestamp = Instant.now();
+
     Long id;
     String deviceId;
     DevicePlatform platform;

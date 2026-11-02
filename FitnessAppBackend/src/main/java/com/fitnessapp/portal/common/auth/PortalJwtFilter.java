@@ -44,7 +44,7 @@ public class PortalJwtFilter extends OncePerRequestFilter {
         // Only portal routes and the developer console use portal JWTs. If this
         // filter runs on ordinary app APIs, a valid app JWT is incorrectly rejected
         // because its token_type is "access", not "portal".
-        boolean portalOrDevRoute = path.startsWith("/api/v1/portal/");
+        boolean portalOrDevRoute = path.startsWith(PORTAL_BASE_URL);
         boolean publicOrDocsRoute = EXCLUDED_PATHS.contains(path)
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui");

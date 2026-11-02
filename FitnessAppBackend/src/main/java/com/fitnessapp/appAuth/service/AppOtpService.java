@@ -220,7 +220,7 @@ public class AppOtpService {
             otpRepo.save(challenge);
             log.error("OTP email delivery failed; recipient details and OTP were not logged : {}", ex.getMessage());
             return response(HttpStatus.SERVICE_UNAVAILABLE, false, "OTP_EMAIL_UNAVAILABLE",
-                    "Unable to send the verification email right now. Please try again later.", null, null);
+                    "Unable to send the OTP email right now. Please try again later.", null, null);
         }
 
         return response(HttpStatus.OK, true, "OTP_SENT", "A verification code has been sent to your email address.", otpExpirySeconds, null);

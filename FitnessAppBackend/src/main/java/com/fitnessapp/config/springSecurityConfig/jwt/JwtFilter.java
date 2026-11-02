@@ -1,7 +1,6 @@
 package com.fitnessapp.config.springSecurityConfig.jwt;
 
 import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtTokenService;
-import com.fitnessapp.appAuth.utils.AppAuthUtils;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -21,8 +20,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static com.fitnessapp.utils.appUtil.AppUtil.APP_AUTH_ENDPOINT;
-import static com.fitnessapp.utils.appUtil.AppUtil.APP_OTP_ENDPOINT;
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_AUTH_ENDPOINT;
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_OTP_ENDPOINT;
 import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_URL;
 
 @Component

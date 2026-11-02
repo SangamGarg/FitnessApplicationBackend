@@ -1,4 +1,4 @@
-package com.fitnessapp.notification.notificationDtos.response;
+package com.fitnessapp.notification.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

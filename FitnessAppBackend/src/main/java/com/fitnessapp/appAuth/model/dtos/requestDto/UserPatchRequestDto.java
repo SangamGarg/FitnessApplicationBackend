@@ -19,6 +19,10 @@ import java.math.BigDecimal;
 public class UserPatchRequestDto {
 
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    @Pattern(
+            regexp = "^(?=(?:.*[a-zA-Z\\p{L}]){2,})(?!.*\\d)[a-zA-Z\\p{L}][a-zA-Z\\p{L}\\s\\-'.]*$",
+            message = "Name must start with a letter, contain at least 2 letters, no numbers, and only allowed symbols (spaces, hyphens, apostrophes, periods)"
+    )
     private String name;
 
     private Gender gender;

@@ -1,7 +1,7 @@
 package com.fitnessapp.notification;
 
 import lombok.extern.slf4j.Slf4j;
-import com.fitnessapp.notification.notificationDtos.request.SendNotificationRequestDto;
+import com.fitnessapp.notification.dto.request.SendNotificationRequestDto;
 import com.google.auth.oauth2.GoogleCredentials;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;

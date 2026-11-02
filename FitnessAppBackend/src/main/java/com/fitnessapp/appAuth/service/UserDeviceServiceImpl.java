@@ -1,14 +1,17 @@
 package com.fitnessapp.appAuth.service;
 
 import com.fitnessapp.appAuth.model.dtos.requestDto.DeviceRegistrationRequestDto;
+import com.fitnessapp.appAuth.model.dtos.responseDto.UserDetailsResponseDto;
 import com.fitnessapp.appAuth.model.dtos.responseDto.UserDeviceResponseDto;
 import com.fitnessapp.appAuth.model.entity.UserDeviceEntity;
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserDeviceRepo;
 import com.fitnessapp.appAuth.repo.UserRepo;
+import com.fitnessapp.utils.appUtil.AppResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,7 +30,7 @@ public class UserDeviceServiceImpl implements UserDeviceService {
     private final UserRepo userRepo;
 
     /**
-     * Upserts one installation. A deviceId is globally unique, so signing into another
+     * Upserts one installation. A deviceId is globally unique, so signing in to another
      * account transfers this installation without disturbing the account's other devices.
      * An FCM token already attached to a different installation is treated as stale and
      * detached before the new registration is saved.
@@ -36,8 +39,14 @@ public class UserDeviceServiceImpl implements UserDeviceService {
     @Transactional
     public UserDeviceResponseDto registerOrUpdateDevice(DeviceRegistrationRequestDto request) {
         String authenticatedUserId = currentUserId();
+        log.info("Processing device registration: userId={}, deviceId={}, platform={}",
+                authenticatedUserId, request.getDeviceId(), request.getPlatform());
+
         UserEntity currentUser = userRepo.findByIdForUpdate(authenticatedUserId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated account was not found"));
+                .orElseThrow(() -> {
+                    log.warn("Device registration failed: Authenticated account not found for userId={}", authenticatedUserId);
+                    return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated account was not found");
+                });
 
         Instant now = Instant.now();
         UserDeviceEntity device = userDeviceRepo.findByDeviceIdForUpdate(request.getDeviceId()).orElse(null);
@@ -45,11 +54,15 @@ public class UserDeviceServiceImpl implements UserDeviceService {
         // FCM may issue a new token after reinstall/restore. Keep only the newest owner of a token.
         UserDeviceEntity tokenOwner = userDeviceRepo.findByFcmTokenForUpdate(request.getFcmToken()).orElse(null);
         if (tokenOwner != null && (device == null || !tokenOwner.getId().equals(device.getId()))) {
+            log.info("Detaching stale token registration from previous installation: previousDeviceId={}, newDeviceId={}",
+                    tokenOwner.getDeviceId(), request.getDeviceId());
             userDeviceRepo.delete(tokenOwner);
             userDeviceRepo.flush();
         }
 
         if (device == null) {
+            log.info("Creating new device installation record: userId={}, deviceId={}",
+                    authenticatedUserId, request.getDeviceId());
             device = UserDeviceEntity.builder()
                     .deviceId(request.getDeviceId())
                     .fcmToken(request.getFcmToken())
@@ -65,6 +78,9 @@ public class UserDeviceServiceImpl implements UserDeviceService {
             boolean tokenChanged = !request.getFcmToken().equals(device.getFcmToken());
             boolean accountChanged = device.getUser() == null
                     || !authenticatedUserId.equals(device.getUser().getId());
+
+            log.info("Updating existing device installation: deviceId={}, tokenChanged={}, accountChanged={}",
+                    request.getDeviceId(), tokenChanged, accountChanged);
 
             // Reassign this installation when another account signs in.
             device.setUser(currentUser);
@@ -82,47 +98,68 @@ public class UserDeviceServiceImpl implements UserDeviceService {
                 device.setTokenUpdatedAt(now);
             }
             if (accountChanged) {
-                log.info("App installation reassigned to authenticated account; deviceId={}", request.getDeviceId());
+                log.info("App installation reassigned to authenticated account: deviceId={}, newUserId={}",
+                        request.getDeviceId(), authenticatedUserId);
             }
         }
 
-        return toResponse(userDeviceRepo.saveAndFlush(device));
+        UserDeviceEntity saved = userDeviceRepo.saveAndFlush(device);
+        log.info("Device successfully registered/updated: id={}, deviceId={}, userId={}",
+                saved.getId(), saved.getDeviceId(), authenticatedUserId);
+        return toResponse(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<UserDeviceResponseDto> getMyDevices() {
         String userId = currentUserId();
-        return userDeviceRepo.findAllByUser_IdOrderByLastActiveAtDesc(userId)
-                .stream().map(this::toResponse).toList();
+        log.debug("Fetching registered devices for userId={}", userId);
+        List<UserDeviceEntity> devices = userDeviceRepo.findAllByUser_IdOrderByLastActiveAtDesc(userId);
+        log.debug("Retrieved {} device(s) for userId={}", devices.size(), userId);
+        return devices.stream().map(this::toResponse).toList();
     }
 
     @Override
     @Transactional
     public UserDeviceResponseDto updateNotificationPreference(String deviceId, boolean enabled) {
+        String userId = currentUserId();
+        log.info("Updating notification preference: userId={}, deviceId={}, enabled={}", userId, deviceId, enabled);
         UserDeviceEntity device = findOwnedDevice(deviceId);
         device.setNotificationEnabled(enabled);
         device.setLastActiveAt(Instant.now());
-        return toResponse(userDeviceRepo.save(device));
+        UserDeviceEntity updated = userDeviceRepo.save(device);
+        log.info("Notification preference updated: deviceId={}, enabled={}", deviceId, enabled);
+        return toResponse(updated);
     }
 
     @Override
     @Transactional
     public void unregisterDevice(String deviceId) {
         String userId = currentUserId();
+        log.info("Unregistering device: userId={}, deviceId={}", userId, deviceId);
         // Ownership is part of the delete predicate; another user's device cannot be removed.
-        userDeviceRepo.deleteByDeviceIdAndUser_Id(deviceId, userId);
+        long deletedCount = userDeviceRepo.deleteByDeviceIdAndUser_Id(deviceId, userId);
+        if (deletedCount > 0) {
+            log.info("Device successfully unregistered: userId={}, deviceId={}", userId, deviceId);
+        } else {
+            log.warn("Unregister device skipped: No matching device found for userId={}, deviceId={}", userId, deviceId);
+        }
     }
 
     private UserDeviceEntity findOwnedDevice(String deviceId) {
-        return userDeviceRepo.findByDeviceIdAndUser_Id(deviceId, currentUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found"));
+        String userId = currentUserId();
+        return userDeviceRepo.findByDeviceIdAndUser_Id(deviceId, userId)
+                .orElseThrow(() -> {
+                    log.warn("Device access rejected: Device not found or not owned by userId={}: deviceId={}", userId, deviceId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Device not found");
+                });
     }
 
     private String currentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
                 || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
+            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
         return authentication.getName();
@@ -141,5 +178,10 @@ public class UserDeviceServiceImpl implements UserDeviceService {
                 .createdAt(device.getCreatedAt())
                 .updatedAt(device.getUpdatedAt())
                 .build();
+    }
+
+    private ResponseEntity<UserDeviceResponseDto> errorResponseDevice(HttpStatus status, String message) {
+        log.warn(message);
+        return ResponseEntity.status(status).body(UserDeviceResponseDto.builder().status(AppResponseStatus.FAILED.name()).statusCode(status.value()).message(message).build());
     }
 }

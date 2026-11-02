@@ -13,7 +13,7 @@ public interface AppAuthService {
     ResponseEntity<RefreshTokenResponseDto> refreshToken(RefreshTokenRequestDto request);
     ResponseEntity<Void> logout(RefreshTokenRequestDto request, boolean logoutEverywhere);
     ResponseEntity<UserDetailsResponseDto> getUserDetails();
-    ResponseEntity<UserDetailsResponseDto> postUserDetails(UserDetailsDto userDetailsDto);
-    ResponseEntity<UserDetailsResponseDto> patchUserDetails(UserPatchRequestDto userDetailsDto);
+    ResponseEntity<UserDetailsResponseDto> addDetailsOfUser(UserDetailsDto userDetailsDto);
+    ResponseEntity<UserDetailsResponseDto> patchDetailsOfUser(UserPatchRequestDto userDetailsDto);
     ResponseEntity<Void> deleteUser();
 }
