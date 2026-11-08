@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${appName} + ' - ' + ${tagline}">MusclePlay - Fitness Tracking</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Ambient Glowing Background Orbs -->
+<div class="ambient-glow glow-top-right"></div>
+<div class="ambient-glow glow-bottom-left"></div>
+
+<!-- Navigation -->
+<nav class="glass-nav">
+    <div class="nav-container">
+        <a href="/" class="brand-logo">
+            <span class="logo-icon">🔥</span>
+            <span class="logo-text" th:text="${appName}">MusclePlay</span>
+        </a>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#tracking">AI Vision</a>
+            <a href="#stats">Community</a>
+            <a href="#download" class="btn btn-primary-sm">Get App</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<header class="hero-section">
+    <div class="hero-badge">Next-Gen Fitness Experience ⚡</div>
+    <h1 class="hero-title">Level Up Your Workouts With <span class="text-gradient">Real-Time AI</span></h1>
+    <p class="hero-subtitle" th:text="${tagline}">
+        Smart AI-Powered Fitness & Real-Time Workout Tracking
+    </p>
+
+    <div class="hero-actions">
+        <a href="#download" class="btn btn-primary">Download for Android &amp; iOS</a>
+        <a href="#features" class="btn btn-secondary">Explore Features</a>
+    </div>
+
+    <!-- Glass Floating App Preview Card -->
+    <div class="preview-container">
+        <div class="glass-card preview-card">
+            <div class="preview-header">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+                <span class="preview-title">Live Workout Session • Active</span>
+            </div>
+            <div class="preview-grid">
+                <div class="stat-box">
+                    <span class="stat-label">Movement</span>
+                    <span class="stat-value">Barbell Squats</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">AI Detected Reps</span>
+                    <span class="stat-value highlight">12 / 12</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Form Accuracy</span>
+                    <span class="stat-value text-green">98.4%</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Rest Timer</span>
+                    <span class="stat-value">00:45</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Features Section -->
+<section id="features" class="section-container">
+    <div class="section-header">
+        <h2 class="section-title">Engineered For Performance</h2>
+        <p class="section-subtitle">Everything you need to transform your training routine</p>
+    </div>
+
+    <div class="cards-grid">
+        <div class="glass-card feature-card">
+            <div class="card-icon">🤖</div>
+            <h3>On-Device AI Tracking</h3>
+            <p>Real-time pose estimation and repetition tracking running directly on your phone camera without compromising privacy.</p>
+        </div>
+
+        <div class="glass-card feature-card">
+            <div class="card-icon">📋</div>
+            <h3>Personalized Workout Plans</h3>
+            <p>Structured daily splits, target volume, and automatic rest intervals crafted to align with your personal goals.</p>
+        </div>
+
+        <div class="glass-card feature-card">
+            <div class="card-icon">📊</div>
+            <h3>Detailed Session Logs</h3>
+            <p>Log sets, weights, durations, and intensity metrics with instant visual analytics and weekly progression charts.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section id="stats" class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-item">
+            <h3 class="stat-number">500+</h3>
+            <p class="stat-desc">Exercise Catalog</p>
+        </div>
+        <div class="stat-item">
+            <h3 class="stat-number">99.2%</h3>
+            <p class="stat-desc">Pose Accuracy</p>
+        </div>
+        <div class="stat-item">
+            <h3 class="stat-number">50k+</h3>
+            <p class="stat-desc">Logged Reps</p>
+        </div>
+        <div class="stat-item">
+            <h3 class="stat-number">0ms</h3>
+            <p class="stat-desc">Cloud Latency on Camera</p>
+        </div>
+    </div>
+</section>
+
+<!-- Download Section -->
+<section id="download" class="cta-section">
+    <div class="glass-card cta-card">
+        <h2>Ready to Transform Your Fitness?</h2>
+        <p>Download MusclePlay today and take your daily workouts to the next level.</p>
+        <div class="cta-buttons">
+            <button class="store-badge">🤖 Download for Android</button>
+            <button class="store-badge">🍏 Download for iOS</button>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <p>&copy; 2026 <span th:text="${appName}">MusclePlay</span>. All rights reserved.</p>
+</footer>
+
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 package com.fitnessapp.exercise.portal;
 
-import tools.jackson.databind.ObjectMapper;
 import com.fitnessapp.exercise.app.model.entity.entityNew.Exercise;
 import com.fitnessapp.exercise.app.model.entity.entityNew.WorkoutPlan;
 import com.fitnessapp.exercise.app.model.entity.entityNew.WorkoutPlanDay;
@@ -11,19 +10,16 @@ import com.fitnessapp.exercise.portal.dto.WorkoutPlanResponseDto;
 import com.fitnessapp.exercise.portal.dto.WorkoutPlanUpsertRequestDto;
 import com.fitnessapp.portal.audit.PortalAuditService;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.ObjectMapper;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,9 +41,9 @@ public class WorkoutPlanService {
             Pageable pageable
     ) {
         return plans.search(
-                normalize(query),
-                normalize(goal),
-                normalize(difficulty),
+                normalizeSearchFilter(query),
+                normalizeSearchFilter(goal),
+                normalizeSearchFilter(difficulty),
                 published,
                 pageable
         ).map(this::toResponse);
@@ -190,14 +186,7 @@ public class WorkoutPlanService {
                         "Workout day numbers must be unique and within a seven-day week"
                 );
             }
-            List<WorkoutPlanUpsertRequestDto.PlanExercise> items =
-                    day.exercises() == null ? List.of() : day.exercises();
-            if (day.restDay() && !items.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rest days cannot contain exercises");
-            }
-            if (!day.restDay() && items.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Training days must contain at least one exercise");
-            }
+            List<WorkoutPlanUpsertRequestDto.PlanExercise> items = getPlanExercises(day);
             if (!day.restDay()) {
                 trainingDays++;
             }
@@ -233,6 +222,18 @@ public class WorkoutPlanService {
         }
     }
 
+    private static @NonNull List<WorkoutPlanUpsertRequestDto.PlanExercise> getPlanExercises(WorkoutPlanUpsertRequestDto.WorkoutDay day) {
+        List<WorkoutPlanUpsertRequestDto.PlanExercise> items =
+                day.exercises() == null ? List.of() : day.exercises();
+        if (day.restDay() && !items.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rest days cannot contain exercises");
+        }
+        if (!day.restDay() && items.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Training days must contain at least one exercise");
+        }
+        return items;
+    }
+
     private String validateEquipmentJson(String raw) {
         if (raw == null || raw.isBlank()) {
             return "[]";
@@ -262,9 +263,13 @@ public class WorkoutPlanService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
+    private String normalizeSearchFilter(String value) {
+        return value == null ? "" : value.trim();
+    }
+
     private WorkoutPlanResponseDto toResponse(WorkoutPlan plan) {
         List<WorkoutPlanResponseDto.Day> days = plan.getDays().stream()
-                .sorted(java.util.Comparator.comparingInt(WorkoutPlanDay -> WorkoutPlanDay.getDayNumber()))
+                .sorted(java.util.Comparator.comparingInt(WorkoutPlanDay::getDayNumber))
                 .map(day -> new WorkoutPlanResponseDto.Day(
                         day.getDayNumber(),
                         day.getName(),

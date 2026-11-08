@@ -57,6 +57,10 @@ public class JwtFilter
                 filterChain.doFilter(request, response);
                 return;
             }
+
+            //TODO HAVE TO REMOVE
+            System.out.println(authHeader);
+
             String token = authHeader.substring(7);
             String id = jwtTokenService.extractId(token);
             if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {

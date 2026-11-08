@@ -22,7 +22,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-class WorkoutSetLog {
+public class WorkoutSetLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

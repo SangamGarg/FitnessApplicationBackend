@@ -1,3 +1,4 @@
+
 package com.fitnessapp.exercise.app.repo;
 
 import com.fitnessapp.exercise.app.model.entity.entityNew.WorkoutPlan;
@@ -19,23 +20,28 @@ public interface WorkoutPlanRepository extends JpaRepository<WorkoutPlan, Long> 
 
     @Query(
             value = """
-                    select p from WorkoutPlan p
-                    where (:published is null or p.published = :published)
-                      and (:goal is null or lower(p.goal) = lower(:goal))
-                      and (:difficulty is null or lower(p.difficulty) = lower(:difficulty))
-                      and (:query is null
-                           or lower(p.name) like concat('%', lower(:query), '%')
-                           or lower(p.planKey) like concat('%', lower(:query), '%'))
-                    """,
+            SELECT p FROM WorkoutPlan p
+            WHERE (:published IS NULL OR p.published = :published)
+              AND (:goal = '' OR LOWER(p.goal) = LOWER(:goal))
+              AND (:difficulty = '' OR LOWER(p.difficulty) = LOWER(:difficulty))
+              AND (
+                    :query = ''
+                    OR LOWER(p.name) LIKE CONCAT('%', LOWER(:query), '%')
+                    OR LOWER(p.planKey) LIKE CONCAT('%', LOWER(:query), '%')
+              )
+            ORDER BY p.name
+            """,
             countQuery = """
-                    select count(p) from WorkoutPlan p
-                    where (:published is null or p.published = :published)
-                      and (:goal is null or lower(p.goal) = lower(:goal))
-                      and (:difficulty is null or lower(p.difficulty) = lower(:difficulty))
-                      and (:query is null
-                           or lower(p.name) like concat('%', lower(:query), '%')
-                           or lower(p.planKey) like concat('%', lower(:query), '%'))
-                    """
+            SELECT COUNT(p) FROM WorkoutPlan p
+            WHERE (:published IS NULL OR p.published = :published)
+              AND (:goal = '' OR LOWER(p.goal) = LOWER(:goal))
+              AND (:difficulty = '' OR LOWER(p.difficulty) = LOWER(:difficulty))
+              AND (
+                    :query = ''
+                    OR LOWER(p.name) LIKE CONCAT('%', LOWER(:query), '%')
+                    OR LOWER(p.planKey) LIKE CONCAT('%', LOWER(:query), '%')
+              )
+            """
     )
     Page<WorkoutPlan> search(
             @Param("query") String query,

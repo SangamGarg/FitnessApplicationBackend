@@ -1,9 +1,9 @@
 package com.fitnessapp.portal.controller;
 
-import com.fitnessapp.wallet.WalletService;
-import com.fitnessapp.wallet.dto.WalletAdjustmentRequestDto;
-import com.fitnessapp.wallet.dto.WalletBalanceResponseDto;
-import com.fitnessapp.wallet.dto.WalletTransactionResponseDto;
+import com.fitnessapp.wallet.service.WalletService;
+import com.fitnessapp.wallet.model.dto.WalletAdjustmentRequestDto;
+import com.fitnessapp.wallet.model.dto.WalletBalanceResponseDto;
+import com.fitnessapp.wallet.model.dto.WalletTransactionResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

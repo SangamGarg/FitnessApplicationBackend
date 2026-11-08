@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/dev/support/**").hasRole("ADMIN")
                         .requestMatchers(PORTAL_BASE_URL + "/**").hasAnyRole("ADMIN", "DEVELOPER")
 
-
+                        .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                         .requestMatchers(APP_AUTH_ENDPOINT + "/loginRegister", APP_AUTH_ENDPOINT + "/refresh-token", APP_OTP_ENDPOINT + "/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api/health").permitAll()
                         .requestMatchers(APP_AUTH_ENDPOINT + "/logout").authenticated()
                         .anyRequest().authenticated())

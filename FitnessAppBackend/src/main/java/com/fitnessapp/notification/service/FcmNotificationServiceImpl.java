@@ -87,7 +87,7 @@ public class FcmNotificationServiceImpl implements FcmNotificationService {
             failureCount += batchResponse.getFailureCount();
             removedInvalidTokenCount += pruneConfirmedInvalidTokens(chunk, batchResponse);
         }
-
+        log.info("FCM delivery Success Counts: {}, Failed Count: {}", successCount, failureCount);
         return FcmDeliveryResult.builder()
                 .targetedDevices(devices.size())
                 .attemptedDevices(attemptedDevices)
@@ -129,7 +129,7 @@ public class FcmNotificationServiceImpl implements FcmNotificationService {
             } else {
                 // INVALID_ARGUMENT may indicate a malformed payload. Sender mismatch and
                 // transient/quota failures are not proof that a registration token is invalid.
-                log.warn("FCM delivery failed for device row id={} with errorCode={}",
+                log.warn("FCM delivery failed for device row id={},  with errorCode={}",
                         devices.get(i).getId(), errorCode);
             }
         }

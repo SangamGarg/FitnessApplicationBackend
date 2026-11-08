@@ -13,16 +13,17 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.time.Instant;
 
 @Entity
 @Table(
-    name = "user_workouts",
-    indexes = {
-        @Index(name = "idx_user_workouts_history", columnList = "user_id, started_at DESC")
-    },
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uq_user_client_request", columnNames = {"user_id", "client_request_id"})
-    }
+        name = "user_workouts",
+        indexes = {
+                @Index(name = "idx_user_workouts_history", columnList = "user_id, started_at DESC")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_user_client_request", columnNames = {"user_id", "client_request_id"})
+        }
 )
 @Getter
 @Setter
@@ -34,7 +35,7 @@ public class UserWorkout {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column(name = "workout_plan_id")
     private Long workoutPlanId;
@@ -77,4 +78,10 @@ public class UserWorkout {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "paused_at")
+    private Instant pausedAt;
+
+    @Column(name = "total_paused_seconds", nullable = false)
+    private Long totalPausedSeconds = 0L;
 }
