@@ -1,18 +1,18 @@
 package com.fitnessapp.calculator.service;
 
-import lombok.extern.slf4j.Slf4j;
-import com.fitnessapp.calculator.shared.ClientCalculatorUtils;
 import com.fitnessapp.calculator.model.dtos.requestDto.BodyFatRequestDto;
 import com.fitnessapp.calculator.model.dtos.requestDto.BurnedCaloriesFromActivityRequestDto;
 import com.fitnessapp.calculator.model.dtos.requestDto.DailyCaloriesRequestDto;
 import com.fitnessapp.calculator.model.dtos.responseDto.*;
 import com.fitnessapp.calculator.model.entities.BurnedCaloriesActivityEntity;
-import com.fitnessapp.portal.dev.assetUploadDev.model.AppMediaAssetEntity;
 import com.fitnessapp.calculator.model.entities.CaloriesInFoodEntity;
 import com.fitnessapp.calculator.repo.BurnedCaloriesFromActivityRepository;
 import com.fitnessapp.calculator.repo.CaloriesInFoodRepository;
-import com.fitnessapp.portal.dev.assetUploadDev.repo.AppMediaAssetRepository;
 import com.fitnessapp.calculator.service.calculatorServiceUtilities.*;
+import com.fitnessapp.portal.dev.assetUploadDev.model.AppMediaAssetEntity;
+import com.fitnessapp.portal.dev.assetUploadDev.repo.AppMediaAssetRepository;
+import com.fitnessapp.utils.appUtil.AppResponseStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -45,7 +45,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
             BmiCalculateResponseDto bmiCalculateResponse = BmiCalculateResponseDto
                     .builder()
-                    .status(ClientCalculatorUtils.SUCCESS_API_STATUS)
+                    .status(AppResponseStatus.SUCCESS.name())
                     .statusCode(200)
                     .bmi(bmi)
                     .healthStatus(BmiCalculatorUtilities.determineHealthStatus(bmi))
@@ -57,7 +57,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             return ResponseEntity.ok(bmiCalculateResponse);
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ClientCalculatorUtils.errorDto(e));
+            return ResponseEntity.internalServerError().body("ClientCalculatorUtils.errorDto(e)");
         }
     }
 
@@ -69,7 +69,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
             BodyFatResponseDto dailyCaloriesResponseDto = BodyFatResponseDto
                     .builder()
-                    .status(ClientCalculatorUtils.SUCCESS_API_STATUS)
+                    .status(AppResponseStatus.SUCCESS.name())
                     .statusCode(200)
                     .data(BodyFatCalculatorUtilities.createMap(bodyFatRequestDto))
                     .imageUrl(bodyFatData.getImageUrl())
@@ -78,7 +78,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ClientCalculatorUtils.errorDto(e));
+            return ResponseEntity.internalServerError().body("ClientCalculatorUtils.errorDto(e)");
         }
     }
 
@@ -89,7 +89,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
             BurnedCaloriesFromActivityResponseDto dailyCaloriesResponseDto = BurnedCaloriesFromActivityResponseDto
                     .builder()
-                    .status(ClientCalculatorUtils.SUCCESS_API_STATUS)
+                    .status(AppResponseStatus.SUCCESS.name())
                     .statusCode(200)
                     .burnedCalories(BurnedCaloriesFromActivityCalculatorUtilities.createMap(burnedCaloriesFromActivityRequestDto, burnedCaloriesFromActivityRepository))
                     .imageUrl(burnedActivityData.getImageUrl())
@@ -98,7 +98,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ClientCalculatorUtils.errorDto(e));
+            return ResponseEntity.internalServerError().body("ClientCalculatorUtils.errorDto(e)");
         }
     }
 
@@ -120,7 +120,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ClientCalculatorUtils.errorDto(e));
+            return ResponseEntity.internalServerError().body("ClientCalculatorUtils.errorDto(e)");
         }
     }
 
@@ -131,7 +131,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
             CaloriesInFoodResponseDto dailyCaloriesResponseDto = CaloriesInFoodResponseDto
                     .builder()
-                    .status(ClientCalculatorUtils.SUCCESS_API_STATUS)
+                    .status(AppResponseStatus.SUCCESS.name())
                     .statusCode(200)
                     .foodData(CaloriesInFoodCalculatorUtilities.createMap(query, quantityGm, caloriesInFoodRepository))
                     .imageUrl(caloriesInFoodData.getImageUrl())
@@ -140,7 +140,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ClientCalculatorUtils.errorDto(e));
+            return ResponseEntity.internalServerError().body("ClientCalculatorUtils.errorDto(e)");
         }
     }
 
@@ -162,7 +162,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ClientCalculatorUtils.errorDto(e));
+            return ResponseEntity.internalServerError().body("ClientCalculatorUtils.errorDto(e)");
         }
     }
 
@@ -173,7 +173,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
             DailyCaloriesResponseDto dailyCaloriesResponseDto = DailyCaloriesResponseDto
                     .builder()
-                    .status(ClientCalculatorUtils.SUCCESS_API_STATUS)
+                    .status(AppResponseStatus.SUCCESS.name())
                     .statusCode(200)
                     .goals(DailyCaloriesCalculatorUtilities.createMap(dailyCaloriesRequestDto))
                     .imageUrl(dailyCaloriesData.getImageUrl())
@@ -182,7 +182,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             return ResponseEntity.ok(dailyCaloriesResponseDto);
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ClientCalculatorUtils.errorDto(e));
+            return ResponseEntity.internalServerError().body("ClientCalculatorUtils.errorDto(e)");
         }
     }
 
@@ -193,7 +193,7 @@ public class CalculatorServiceImpl implements CalculatorService {
 
             IdealWeightResponseDto idealWeightResponseDto = IdealWeightResponseDto
                     .builder()
-                    .status(ClientCalculatorUtils.SUCCESS_API_STATUS)
+                    .status(AppResponseStatus.SUCCESS.name())
                     .statusCode(200)
                     .idealWeight(IdealWeightCalculatorUtilities.createMap(gender, height))
                     .imageUrl(idealWeightData.getImageUrl())
@@ -202,7 +202,7 @@ public class CalculatorServiceImpl implements CalculatorService {
             return ResponseEntity.ok(idealWeightResponseDto);
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ClientCalculatorUtils.errorDto(e));
+            return ResponseEntity.internalServerError().body("ClientCalculatorUtils.errorDto(e)");
         }
     }
 

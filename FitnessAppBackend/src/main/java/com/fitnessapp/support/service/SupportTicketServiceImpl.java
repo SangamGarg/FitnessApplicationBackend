@@ -1,12 +1,17 @@
 package com.fitnessapp.support.service;
 
 import com.fitnessapp.portal.dev.assetUploadDev.service.FileStorageService;
-import com.fitnessapp.support.models.SupportTicketResponseDTO;
-import com.fitnessapp.support.models.*;
-import com.fitnessapp.support.repository.SupportTicketRepository;
-import com.fitnessapp.support.repository.SupportTicketMessageRepository;
-import com.fitnessapp.support.models.SupportTicketMessageEntity;
-import com.fitnessapp.support.models.SupportTicketMessageResponseDTO;
+import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
+import com.fitnessapp.support.models.dtos.request.CreateSupportTicketRequestDTO;
+import com.fitnessapp.support.models.dtos.request.UpdateTicketStatusRequestDTO;
+import com.fitnessapp.support.models.entity.SupportTicketEntity;
+import com.fitnessapp.support.models.enums.TicketCategory;
+import com.fitnessapp.support.models.enums.TicketPriority;
+import com.fitnessapp.support.models.enums.TicketStatus;
+import com.fitnessapp.support.repo.SupportTicketRepository;
+import com.fitnessapp.support.repo.SupportTicketMessageRepository;
+import com.fitnessapp.support.models.entity.SupportTicketMessageEntity;
+import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
 import com.fitnessapp.portal.audit.PortalAuditService;
 import com.fitnessapp.portal.common.enums.UserRole;
 import com.fitnessapp.portal.repository.PortalAccountRepository;
@@ -15,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -259,7 +266,8 @@ public class SupportTicketServiceImpl implements SupportTicketService {
             return true;
         }
         return switch (current) {
-            case OPEN -> next == TicketStatus.IN_PROGRESS || next == TicketStatus.RESOLVED || next == TicketStatus.CLOSED;
+            case OPEN ->
+                    next == TicketStatus.IN_PROGRESS || next == TicketStatus.RESOLVED || next == TicketStatus.CLOSED;
             case IN_PROGRESS -> next == TicketStatus.RESOLVED || next == TicketStatus.CLOSED;
             case RESOLVED -> next == TicketStatus.IN_PROGRESS || next == TicketStatus.CLOSED;
             case CLOSED -> false;
@@ -280,6 +288,15 @@ public class SupportTicketServiceImpl implements SupportTicketService {
         String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         int randomSuffix = ThreadLocalRandom.current().nextInt(1000, 9999);
         return "TCK-" + datePart + "-" + randomSuffix;
+    }
+    private String currentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
+            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+        return authentication.getName();
     }
 
     private SupportTicketResponseDTO toResponseDTO(SupportTicketEntity entity) {

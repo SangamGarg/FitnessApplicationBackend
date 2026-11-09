@@ -22,7 +22,7 @@ import java.io.IOException;
 
 import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_AUTH_ENDPOINT;
 import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_OTP_ENDPOINT;
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_URL;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_ENDPOINT;
 
 @Component
 @RequiredArgsConstructor
@@ -45,7 +45,7 @@ public class JwtFilter
                 || path.equals(APP_AUTH_ENDPOINT + "/refresh-token")
                 || path.startsWith(APP_OTP_ENDPOINT)
                 || path.startsWith("/api/v1/dev/support/")
-                || path.startsWith(PORTAL_BASE_URL + "/");
+                || path.startsWith(PORTAL_BASE_ENDPOINT + "/");
     }
 
     @Override

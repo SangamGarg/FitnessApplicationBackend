@@ -1,17 +1,21 @@
 package com.fitnessapp.support.service;
 
-import lombok.extern.slf4j.Slf4j;
-import com.fitnessapp.portal.dev.appInfoDev.models.entity.AppInfoEntity;
-import com.fitnessapp.portal.dev.appInfoDev.AppInfoRepository;
+import com.fitnessapp.support.portalSupport.repo.AppInfoRepository;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoEntity;
 import com.fitnessapp.portal.dev.assetUploadDev.model.AppMediaAssetEntity;
-import com.fitnessapp.support.models.dtos.FeedbackRequestDto;
-import com.fitnessapp.support.models.dtos.FeedbackResponseDto;
-import com.fitnessapp.support.models.entities.FeedbackEntity;
-import com.fitnessapp.support.repository.FeedbackRepository;
-import com.fitnessapp.support.utils.SupportUtils;
+import com.fitnessapp.support.models.dtos.request.FeedbackRequestDto;
+import com.fitnessapp.support.models.dtos.response.FeedbackResponseDto;
+import com.fitnessapp.support.models.entity.FeedbackEntity;
+import com.fitnessapp.support.repo.FeedbackRepository;
+import com.fitnessapp.utils.appUtil.AppResponseStatus;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -39,13 +43,13 @@ public class SupportServiceImpl implements SupportService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(SupportUtils.errorDtoSupportService(e));
+            return ResponseEntity.internalServerError().body("SupportUtils.errorDtoSupportService(e)");
         }
     }
 
     @Override
     @Transactional
-    public ResponseEntity<?> postFeedback(FeedbackRequestDto feedbackRequestDto) {
+    public ResponseEntity<FeedbackResponseDto> postFeedback(FeedbackRequestDto feedbackRequestDto) {
         try {
 
             feedbackRepository.save(FeedbackEntity.builder()
@@ -57,7 +61,7 @@ public class SupportServiceImpl implements SupportService {
 
             FeedbackResponseDto responseDto = FeedbackResponseDto
                     .builder()
-                    .status(SupportUtils.SUCCESS_API_STATUS)
+                    .status(AppResponseStatus.SUCCESS.name())
                     .message("Feedback Submitted")
                     .imageUrl(getImageUrlAndAbout().getImageUrl())
                     .statusCode(200)
@@ -67,7 +71,7 @@ public class SupportServiceImpl implements SupportService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(SupportUtils.errorDtoSupportService(e));
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -79,7 +83,7 @@ public class SupportServiceImpl implements SupportService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(SupportUtils.errorDtoSupportService(e));
+            return ResponseEntity.internalServerError().body("SupportUtils.errorDtoSupportService(e)");
         }
     }
 
@@ -87,12 +91,12 @@ public class SupportServiceImpl implements SupportService {
     public ResponseEntity<?> getFeedback(String name) {
         try {
 
-            FeedbackEntity feedback = feedbackRepository.findByName(name);
+            Optional<FeedbackEntity> feedback = feedbackRepository.findByName(name);
 
             FeedbackResponseDto responseDto = FeedbackResponseDto
                     .builder()
-                    .status(SupportUtils.SUCCESS_API_STATUS)
-                    .message("Feedback" + feedback.getFeedback() + "\nUser Id: " + feedback.getUserId() + "\nName: " + feedback.getName() + "\nEmail: " + feedback.getEmail())
+                    .status(AppResponseStatus.SUCCESS.name())
+                    .message("Feedback" + feedback.get().getFeedback() + "\nUser Id: " + feedback.get().getUserId() + "\nName: " + feedback.get().getName() + "\nEmail: " + feedback.get().getEmail())
                     .imageUrl(getImageUrlAndAbout().getImageUrl())
                     .statusCode(200)
                     .build();
@@ -101,7 +105,7 @@ public class SupportServiceImpl implements SupportService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(SupportUtils.errorDtoSupportService(e));
+            return ResponseEntity.internalServerError().body("SupportUtils.errorDtoSupportService(e)");
         }
     }
 
@@ -114,7 +118,7 @@ public class SupportServiceImpl implements SupportService {
 
             FeedbackResponseDto responseDto = FeedbackResponseDto
                     .builder()
-                    .status(SupportUtils.SUCCESS_API_STATUS)
+                    .status(AppResponseStatus.SUCCESS.name())
                     .message("Feedback Deleted")
                     .imageUrl(getImageUrlAndAbout().getImageUrl())
                     .statusCode(200)
@@ -124,10 +128,19 @@ public class SupportServiceImpl implements SupportService {
 
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(SupportUtils.errorDtoSupportService(e));
+            return ResponseEntity.internalServerError().body("SupportUtils.errorDtoSupportService(e)");
         }
     }
 
+    private String currentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
+            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+        return authentication.getName();
+    }
 
     private AppMediaAssetEntity getImageUrlAndAbout() {
 //        try {

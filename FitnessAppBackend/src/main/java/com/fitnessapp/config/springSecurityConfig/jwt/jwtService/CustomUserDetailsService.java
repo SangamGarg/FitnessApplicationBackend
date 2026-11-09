@@ -3,6 +3,7 @@ package com.fitnessapp.config.springSecurityConfig.jwt.jwtService;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,7 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepo userRepo;
 
     @Override
-    public UserDetails loadUserByUsername(String uid) throws UsernameNotFoundException {
+    public @NonNull UserDetails loadUserByUsername(@NonNull String uid) throws UsernameNotFoundException {
         return userRepo.findById(uid)
                 .map(user -> new org.springframework.security.core.userdetails.User(
                         user.getId(),

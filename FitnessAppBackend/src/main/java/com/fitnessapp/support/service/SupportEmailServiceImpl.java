@@ -1,6 +1,6 @@
 package com.fitnessapp.support.service;
 
-import com.fitnessapp.support.models.SupportTicketEntity;
+import com.fitnessapp.support.models.entity.SupportTicketEntity;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,7 @@ public class SupportEmailServiceImpl implements SupportEmailService {
             context.setVariable("description", ticket.getDescription());
             context.setVariable("createdAt", ticket.getCreatedAt());
 
-            String htmlContent = templateEngine.process("mail/ticket-confirmation", context);
+            String htmlContent = templateEngine.process("mail/ticket-confirmation-email", context);
 
             helper.setTo(ticket.getUserEmail());
             helper.setFrom(fromEmail, "FitnessApp Support Team");
@@ -76,7 +76,7 @@ public class SupportEmailServiceImpl implements SupportEmailService {
             context.setVariable("ticketNumber", ticket.getTicketNumber());
             context.setVariable("resolutionNotes", ticket.getResolutionNotes());
 
-            String htmlContent = templateEngine.process("mail/ticket-resolved", context);
+            String htmlContent = templateEngine.process("mail/ticket-resolved-email", context);
 
             helper.setTo(ticket.getUserEmail());
             helper.setFrom(fromEmail, "FitnessApp Support Team");

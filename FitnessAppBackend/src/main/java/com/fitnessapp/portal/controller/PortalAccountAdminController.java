@@ -29,11 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Locale;
 import java.util.Set;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_URL;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_ENDPOINT;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(PORTAL_BASE_URL + "/admin")
+@RequestMapping(PORTAL_BASE_ENDPOINT + "/admin")
 @Tag(name = "Admin - Portal Accounts", description = "Search and manage portal accounts and review administrative audit events")
 @SecurityRequirement(name = "bearerAuth")
 public class PortalAccountAdminController {

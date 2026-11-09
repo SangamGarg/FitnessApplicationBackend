@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "nutrition_recipes", indexes = {
-    @Index(name = "idx_recipe_active", columnList = "active"),
+    @Index(name = "idx_recipe_active", columnList = "is_active"),
     @Index(name = "idx_recipe_diet_type", columnList = "diet_type")
 })
 @Getter @Setter @NoArgsConstructor

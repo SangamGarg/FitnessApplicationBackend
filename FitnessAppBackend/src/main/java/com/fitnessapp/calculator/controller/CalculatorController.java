@@ -1,20 +1,21 @@
 package com.fitnessapp.calculator.controller;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.Operation;
-import com.fitnessapp.calculator.shared.ClientCalculatorUtils;
 import com.fitnessapp.calculator.model.dtos.requestDto.BodyFatRequestDto;
 import com.fitnessapp.calculator.model.dtos.requestDto.BurnedCaloriesFromActivityRequestDto;
 import com.fitnessapp.calculator.model.dtos.requestDto.DailyCaloriesRequestDto;
 import com.fitnessapp.calculator.service.CalculatorService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_CALCULATOR_ENDPOINT;
+
 @RestController
-@RequestMapping(ClientCalculatorUtils.API_PREFIX)
+@RequestMapping(APP_CALCULATOR_ENDPOINT)
 @Validated
 @Tag(name = "Calculator", description = "Endpoints for calculator")
 public class CalculatorController {

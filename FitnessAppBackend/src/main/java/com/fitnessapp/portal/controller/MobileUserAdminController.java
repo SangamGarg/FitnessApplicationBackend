@@ -23,10 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_URL;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_ENDPOINT;
 
 @RestController
-@RequestMapping(PORTAL_BASE_URL + "/admin/users")
+@RequestMapping(PORTAL_BASE_ENDPOINT + "/admin/users")
 @Tag(name = "Admin - Mobile Users", description = "Search mobile users and manage account access")
 @SecurityRequirement(name = "bearerAuth")
 public class MobileUserAdminController {

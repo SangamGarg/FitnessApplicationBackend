@@ -31,7 +31,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(PortalUtil.PORTAL_AUTH_BASE_REQUEST_URL)
+@RequestMapping(PortalUtil.PORTAL_AUTH_ENDPOINT)
 @Tag(name = "Portal Authentication", description = "Admin and developer portal login, onboarding and session refresh")
 public class PortalAuthController {
 

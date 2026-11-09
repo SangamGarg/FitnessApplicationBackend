@@ -20,8 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_AUTH_ENDPOINT;
 import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_OTP_ENDPOINT;
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_AUTH_BASE_REQUEST_URL;
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_URL;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_AUTH_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_ENDPOINT;
 
 @Configuration
 @EnableWebSecurity
@@ -45,10 +45,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, PortalJwtFilter portalJwtFilter) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PORTAL_AUTH_BASE_REQUEST_URL + "/login", PORTAL_AUTH_BASE_REQUEST_URL + "/refresh", PORTAL_AUTH_BASE_REQUEST_URL + "/logout", PORTAL_AUTH_BASE_REQUEST_URL + "/setup").permitAll()
-                        .requestMatchers(PORTAL_BASE_URL + "/admin/**").hasRole("ADMIN")
+                        .requestMatchers(PORTAL_AUTH_ENDPOINT + "/login", PORTAL_AUTH_ENDPOINT + "/refresh", PORTAL_AUTH_ENDPOINT + "/logout", PORTAL_AUTH_ENDPOINT + "/setup").permitAll()
+                        .requestMatchers(PORTAL_BASE_ENDPOINT + "/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/dev/support/**").hasRole("ADMIN")
-                        .requestMatchers(PORTAL_BASE_URL + "/**").hasAnyRole("ADMIN", "DEVELOPER")
+                        .requestMatchers(PORTAL_BASE_ENDPOINT + "/**").hasAnyRole("ADMIN", "DEVELOPER")
 
                         .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                         .requestMatchers(APP_AUTH_ENDPOINT + "/loginRegister", APP_AUTH_ENDPOINT + "/refresh-token", APP_OTP_ENDPOINT + "/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api/health").permitAll()

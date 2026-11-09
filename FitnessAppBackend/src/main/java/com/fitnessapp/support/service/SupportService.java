@@ -1,6 +1,7 @@
 package com.fitnessapp.support.service;
 
-import com.fitnessapp.support.models.dtos.FeedbackRequestDto;
+import com.fitnessapp.support.models.dtos.request.FeedbackRequestDto;
+import com.fitnessapp.support.models.dtos.response.FeedbackResponseDto;
 import org.springframework.http.ResponseEntity;
 
 public interface SupportService {
@@ -8,7 +9,7 @@ public interface SupportService {
     ResponseEntity<?> getAppInfo();
 
 
-    ResponseEntity<?> postFeedback(FeedbackRequestDto feedbackRequestDto);
+    ResponseEntity<FeedbackResponseDto> postFeedback(FeedbackRequestDto feedbackRequestDto);
 
     ResponseEntity<?> getAllFeedback();
 

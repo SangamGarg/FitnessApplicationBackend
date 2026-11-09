@@ -10,23 +10,23 @@ public final class PortalUtil {
     private PortalUtil() {
     }
 
-    //Root endpoint for all portal-related API requests.
-    public static final String PORTAL_BASE_URL = "/api/v1/portal";
+    public static final String PORTAL_BASE_ENDPOINT = "/api/v1/portal";
+    public static final String PORTAL_ADMIN_BASE_ENDPOINT = PORTAL_BASE_ENDPOINT + "/admin";
+    public static final String PORTAL_DEV_BASE_ENDPOINT = PORTAL_BASE_ENDPOINT + "/dev";
+    /*********************************************************/
+    public static final String PORTAL_AUTH_ENDPOINT = PORTAL_BASE_ENDPOINT + "/auth";
+    public static final String PORTAL_SUPPORT_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/support";
+    public static final String PORTAL_ADMIN_DEV_ENDPOINT = PORTAL_ADMIN_BASE_ENDPOINT + "/developers";
 
-    //Base endpoint for portal authentication and authorization flows.
-    public static final String PORTAL_AUTH_BASE_REQUEST_URL = PORTAL_BASE_URL + "/auth";
-
-    // Base endpoint for admin developer management operations.
-    public static final String PORTAL_ADMIN_DEVELOPER_BASE_REQUEST_URL = PORTAL_BASE_URL + "/admin/developers";
 
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String AUTH_HEADER = "Authorization";
 
     public static final Set<String> EXCLUDED_PATHS = Set.of(
-            "/api/portal/auth/login",
-            "/api/portal/auth/refresh",
-            "/api/portal/auth/logout",
-            "/api/portal/auth/setup"
+            PORTAL_AUTH_ENDPOINT + "/login",
+            PORTAL_AUTH_ENDPOINT + "/refresh",
+            PORTAL_AUTH_ENDPOINT + "/logout",
+            PORTAL_AUTH_ENDPOINT + "/setup"
     );
 
     public static final String CLAIM_TOKEN_TYPE = "token_type";

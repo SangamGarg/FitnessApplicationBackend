@@ -23,12 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_ADMIN_DEVELOPER_BASE_REQUEST_URL;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_ADMIN_DEV_ENDPOINT;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(PORTAL_ADMIN_DEVELOPER_BASE_REQUEST_URL)
+@RequestMapping(PORTAL_ADMIN_DEV_ENDPOINT)
 @Tag(name = "Admin - Developers", description = "Admin-only developer account lifecycle management")
 @SecurityRequirement(name = "bearerAuth") // Swagger UI
 public class PortalAdminController {
