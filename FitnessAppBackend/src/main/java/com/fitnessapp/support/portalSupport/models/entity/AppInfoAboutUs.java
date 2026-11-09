@@ -1,24 +1,20 @@
 package com.fitnessapp.support.portalSupport.models.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
-@Embeddable
+@Entity
+@Table(name = "app_about_us")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppInfoAboutUs {
+public class AppInfoAboutUs extends BaseContentEntity {
 
-    @Column(name = "about_us_content", columnDefinition = "TEXT")
+    @Id
+    private Long id;
+
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
-
-    @Column(name = "about_us_last_updated")
-    private String lastUpdatedBy;
 }

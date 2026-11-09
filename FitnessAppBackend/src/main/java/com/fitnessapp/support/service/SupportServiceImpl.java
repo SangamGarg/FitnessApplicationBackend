@@ -1,85 +1,88 @@
+
 package com.fitnessapp.support.service;
 
-import com.fitnessapp.portal.dev.assetUploadDev.model.AppMediaAssetEntity;
+import com.fitnessapp.support.models.dtos.response.AppInfoContentResponseDto;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoEntity;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
-import com.fitnessapp.support.portalSupport.repo.AppInfoRepository;
+import com.fitnessapp.support.portalSupport.repo.AppInfoAboutUsRepository;
+import com.fitnessapp.support.portalSupport.repo.AppInfoPrivacyPolicyRepository;
+import com.fitnessapp.support.portalSupport.repo.AppInfoTermsAndConditionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Optional;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class SupportServiceImpl implements SupportService {
-    private final AppInfoRepository appInfoRepository;
 
+    private static final Long CONTENT_ID = 1L;
 
-    @Override
-    public ResponseEntity<?> getAppInfo() {
-        try {
-            Optional<AppInfoEntity> appInfo = appInfoRepository.findById(1L);
-            if (appInfo.isPresent()) {
-                return ResponseEntity.ok(appInfo.get());
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("App information has not been initialized");
-            }
+    private final AppInfoAboutUsRepository aboutUsRepository;
+    private final AppInfoPrivacyPolicyRepository privacyPolicyRepository;
+    private final AppInfoTermsAndConditionRepository termsAndConditionRepository;
 
-        } catch (Exception e) {
-            log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body("An error occurred while fetching app info");
-        }
-    }
+    // ---------------------------------------------------------
+    // ABOUT US
+    // ---------------------------------------------------------
 
     @Override
-    public AppInfoAboutUs getAboutUs() {
-        return appInfoRepository.findById(1L)
-                .map(AppInfoEntity::getAppInfoAboutUs)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "About Us not found"));
+    public AppInfoContentResponseDto getAboutUs() {
+
+        log.debug("Fetching About Us content");
+
+        AppInfoAboutUs detail = aboutUsRepository.findById(CONTENT_ID)
+                .orElseThrow(() -> {
+                    log.warn("About Us content not found");
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "About Us not found"
+                    );
+                });
+
+        return AppInfoContentResponseDto.builder().content(detail.getContent()).createdAt(detail.getCreatedAt()).updatedAt(detail.getUpdatedAt()).version(detail.getVersion()).updatedBy(detail.getUpdatedBy()).build();
     }
+
+    // ---------------------------------------------------------
+    // PRIVACY POLICY
+    // ---------------------------------------------------------
 
     @Override
-    public AppInfoPrivacyPolicy getPrivacyPolicy() {
-        return appInfoRepository.findById(1L)
-                .map(AppInfoEntity::getAppInfoPrivacyPolicy)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Privacy Policy not found"));
+    public AppInfoContentResponseDto getPrivacyPolicy() {
+
+        log.debug("Fetching Privacy Policy content");
+
+        AppInfoPrivacyPolicy detail = privacyPolicyRepository.findById(CONTENT_ID)
+                .orElseThrow(() -> {
+                    log.warn("Privacy Policy content not found");
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Privacy Policy not found"
+                    );
+                });
+        return AppInfoContentResponseDto.builder().content(detail.getContent()).createdAt(detail.getCreatedAt()).updatedAt(detail.getUpdatedAt()).version(detail.getVersion()).updatedBy(detail.getUpdatedBy()).build();
     }
+
+    // ---------------------------------------------------------
+    // TERMS AND CONDITIONS
+    // ---------------------------------------------------------
 
     @Override
-    public AppInfoTermsAndCondition getTermsAndConditions() {
-        return appInfoRepository.findById(1L)
-                .map(AppInfoEntity::getAppInfoTermsAndCondition)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Terms and Conditions not found"));
+    public AppInfoContentResponseDto getTermsAndConditions() {
+
+        log.debug("Fetching Terms and Conditions content");
+
+        AppInfoTermsAndCondition detail = termsAndConditionRepository.findById(CONTENT_ID)
+                .orElseThrow(() -> {
+                    log.warn("Terms and Conditions content not found");
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Terms and Conditions not found"
+                    );
+                });
+        return AppInfoContentResponseDto.builder().content(detail.getContent()).createdAt(detail.getCreatedAt()).updatedAt(detail.getUpdatedAt()).version(detail.getVersion()).updatedBy(detail.getUpdatedBy()).build();
     }
-
-
-    private String currentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()
-                || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
-            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-        }
-        return authentication.getName();
-    }
-
-    private AppMediaAssetEntity getImageUrlAndAbout() {
-//        try {
-//            return imageAndAboutRepository.findByNameIgnoreCase().orElse(AppMediaAssetEntity.builder().imageUrl("Not Found").build());
-//        } catch (Exception e) {
-//            return new AppMediaAssetEntity(0L, "Error Getting Name", "Error Getting Image", "Error Getting About");
-//        }
-        return null;
-
-    }
-
 }

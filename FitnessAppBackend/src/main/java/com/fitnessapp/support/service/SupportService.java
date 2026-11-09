@@ -1,18 +1,13 @@
 package com.fitnessapp.support.service;
 
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
-import org.springframework.http.ResponseEntity;
+import com.fitnessapp.support.models.dtos.response.AppInfoContentResponseDto;
 
 public interface SupportService {
 
-    ResponseEntity<?> getAppInfo();
+    AppInfoContentResponseDto getAboutUs();
 
-    AppInfoAboutUs getAboutUs();
+    AppInfoContentResponseDto getPrivacyPolicy();
 
-    AppInfoPrivacyPolicy getPrivacyPolicy();
-
-    AppInfoTermsAndCondition getTermsAndConditions();
+    AppInfoContentResponseDto getTermsAndConditions();
 
 }

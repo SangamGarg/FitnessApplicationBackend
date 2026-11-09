@@ -2,9 +2,7 @@ package com.fitnessapp.support.controller;
 
 import com.fitnessapp.support.models.dtos.*;
 import com.fitnessapp.support.models.dtos.response.SupportHomeResponseDto;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
+import com.fitnessapp.support.models.dtos.response.AppInfoContentResponseDto;
 import com.fitnessapp.support.service.SupportHelpService;
 import com.fitnessapp.support.service.SupportService;
 import lombok.RequiredArgsConstructor;
@@ -28,30 +26,20 @@ public class SupportHelpController {
     private final SupportHelpService supportHelpService;
     private final SupportService supportService;
 
-    @GetMapping("/app-info")
-    public ResponseEntity<?> getAppInfo() {
-        log.debug("Fetching app information");
-
-        ResponseEntity<?> response = supportService.getAppInfo();
-
-        log.info("App information request completed with status={}", response.getStatusCode());
-        return response;
-    }
-
     @GetMapping("/about")
-    public ResponseEntity<AppInfoAboutUs> getAboutUs() {
+    public ResponseEntity<AppInfoContentResponseDto> getAboutUs() {
         log.debug("Fetching About Us content");
         return ResponseEntity.ok(supportService.getAboutUs());
     }
 
     @GetMapping("/privacy-policy")
-    public ResponseEntity<AppInfoPrivacyPolicy> getPrivacyPolicy() {
+    public ResponseEntity<AppInfoContentResponseDto> getPrivacyPolicy() {
         log.debug("Fetching Privacy Policy content");
         return ResponseEntity.ok(supportService.getPrivacyPolicy());
     }
 
     @GetMapping("/terms-condition")
-    public ResponseEntity<AppInfoTermsAndCondition> getTermsAndConditions() {
+    public ResponseEntity<AppInfoContentResponseDto> getTermsAndConditions() {
         log.debug("Fetching Terms and Conditions content");
         return ResponseEntity.ok(supportService.getTermsAndConditions());
     }

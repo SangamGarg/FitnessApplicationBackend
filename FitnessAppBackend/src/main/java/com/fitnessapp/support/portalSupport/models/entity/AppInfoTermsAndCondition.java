@@ -1,24 +1,20 @@
 package com.fitnessapp.support.portalSupport.models.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
-@Embeddable
+@Entity
+@Table(name = "app_terms_conditions")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppInfoTermsAndCondition {
+public class AppInfoTermsAndCondition extends BaseContentEntity {
 
-    @Column(name = "terms_content", columnDefinition = "TEXT")
+    @Id
+    private Long id;
+
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
-
-    @Column(name = "terms_last_updated")
-    private String lastUpdatedBy;
 }

@@ -6,12 +6,12 @@ import com.fitnessapp.support.models.dtos.SupportTicketSummaryDto;
 import com.fitnessapp.support.models.dtos.response.SupportHomeResponseDto;
 import com.fitnessapp.support.models.entity.SupportFaqEntity;
 import com.fitnessapp.support.models.enums.TicketStatus;
-import com.fitnessapp.support.portalSupport.repo.AppInfoRepository;
 import com.fitnessapp.support.repo.SupportFaqCategoryRepository;
 import com.fitnessapp.support.repo.SupportFaqRepository;
 import com.fitnessapp.support.repo.SupportTicketRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +38,13 @@ public class SupportHelpServiceImpl implements SupportHelpService {
     private final SupportFaqCategoryRepository categoryRepository;
     private final SupportFaqRepository faqRepository;
     private final SupportTicketRepository ticketRepository;
-    private final AppInfoRepository appInfoRepository;
+
+    @Value("${version.app}")
+    private String appVersion;
+    @Value("${builds.app}")
+    private String appBuild;
+    @Value("${footer.app}")
+    private String footer;
 
     @Override
     public SupportHomeResponseDto getHome() {
@@ -50,22 +56,9 @@ public class SupportHelpServiceImpl implements SupportHelpService {
         SupportHomeResponseDto.SupportHomeResponseDtoBuilder builder = SupportHomeResponseDto.builder()
                 .categories(getCategories())
                 .popularFaqs(getPopularFaqs(DEFAULT_POPULAR_FAQ_LIMIT))
-                .ticketSummary(buildTicketSummary(userId));
-
-        // Fetch basic App Info for home
-        appInfoRepository.findAll().stream().findFirst().ifPresent(appInfo -> {
-            String aboutUsSnippet = "";
-            if (appInfo.getAppInfoAboutUs() != null && appInfo.getAppInfoAboutUs().getContent() != null) {
-                String content = appInfo.getAppInfoAboutUs().getContent();
-                aboutUsSnippet = content.length() > 150 ? content.substring(0, 147) + "..." : content;
-            }
-
-            builder.appInfo(SupportHomeResponseDto.AppInfoBasicDto.builder()
-                    .appVersion(appInfo.getAppVersion())
-                    .aboutUsSnippet(aboutUsSnippet)
-                    .updatedAt(appInfo.getUpdatedAt())
-                    .build());
-        });
+                .ticketSummary(buildTicketSummary(userId))
+                .appVersion(appVersion)
+                .appBuild(appBuild).footer(footer);
 
         return builder.build();
     }

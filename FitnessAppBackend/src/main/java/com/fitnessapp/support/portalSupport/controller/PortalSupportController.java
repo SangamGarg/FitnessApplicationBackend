@@ -25,9 +25,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_SUPPORT_ENDPOINT;
+
 @Slf4j
 @RestController
-@RequestMapping({"/api/v1/dev/support", "/api/portal/admin/support"})
+@RequestMapping(PORTAL_SUPPORT_ENDPOINT)
 @RequiredArgsConstructor
 @Tag(name = "Portal Support Admin", description = "Administrative endpoints to triage, update, and resolve support tickets")
 @SecurityRequirement(name = "bearerAuth")

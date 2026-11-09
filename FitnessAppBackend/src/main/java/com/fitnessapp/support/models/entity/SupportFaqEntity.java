@@ -38,4 +38,7 @@ public class SupportFaqEntity {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "updated_by", length = 150)
+    private String updatedBy;
 }

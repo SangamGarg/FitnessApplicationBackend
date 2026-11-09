@@ -1,25 +1,11 @@
 package com.fitnessapp.support.portalSupport.service;
 
 import com.fitnessapp.support.portalSupport.models.dto.request.*;
-import com.fitnessapp.support.portalSupport.models.dto.response.AppInfoFaqsResponseDto;
-import com.fitnessapp.support.portalSupport.models.dto.response.AppInfoResponseDto;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
 
 import java.util.List;
 import java.util.Map;
 
 public interface AppInfoService {
-    // --- READ ENDPOINTS ---
-    AppInfoResponseDto getCompleteAppInfo();
-
-    AppInfoAboutUs getAboutUs();
-
-    AppInfoPrivacyPolicy getPrivacyPolicy();
-
-    AppInfoTermsAndCondition getTermsAndConditions();
-
     // --- MUTATION ENDPOINTS ---
     Map<String, String> uploadAboutUs(AppInfoAboutUsRequestDto dto);
 
@@ -33,8 +19,8 @@ public interface AppInfoService {
 
     Map<String, String> patchTermsAndCondition(AppInfoTermsAndConditionRequestDto dto);
 
-
     Map<String, String> uploadAppFqs(List<AppInfoFaqsRequestDto> dtoList);
 
-    Map<String, String> patchAppFaqs(AppInfoFaqsRequestDto dto, Long id);
+    Map<String, String> patchAppFaqs(AppInfoFaqPatchRequestDto dto,
+                                     Long id);
 }

@@ -1,10 +1,6 @@
 package com.fitnessapp.support.portalSupport.controller;
 
-import com.fitnessapp.followUsLinks.FollowUsLinksRequestDto;
 import com.fitnessapp.support.portalSupport.models.dto.request.*;
-import com.fitnessapp.support.portalSupport.models.dto.response.AppInfoFaqsResponseDto;
-import com.fitnessapp.followUsLinks.FollowUsLinksResponseDto;
-import com.fitnessapp.support.portalSupport.models.dto.response.AppInfoResponseDto;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
@@ -87,27 +83,4 @@ public class AppInfoController {
         return ResponseEntity.ok(appInfoService.patchAppFaqs(requestDto, id));
     }
 
-    @GetMapping
-    public ResponseEntity<AppInfoResponseDto> getCompleteAppInfo() {
-        log.debug("REST request to fetch all App Info");
-        return ResponseEntity.ok(appInfoService.getCompleteAppInfo());
-    }
-
-    @GetMapping("/about")
-    public ResponseEntity<AppInfoAboutUs> getAboutUs() {
-        log.debug("REST request to fetch About Us");
-        return ResponseEntity.ok(appInfoService.getAboutUs());
-    }
-
-    @GetMapping("/privacy-policy")
-    public ResponseEntity<AppInfoPrivacyPolicy> getPrivacyPolicy() {
-        log.debug("REST request to fetch Privacy Policy");
-        return ResponseEntity.ok(appInfoService.getPrivacyPolicy());
-    }
-
-    @GetMapping("/terms-condition")
-    public ResponseEntity<AppInfoTermsAndCondition> getTermsAndConditions() {
-        log.debug("REST request to fetch Terms and Conditions");
-        return ResponseEntity.ok(appInfoService.getTermsAndConditions());
-    }
 }
