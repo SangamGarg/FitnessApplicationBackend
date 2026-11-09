@@ -1,5 +1,6 @@
 package com.fitnessapp.support.portalSupport.models.dto.response;
 
+import com.fitnessapp.followUsLinks.FollowUsLinksResponseDto;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
@@ -20,6 +21,6 @@ public class AppInfoResponseDto {
     private AppInfoAboutUs aboutUs;
     private AppInfoPrivacyPolicy privacyPolicy;
     private AppInfoTermsAndCondition termsAndCondition;
-    private List<AppInfoLinksResponseDto> links;
+    private List<FollowUsLinksResponseDto> links;
     private List<AppInfoFaqsResponseDto> faqs;
 }

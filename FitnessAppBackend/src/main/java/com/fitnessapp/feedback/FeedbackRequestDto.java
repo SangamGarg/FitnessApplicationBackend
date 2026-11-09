@@ -1,4 +1,4 @@
-package com.fitnessapp.support.models.dtos.request;
+package com.fitnessapp.feedback;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

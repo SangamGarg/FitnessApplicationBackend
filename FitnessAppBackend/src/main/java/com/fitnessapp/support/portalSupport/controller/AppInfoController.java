@@ -1,17 +1,14 @@
 package com.fitnessapp.support.portalSupport.controller;
 
-import com.fitnessapp.portal.dev.shared.DevUtils;
+import com.fitnessapp.followUsLinks.FollowUsLinksRequestDto;
 import com.fitnessapp.support.portalSupport.models.dto.request.*;
 import com.fitnessapp.support.portalSupport.models.dto.response.AppInfoFaqsResponseDto;
-import com.fitnessapp.support.portalSupport.models.dto.response.AppInfoLinksResponseDto;
+import com.fitnessapp.followUsLinks.FollowUsLinksResponseDto;
 import com.fitnessapp.support.portalSupport.models.dto.response.AppInfoResponseDto;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
 import com.fitnessapp.support.portalSupport.service.AppInfoService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
@@ -71,19 +68,7 @@ public class AppInfoController {
         return ResponseEntity.ok(appInfoService.patchTermsAndCondition(requestDto));
     }
 
-    @PostMapping("/upload/app-links")
-    public ResponseEntity<Map<String, String>> uploadAppLinksUrl(
-            @NotEmpty(message = "Links list cannot be empty") @RequestBody List<AppInfoLinksRequestDto> requestDto
-    ) {
-        log.info("REST request to upload {} app links", requestDto.size());
-        return ResponseEntity.status(HttpStatus.CREATED).body(appInfoService.uploadAppLinksUrl(requestDto));
-    }
 
-    @PatchMapping("/patch/app-links")
-    public ResponseEntity<Map<String, String>> patchAppLinksUrl(@Valid @RequestBody AppInfoLinksRequestDto requestDto) {
-        log.info("REST request to patch app link: [{}]", requestDto.getTitle());
-        return ResponseEntity.ok(appInfoService.patchAppLinksUrl(requestDto));
-    }
 
     @PostMapping("/upload/app-faqs")
     public ResponseEntity<Map<String, String>> uploadAppFaqs(
@@ -124,17 +109,5 @@ public class AppInfoController {
     public ResponseEntity<AppInfoTermsAndCondition> getTermsAndConditions() {
         log.debug("REST request to fetch Terms and Conditions");
         return ResponseEntity.ok(appInfoService.getTermsAndConditions());
-    }
-
-    @GetMapping("/app-links")
-    public ResponseEntity<List<AppInfoLinksResponseDto>> getAppLinks() {
-        log.debug("REST request to fetch App Links");
-        return ResponseEntity.ok(appInfoService.getAppLinks());
-    }
-
-    @GetMapping("/app-faqs")
-    public ResponseEntity<List<AppInfoFaqsResponseDto>> getAppFaqs() {
-        log.debug("REST request to fetch FAQs");
-        return ResponseEntity.ok(appInfoService.getAppFaqs());
     }
 }

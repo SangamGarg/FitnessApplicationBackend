@@ -1,19 +1,18 @@
 package com.fitnessapp.support.service;
 
-import com.fitnessapp.support.models.dtos.request.FeedbackRequestDto;
-import com.fitnessapp.support.models.dtos.response.FeedbackResponseDto;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
 import org.springframework.http.ResponseEntity;
 
 public interface SupportService {
 
     ResponseEntity<?> getAppInfo();
 
+    AppInfoAboutUs getAboutUs();
 
-    ResponseEntity<FeedbackResponseDto> postFeedback(FeedbackRequestDto feedbackRequestDto);
+    AppInfoPrivacyPolicy getPrivacyPolicy();
 
-    ResponseEntity<?> getAllFeedback();
+    AppInfoTermsAndCondition getTermsAndConditions();
 
-    ResponseEntity<?> getFeedback(String name);
-
-    ResponseEntity<?> deleteFeedback(Long id);
 }

@@ -1,20 +1,20 @@
 package com.fitnessapp.support.service;
 
+import com.fitnessapp.portal.audit.PortalAuditService;
+import com.fitnessapp.portal.common.enums.UserRole;
 import com.fitnessapp.portal.dev.assetUploadDev.service.FileStorageService;
-import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
+import com.fitnessapp.portal.repository.PortalAccountRepository;
 import com.fitnessapp.support.models.dtos.request.CreateSupportTicketRequestDTO;
 import com.fitnessapp.support.models.dtos.request.UpdateTicketStatusRequestDTO;
+import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
+import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
 import com.fitnessapp.support.models.entity.SupportTicketEntity;
+import com.fitnessapp.support.models.entity.SupportTicketMessageEntity;
 import com.fitnessapp.support.models.enums.TicketCategory;
 import com.fitnessapp.support.models.enums.TicketPriority;
 import com.fitnessapp.support.models.enums.TicketStatus;
-import com.fitnessapp.support.repo.SupportTicketRepository;
 import com.fitnessapp.support.repo.SupportTicketMessageRepository;
-import com.fitnessapp.support.models.entity.SupportTicketMessageEntity;
-import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
-import com.fitnessapp.portal.audit.PortalAuditService;
-import com.fitnessapp.portal.common.enums.UserRole;
-import com.fitnessapp.portal.repository.PortalAccountRepository;
+import com.fitnessapp.support.repo.SupportTicketRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -49,11 +49,10 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     @Override
     @Transactional
     public SupportTicketResponseDTO createTicket(
-            Long userId,
             String userEmail,
             CreateSupportTicketRequestDTO request,
             List<MultipartFile> attachments) {
-
+        String userId = currentUserId();
         log.info("Initiating ticket creation for user ID [{}] with {} attachment(s)",
                 userId, (attachments != null ? attachments.size() : 0));
 
@@ -98,7 +97,9 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     }
 
     @Override
-    public List<SupportTicketResponseDTO> getUserTickets(Long userId) {
+    public List<SupportTicketResponseDTO> getUserTickets() {
+        String userId = currentUserId();
+
         log.debug("Fetching support ticket history for user ID [{}]", userId);
         return ticketRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
@@ -107,7 +108,9 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     }
 
     @Override
-    public SupportTicketResponseDTO getTicketByNumber(Long userId, String ticketNumber) {
+    public SupportTicketResponseDTO getTicketByNumber(String ticketNumber) {
+        String userId = currentUserId();
+
         log.debug("Fetching ticket [{}] for user ID [{}]", ticketNumber, userId);
         SupportTicketEntity ticket = ticketRepository.findByTicketNumber(ticketNumber)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
@@ -142,7 +145,9 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     }
 
     @Override
-    public List<SupportTicketMessageResponseDTO> getTicketMessages(Long userId, String ticketNumber) {
+    public List<SupportTicketMessageResponseDTO> getTicketMessages(String ticketNumber) {
+        String userId = currentUserId();
+
         SupportTicketEntity ticket = findTicket(ticketNumber);
         if (!ticket.getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to view this ticket");
@@ -165,11 +170,12 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     @Override
     @Transactional
     public SupportTicketMessageResponseDTO addUserMessage(
-            Long userId,
             String userEmail,
             String ticketNumber,
             String message
     ) {
+        String userId = currentUserId();
+
         SupportTicketEntity ticket = findTicket(ticketNumber);
         if (!ticket.getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to reply to this ticket");
@@ -289,6 +295,7 @@ public class SupportTicketServiceImpl implements SupportTicketService {
         int randomSuffix = ThreadLocalRandom.current().nextInt(1000, 9999);
         return "TCK-" + datePart + "-" + randomSuffix;
     }
+
     private String currentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()

@@ -1,4 +1,4 @@
-package com.fitnessapp.support.portalSupport.models.dto.request;
+package com.fitnessapp.followUsLinks;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppInfoLinksRequestDto {
+public class FollowUsLinksRequestDto {
 
     @NotBlank(message = "Title cannot be blank")
     @Schema(description = "Title of the link", example = "Play Store")

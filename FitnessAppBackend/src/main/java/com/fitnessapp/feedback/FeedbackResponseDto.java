@@ -1,4 +1,4 @@
-package com.fitnessapp.support.models.dtos.response;
+package com.fitnessapp.feedback;
 
 
 import lombok.AllArgsConstructor;

@@ -1,12 +1,12 @@
 package com.fitnessapp.support.controller;
 
 import com.fitnessapp.support.models.dtos.*;
-import com.fitnessapp.support.models.dtos.request.FeedbackRequestDto;
-import com.fitnessapp.support.models.dtos.response.FeedbackResponseDto;
 import com.fitnessapp.support.models.dtos.response.SupportHomeResponseDto;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
 import com.fitnessapp.support.service.SupportHelpService;
 import com.fitnessapp.support.service.SupportService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,17 +38,24 @@ public class SupportHelpController {
         return response;
     }
 
-    @PostMapping("/feedback")
-    public ResponseEntity<FeedbackResponseDto> postFeedback(
-            @RequestBody @Valid FeedbackRequestDto feedbackRequestDto) {
-
-        log.info("Feedback submission request received");
-
-        ResponseEntity<FeedbackResponseDto> response = supportService.postFeedback(feedbackRequestDto);
-
-        log.info("Feedback submission completed with status={}", response.getStatusCode());
-        return response;
+    @GetMapping("/about")
+    public ResponseEntity<AppInfoAboutUs> getAboutUs() {
+        log.debug("Fetching About Us content");
+        return ResponseEntity.ok(supportService.getAboutUs());
     }
+
+    @GetMapping("/privacy-policy")
+    public ResponseEntity<AppInfoPrivacyPolicy> getPrivacyPolicy() {
+        log.debug("Fetching Privacy Policy content");
+        return ResponseEntity.ok(supportService.getPrivacyPolicy());
+    }
+
+    @GetMapping("/terms-condition")
+    public ResponseEntity<AppInfoTermsAndCondition> getTermsAndConditions() {
+        log.debug("Fetching Terms and Conditions content");
+        return ResponseEntity.ok(supportService.getTermsAndConditions());
+    }
+
 
     @GetMapping("/home")
     public ResponseEntity<SupportHomeResponseDto> getHome() {
@@ -100,6 +107,7 @@ public class SupportHelpController {
         return ResponseEntity.ok(supportHelpService.getFaq(faqId));
 
     }
+
 
     @GetMapping("/tickets/summary")
     public ResponseEntity<SupportTicketSummaryDto> summary() {

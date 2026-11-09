@@ -1,4 +1,4 @@
-package com.fitnessapp.support.portalSupport.models.entity;
+package com.fitnessapp.followUsLinks;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,8 +20,8 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "app_info_links")
-public class AppInfoLinks {
+@Table(name = "follow_us_links")
+public class FollowUsLinksEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +36,7 @@ public class AppInfoLinks {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AppInfoLinks that)) return false;
+        if (!(o instanceof FollowUsLinksEntity that)) return false;
         return id != null && Objects.equals(id, that.id);
     }
 

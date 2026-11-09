@@ -28,47 +28,43 @@ public class SupportTicketController {
 
     @PostMapping(value = "/tickets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SupportTicketResponseDTO> createTicket(
-            @RequestAttribute("userId") Long userId,
             @RequestAttribute("userEmail") String userEmail,
             @Valid @RequestPart("ticket") CreateSupportTicketRequestDTO request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
-        log.info("REST multipart request from user [{}] to create support ticket", userId);
-        SupportTicketResponseDTO response = supportTicketService.createTicket(userId, userEmail, request, files);
+        log.info("REST multipart request from user to create support ticket");
+        SupportTicketResponseDTO response = supportTicketService.createTicket(userEmail, request, files);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/tickets")
     public ResponseEntity<List<SupportTicketResponseDTO>> getUserTickets(
-            @RequestAttribute("userId") Long userId) {
-        log.info("REST request to fetch ticket history for user [{}]", userId);
-        return ResponseEntity.ok(supportTicketService.getUserTickets(userId));
+    ) {
+        log.info("REST request to fetch ticket history for user");
+        return ResponseEntity.ok(supportTicketService.getUserTickets());
     }
 
     @GetMapping("/tickets/{ticketNumber}")
     public ResponseEntity<SupportTicketResponseDTO> getTicketDetails(
-            @RequestAttribute("userId") Long userId,
             @PathVariable String ticketNumber) {
-        log.info("REST request for ticket [{}] by user [{}]", ticketNumber, userId);
-        return ResponseEntity.ok(supportTicketService.getTicketByNumber(userId, ticketNumber));
+        log.info("REST request for ticket [{}] by user", ticketNumber);
+        return ResponseEntity.ok(supportTicketService.getTicketByNumber(ticketNumber));
     }
 
     @GetMapping("/tickets/{ticketNumber}/messages")
     public ResponseEntity<List<SupportTicketMessageResponseDTO>> getTicketMessages(
-            @RequestAttribute("userId") Long userId,
             @PathVariable String ticketNumber) {
-        return ResponseEntity.ok(supportTicketService.getTicketMessages(userId, ticketNumber));
+        return ResponseEntity.ok(supportTicketService.getTicketMessages(ticketNumber));
     }
 
     @PostMapping("/tickets/{ticketNumber}/messages")
     public ResponseEntity<SupportTicketMessageResponseDTO> addTicketMessage(
-            @RequestAttribute("userId") Long userId,
             @RequestAttribute("userEmail") String userEmail,
             @PathVariable String ticketNumber,
             @Valid @RequestBody SupportTicketMessageRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                supportTicketService.addUserMessage(userId, userEmail, ticketNumber, request.message())
+                supportTicketService.addUserMessage(userEmail, ticketNumber, request.message())
         );
     }
 }

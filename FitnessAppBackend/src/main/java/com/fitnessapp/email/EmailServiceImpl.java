@@ -46,7 +46,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     /**
-     * Receives feedback/inquiries submitted by a user and forwards them to the internal support desk.
+     * Receives inquiries submitted by a user and forwards them to the internal support desk.
      */
     @Override
     public ResponseEntity<?> getMailFromUser(EmailFromUseRequestDto requestDto) {

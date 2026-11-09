@@ -1,4 +1,4 @@
-package com.fitnessapp.support.portalSupport.models.dto.response;
+package com.fitnessapp.followUsLinks;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppInfoLinksResponseDto {
+public class FollowUsLinksResponseDto {
     private Long id;
     private String title;
     private String url;

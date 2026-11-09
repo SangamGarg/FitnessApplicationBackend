@@ -16,16 +16,15 @@ public interface SupportTicketService {
 
 
     SupportTicketResponseDTO createTicket(
-            Long userId,
             String userEmail,
             CreateSupportTicketRequestDTO request,
             List<MultipartFile> attachments
     );
 
-    List<SupportTicketResponseDTO> getUserTickets(Long userId);
+    List<SupportTicketResponseDTO> getUserTickets();
 
 
-    SupportTicketResponseDTO getTicketByNumber(Long userId, String ticketNumber);
+    SupportTicketResponseDTO getTicketByNumber(String ticketNumber);
 
 
     Page<SupportTicketResponseDTO> getAllTickets(TicketStatus status, TicketCategory category, Pageable pageable);
@@ -39,11 +38,11 @@ public interface SupportTicketService {
 
     SupportTicketResponseDTO getTicketForAdmin(String ticketNumber);
 
-    List<SupportTicketMessageResponseDTO> getTicketMessages(Long userId, String ticketNumber);
+    List<SupportTicketMessageResponseDTO> getTicketMessages(String ticketNumber);
 
     List<SupportTicketMessageResponseDTO> getTicketMessagesForAdmin(String ticketNumber);
 
-    SupportTicketMessageResponseDTO addUserMessage(Long userId, String userEmail, String ticketNumber, String message);
+    SupportTicketMessageResponseDTO addUserMessage(String userEmail, String ticketNumber, String message);
 
     SupportTicketMessageResponseDTO addAdminMessage(String actorEmail, String ticketNumber, String message, boolean internalNote);
 

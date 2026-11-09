@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 public class SupportTicketResponseDTO {
     private String ticketNumber;
-    private Long userId;
+    private String userId;
     private String userEmail;
     private TicketCategory category;
     private String subject;

@@ -24,6 +24,8 @@ public final class AppUtilEndpoint {
     public static final String APP_ACHIEVEMENT_ENDPOINT = APP_BASE_ENDPOINT + "/achievements";
     public static final String APP_CALCULATOR_ENDPOINT = APP_BASE_ENDPOINT + "/calculator";
     public static final String APP_SUPPORT_ENDPOINT = APP_BASE_ENDPOINT + "/support";
+    public static final String APP_FEEDBACK_ENDPOINT = APP_BASE_ENDPOINT + "/feedback";
+    public static final String APP_FOLLOW_US_ENDPOINT = APP_BASE_ENDPOINT + "/follow-us";
     public static final String APP_EXERCISE_ENDPOINT = APP_BASE_ENDPOINT + "/exercise";
 
 

@@ -1,6 +1,5 @@
-package com.fitnessapp.support.repo;
+package com.fitnessapp.feedback;
 
-import com.fitnessapp.support.models.entity.FeedbackEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
