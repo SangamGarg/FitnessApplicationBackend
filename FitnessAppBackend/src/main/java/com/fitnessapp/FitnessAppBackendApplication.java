@@ -10,6 +10,6 @@ public class FitnessAppBackendApplication {
 
     public static void main(String[] args) {
         SpringApplication. run(FitnessAppBackendApplication.class, args);
-        log.info("Server started");
+        log.info("Server Started Successfully...");
     }
 }

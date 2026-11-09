@@ -35,3 +35,8 @@ build/
 ### Application logs ###
 logs/
 *.log
+
+# Local environment files
+.env
+.env.*
+!.env.example

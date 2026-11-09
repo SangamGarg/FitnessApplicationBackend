@@ -1,7 +1,6 @@
 package com.fitnessapp.config.springSecurityConfig.jwt;
 
-import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtService;
-import com.fitnessapp.userDetailsAndAuthService.userDetailsAndAuthServiceUtilities.AppConstantsUserAndAuthService;
+import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtTokenService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -21,12 +20,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_AUTH_ENDPOINT;
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_OTP_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_ENDPOINT;
+
 @Component
 @RequiredArgsConstructor
 public class JwtFilter
         extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final JwtTokenService jwtTokenService;
     private final UserDetailsService userDetailsService;
 
     /**
@@ -36,8 +39,13 @@ public class JwtFilter
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.equals(AppConstantsUserAndAuthService.API_PREFIX + "/loginRegister")
-                || path.equals(AppConstantsUserAndAuthService.API_PREFIX + "/refresh-token");
+        // This filter validates the app/mobile access JWT only. Portal endpoints and
+        // developer-console endpoints use PortalJwtFilter and portal-token claims.
+        return path.equals(APP_AUTH_ENDPOINT + "/loginRegister")
+                || path.equals(APP_AUTH_ENDPOINT + "/refresh-token")
+                || path.startsWith(APP_OTP_ENDPOINT)
+                || path.startsWith("/api/v1/dev/support/")
+                || path.startsWith(PORTAL_BASE_ENDPOINT + "/");
     }
 
     @Override
@@ -49,12 +57,16 @@ public class JwtFilter
                 filterChain.doFilter(request, response);
                 return;
             }
+
+            //TODO HAVE TO REMOVE
+            System.out.println(authHeader);
+
             String token = authHeader.substring(7);
-            String id = jwtService.extractId(token);
+            String id = jwtTokenService.extractId(token);
             if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(id);
                 // validToken only accepts ACCESS tokens, so a refresh token cannot be used here.
-                if (jwtService.validToken(token, userDetails)) {
+                if (jwtTokenService.validToken(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);

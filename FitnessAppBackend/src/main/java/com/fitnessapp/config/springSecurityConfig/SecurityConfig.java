@@ -1,10 +1,10 @@
 package com.fitnessapp.config.springSecurityConfig;
 
-import com.fitnessapp.userDetailsAndAuthService.userDetailsAndAuthServiceUtilities.AppConstantsUserAndAuthService;
 import com.fitnessapp.config.springSecurityConfig.jwt.JwtFilter;
+import com.fitnessapp.portal.common.auth.PortalJwtFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,56 +13,56 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_AUTH_ENDPOINT;
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_OTP_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_AUTH_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_ENDPOINT;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    @Autowired
     private final JwtFilter jwtFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-                //disable csrf token
-                .csrf(AbstractHttpConfigurer::disable)
-                //authenticate user
-                .authorizeHttpRequests(request ->
-                        request
-                                //→ Allows anyone (even unauthenticated users) to access the /login and /register endpoints.
-                                .requestMatchers(
-                                        AppConstantsUserAndAuthService.API_PREFIX + "/loginRegister",
-                                        AppConstantsUserAndAuthService.API_PREFIX + "/refresh-token",
-                                        "/api/v1/dev/**",
-                                        //Swagger / OpenAPI docs (disable in prod with SWAGGER_ENABLED=false)
-                                        "/v3/api-docs/**",
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html"
-                                )
-                                .permitAll()
-                                .anyRequest()
-                                //All other endpoints will require a valid JWT (or other auth method) to access.
-                                .authenticated())
-
-                //make http stateless
-                .sessionManagement(session -> session.sessionCreationPolicy
-                        (SessionCreationPolicy.STATELESS))
-
-                //below to validate the jwt token
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(handling ->
-                        handling.authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")));
-
-        return httpSecurity.build();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
     }
 
-    //JWT Implementation
+    @Bean
+    public FilterRegistrationBean<PortalJwtFilter> portalJwtFilterServletRegistration(PortalJwtFilter filter) {
+        FilterRegistrationBean<PortalJwtFilter> bean = new FilterRegistrationBean<>(filter);
+        bean.setEnabled(false);
+        return bean;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, PortalJwtFilter portalJwtFilter) throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PORTAL_AUTH_ENDPOINT + "/login", PORTAL_AUTH_ENDPOINT + "/refresh", PORTAL_AUTH_ENDPOINT + "/logout", PORTAL_AUTH_ENDPOINT + "/setup").permitAll()
+                        .requestMatchers(PORTAL_BASE_ENDPOINT + "/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/dev/support/**").hasRole("ADMIN")
+                        .requestMatchers(PORTAL_BASE_ENDPOINT + "/**").hasAnyRole("ADMIN", "DEVELOPER")
+
+                        .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                        .requestMatchers(APP_AUTH_ENDPOINT + "/loginRegister", APP_AUTH_ENDPOINT + "/refresh-token", APP_OTP_ENDPOINT + "/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api/health").permitAll()
+                        .requestMatchers(APP_AUTH_ENDPOINT + "/logout").authenticated()
+                        .anyRequest().authenticated())
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(portalJwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")));
+        return http.build();
+    }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-
         return configuration.getAuthenticationManager();
     }
 }
