@@ -1,10 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Ticket Resolved</title>
 </head>
-<body>
 
+<body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, Helvetica, sans-serif; color:#333333;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background-color:#f4f6f8; padding:30px 12px;">
+    <tr>
+        <td align="center">
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                   style="max-width:600px; background-color:#ffffff; border-radius:12px; overflow:hidden;">
+
+                <!-- Header -->
+                <tr>
+                    <td align="center"
+                        style="background-color:#16a34a; padding:30px 20px; color:#ffffff;">
+                        <h1 style="margin:0; font-size:26px; font-weight:700;">
+                            FitnessApp
+                        </h1>
+                        <p style="margin:8px 0 0; font-size:14px; color:#eaffef;">
+                            FitnessApp Support Team
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                    <td style="padding:35px 30px 20px;">
+
+                        <div style="text-align:center; margin-bottom:25px;">
+                            <div style="display:inline-block; width:58px; height:58px;
+                                        line-height:58px; border-radius:50%;
+                                        background-color:#dcfce7; color:#16a34a;
+                                        font-size:30px; font-weight:bold;">
+                                &#10003;
+                            </div>
+
+                            <h2 style="margin:18px 0 8px; color:#166534; font-size:23px;">
+                                Your Ticket Has Been Resolved!
+                            </h2>
+
+                            <p style="margin:0; color:#64748b; font-size:15px; line-height:1.6;">
+                                Good news! Our support team has resolved your reported issue.
+                            </p>
+                        </div>
+
+                        <!-- Ticket Details -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                               style="background-color:#f8fafc; border:1px solid #e2e8f0;
+                                      border-radius:8px; margin:25px 0;">
+                            <tr>
+                                <td style="padding:18px 20px;">
+                                    <p style="margin:0 0 6px; color:#64748b; font-size:12px;
+                                              text-transform:uppercase; letter-spacing:0.5px;">
+                                        Ticket Number
+                                    </p>
+
+                                    <p style="margin:0; color:#0f172a; font-size:17px;
+                                              font-weight:bold;"
+                                       th:utext="${ticketNumber}">
+                                        TICKET-12345
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Resolution Notes -->
+                        <h3 style="margin:25px 0 10px; color:#1e293b; font-size:16px;">
+                            Resolution Details
+                        </h3>
+
+                        <div style="padding:16px 18px; background-color:#f0fdf4;
+                                    border-left:4px solid #16a34a; border-radius:5px;
+                                    color:#334155; font-size:14px; line-height:1.7;
+                                    white-space:pre-line;"
+                             th:utext="${resolutionNotes}">
+                            Your issue has been successfully resolved by our support team.
+                        </div>
+
+                        <p style="margin:25px 0 10px; color:#475569; font-size:14px; line-height:1.7;">
+                            We appreciate your patience while we worked on your request.
+                            If you continue to experience the same issue or need further
+                            assistance, please contact our support team and mention your
+                            ticket number.
+                        </p>
+
+                        <p style="margin:20px 0 0; color:#334155; font-size:14px; line-height:1.6;">
+                            Thank you for being a part of FitnessApp!
+                        </p>
+
+                    </td>
+                </tr>
+
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+<!-- Footer -->
+<div class="footer"
+     style="padding:24px 32px; background:#f1f5f9;
+            text-align:center; font-size:12px; color:#64748b;">
+
+    <p style="margin:0 0 10px; color:#334155;
+              font-size:14px; font-weight:600;">
+        We're here to help!
+    </p>
+
+    <p style="margin:0 0 12px; line-height:1.6;">
+        Need further assistance? Visit the
+        <strong>Help &amp; Support</strong> section in your FitnessApp
+        to raise a new support ticket.
+    </p>
+
+    <p style="margin:0 0 12px; line-height:1.6;">
+        You can track your ticket status and updates anytime under
+        <strong>Profile &gt; Support &gt; Ticket</strong>.
+    </p>
+
+    <div style="border-top:1px solid #e2e8f0;
+                margin:18px 0; padding-top:16px;">
+
+        <p style="margin:0 0 8px; color:#64748b; font-size:11px;">
+            This is an automated email sent by FitnessApp Support.
+            Please do not reply directly to this email.
+        </p>
+
+        <p style="margin:0; color:#94a3b8; font-size:11px;">
+            &copy; 2026 FitnessApp Inc. All rights reserved.
+        </p>
+
+    </div>
+
+</div>
 </body>
 </html>

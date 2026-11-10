@@ -23,7 +23,7 @@ public class CreateSupportTicketRequestDTO {
     @Size(max = 3000, message = "Description cannot exceed 3000 characters")
     private String description;
 
-    // Autofilled by the Android client
+    // Auto filled by the Android client
     private DeviceDiagnosticInfo diagnosticInfo;
 
     // Optional URLs if uploaded prior to ticket creation

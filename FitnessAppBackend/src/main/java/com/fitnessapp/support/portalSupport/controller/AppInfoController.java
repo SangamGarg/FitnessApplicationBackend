@@ -1,5 +1,6 @@
 package com.fitnessapp.support.portalSupport.controller;
 
+import com.fitnessapp.support.models.dtos.SupportFaqCategoryDto;
 import com.fitnessapp.support.portalSupport.models.dto.request.*;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
@@ -65,8 +66,7 @@ public class AppInfoController {
     }
 
 
-
-    @PostMapping("/upload/app-faqs")
+    @PostMapping("/upload/faqs")
     public ResponseEntity<Map<String, String>> uploadAppFaqs(
             @NotEmpty(message = "FAQ list cannot be empty") @RequestBody List<AppInfoFaqsRequestDto> requestDto
     ) {
@@ -74,13 +74,22 @@ public class AppInfoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(appInfoService.uploadAppFqs(requestDto));
     }
 
-    @PatchMapping("/patch/app-faqs/{id}")
+    @PatchMapping("/patch/faqs/{id}")
     public ResponseEntity<Map<String, String>> patchAppFaqs(
-            @Valid @RequestBody AppInfoFaqsRequestDto requestDto,
+            @Valid @RequestBody AppInfoFaqPatchRequestDto requestDto,
             @PathVariable Long id
     ) {
         log.info("REST request to patch FAQ with ID: [{}]", id);
         return ResponseEntity.ok(appInfoService.patchAppFaqs(requestDto, id));
     }
+
+
+    @PostMapping("/upload/faqs/category")
+    public ResponseEntity<SupportFaqCategoryDto> uploadAppFaqsCategory(@Valid @RequestBody SupportFaqCategoryRequestDto requestDto
+    ) {
+        log.info("REST request to upload Category FAQs");
+        return ResponseEntity.status(HttpStatus.CREATED).body(appInfoService.createCategory(requestDto));
+    }
+
 
 }

@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "support_faq_categories", indexes = @Index(name = "idx_support_faq_category_active_sort", columnList = "active, sort_order"))
+@Table(name = "app_support_faq_categories", indexes = @Index(name = "idx_support_faq_category_active_sort", columnList = "active, sort_order"))
 @Getter
 @Setter
 @NoArgsConstructor

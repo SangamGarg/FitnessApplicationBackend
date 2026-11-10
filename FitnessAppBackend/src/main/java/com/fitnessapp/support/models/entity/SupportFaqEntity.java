@@ -7,7 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "support_faq_articles", indexes = {
+@Table(name = "app_support_faq_articles", indexes = {
         @Index(name = "idx_support_faq_active_popular", columnList = "active, popular, sort_order"),
         @Index(name = "idx_support_faq_category", columnList = "category_id")})
 @Getter

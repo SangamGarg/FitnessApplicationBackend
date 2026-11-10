@@ -1,26 +1,27 @@
 package com.fitnessapp.exercise.portal;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import io.swagger.v3.oas.annotations.Operation;
-import com.fitnessapp.portal.dev.shared.DevUtils;
 import com.fitnessapp.exercise.portal.models.ExercisePortalCategoryRequestDto;
 import com.fitnessapp.exercise.portal.models.ExercisePortalDetailsRequestDto;
 import com.fitnessapp.exercise.portal.models.ExercisePortalLevelRequestDto;
 import com.fitnessapp.exercise.portal.models.ExercisePortalSubCategoryRequestDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_EXERCISE_ENDPOINT;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@RequestMapping(DevUtils.API_PREFIX_EXERCISE)
+@RequestMapping(PORTAL_EXERCISE_ENDPOINT)
 @Validated
 @Tag(name = "Dev Exercise", description = "Endpoints for dev exercise")
 public class ExercisePortalController {

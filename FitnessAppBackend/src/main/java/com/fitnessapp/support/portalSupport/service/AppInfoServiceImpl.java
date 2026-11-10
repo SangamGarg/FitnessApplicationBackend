@@ -1,6 +1,7 @@
 
 package com.fitnessapp.support.portalSupport.service;
 
+import com.fitnessapp.support.models.dtos.SupportFaqCategoryDto;
 import com.fitnessapp.support.models.entity.SupportFaqCategoryEntity;
 import com.fitnessapp.support.models.entity.SupportFaqEntity;
 import com.fitnessapp.support.portalSupport.models.dto.request.*;
@@ -73,9 +74,6 @@ public class AppInfoServiceImpl implements AppInfoService {
         return uploadAboutUs(dto);
     }
 
-    // ---------------------------------------------------------
-    // PRIVACY POLICY
-    // ---------------------------------------------------------
 
     @Override
     @Transactional
@@ -149,66 +147,84 @@ public class AppInfoServiceImpl implements AppInfoService {
 
     @Override
     @Transactional
-    public Map<String, String> uploadAppFqs(
-            List<AppInfoFaqsRequestDto> dtoList) {
+    public SupportFaqCategoryDto createCategory(
+            SupportFaqCategoryRequestDto requestDto) {
 
-        if (dtoList == null || dtoList.isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "FAQ list cannot be empty"
+        String categoryKey = requestDto.getCategoryKey()
+                .trim()
+                .toUpperCase();
+
+        log.info("Creating support FAQ category: {}", categoryKey);
+
+        if (supportFaqCategoryRepository.existsByCategoryKeyIgnoreCase(categoryKey)) {
+            throw new IllegalArgumentException(
+                    "FAQ category already exists: " + categoryKey
             );
         }
 
-        Map<String, SupportFaqCategoryEntity> categoryCache =
-                new HashMap<>();
+        SupportFaqCategoryEntity entity = SupportFaqCategoryEntity.builder()
+                .categoryKey(categoryKey)
+                .name(requestDto.getName().trim())
+                .description(requestDto.getDescription())
+                .iconKey(requestDto.getIconKey())
+                .active(requestDto.getActive() != null
+                        ? requestDto.getActive()
+                        : true)
+                .sortOrder(requestDto.getSortOrder() != null
+                        ? requestDto.getSortOrder()
+                        : 0)
+                .build();
 
+        SupportFaqCategoryEntity savedEntity =
+                supportFaqCategoryRepository.save(entity);
+
+        log.info("Support FAQ category created successfully. ID: {}",
+                savedEntity.getId());
+
+        return SupportFaqCategoryDto.builder()
+                .id(savedEntity.getId())
+                .categoryKey(savedEntity.getCategoryKey())
+                .name(savedEntity.getName())
+                .description(savedEntity.getDescription())
+                .iconKey(savedEntity.getIconKey())
+                .sortOrder(savedEntity.getSortOrder())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public Map<String, String> uploadAppFqs(List<AppInfoFaqsRequestDto> dtoList) {
+        if (dtoList == null || dtoList.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "FAQ list cannot be empty");
+        }
+        Map<String, SupportFaqCategoryEntity> categoryCache = new HashMap<>();
         List<SupportFaqEntity> faqEntities = new ArrayList<>();
-
         for (AppInfoFaqsRequestDto dto : dtoList) {
-
             if (dto == null) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "FAQ entry cannot be null"
-                );
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "FAQ entry cannot be null");
             }
-
             if (dto.getQuestion() == null || dto.getQuestion().isBlank()
                     || dto.getAnswer() == null || dto.getAnswer().isBlank()
                     || dto.getCategoryKey() == null || dto.getCategoryKey().isBlank()) {
-
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Question, answer and category key are required"
-                );
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Question, answer and category key are required");
             }
-
             String categoryKey = dto.getCategoryKey().trim();
-
-            SupportFaqCategoryEntity category =
-                    categoryCache.computeIfAbsent(categoryKey.toLowerCase(), key ->
-                            supportFaqCategoryRepository
-                                    .findByCategoryKeyIgnoreCaseAndActiveTrue(categoryKey)
-                                    .orElseThrow(() -> new ResponseStatusException(
-                                            HttpStatus.BAD_REQUEST,
-                                            "Invalid or inactive FAQ category: " + categoryKey
-                                    ))
-                    );
+            SupportFaqCategoryEntity category = categoryCache.computeIfAbsent(categoryKey.toLowerCase(), key ->
+                    supportFaqCategoryRepository
+                            .findByCategoryKeyIgnoreCaseAndActiveTrue(categoryKey)
+                            .orElseThrow(() -> new ResponseStatusException(
+                                    HttpStatus.BAD_REQUEST, "Invalid or inactive FAQ category: " + categoryKey
+                            )));
 
             SupportFaqEntity faq = getSupportFaqEntity(dto, category);
-
             // If SupportFaqEntity extends your BaseContentEntity:
             faq.setUpdatedBy(getCurrentAdmin());
-
             faqEntities.add(faq);
         }
-
         supportFaqRepository.saveAll(faqEntities);
-
         Map<String, String> response = new LinkedHashMap<>();
         response.put("message", "FAQs uploaded successfully");
         response.put("uploadedCount", String.valueOf(faqEntities.size()));
-
         return response;
     }
 

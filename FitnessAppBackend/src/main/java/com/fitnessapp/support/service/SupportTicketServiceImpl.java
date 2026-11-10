@@ -15,6 +15,7 @@ import com.fitnessapp.support.models.enums.TicketPriority;
 import com.fitnessapp.support.models.enums.TicketStatus;
 import com.fitnessapp.support.repo.SupportTicketMessageRepository;
 import com.fitnessapp.support.repo.SupportTicketRepository;
+import com.fitnessapp.support.service.supportEmail.SupportEmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

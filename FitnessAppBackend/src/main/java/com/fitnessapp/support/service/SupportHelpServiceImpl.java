@@ -3,9 +3,16 @@ package com.fitnessapp.support.service;
 import com.fitnessapp.support.models.dtos.SupportFaqCategoryDto;
 import com.fitnessapp.support.models.dtos.SupportFaqDto;
 import com.fitnessapp.support.models.dtos.SupportTicketSummaryDto;
+import com.fitnessapp.support.models.dtos.response.AppInfoContentResponseDto;
 import com.fitnessapp.support.models.dtos.response.SupportHomeResponseDto;
 import com.fitnessapp.support.models.entity.SupportFaqEntity;
 import com.fitnessapp.support.models.enums.TicketStatus;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
+import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
+import com.fitnessapp.support.portalSupport.repo.AppInfoAboutUsRepository;
+import com.fitnessapp.support.portalSupport.repo.AppInfoPrivacyPolicyRepository;
+import com.fitnessapp.support.portalSupport.repo.AppInfoTermsAndConditionRepository;
 import com.fitnessapp.support.repo.SupportFaqCategoryRepository;
 import com.fitnessapp.support.repo.SupportFaqRepository;
 import com.fitnessapp.support.repo.SupportTicketRepository;
@@ -34,6 +41,7 @@ public class SupportHelpServiceImpl implements SupportHelpService {
     private static final int MAX_FAQ_LIMIT = 20;
     private static final int DEFAULT_POPULAR_FAQ_LIMIT = 6;
     private static final int MAX_PAGE_SIZE = 100;
+    private static final Long CONTENT_ID = 1L;
 
     private final SupportFaqCategoryRepository categoryRepository;
     private final SupportFaqRepository faqRepository;
@@ -56,7 +64,6 @@ public class SupportHelpServiceImpl implements SupportHelpService {
         SupportHomeResponseDto.SupportHomeResponseDtoBuilder builder = SupportHomeResponseDto.builder()
                 .categories(getCategories())
                 .popularFaqs(getPopularFaqs(DEFAULT_POPULAR_FAQ_LIMIT))
-                .ticketSummary(buildTicketSummary(userId))
                 .appVersion(appVersion)
                 .appBuild(appBuild).footer(footer);
 
@@ -185,6 +192,72 @@ public class SupportHelpServiceImpl implements SupportHelpService {
         String userId = currentUserId();
 
         return buildTicketSummary(userId);
+    }
+
+
+    private final AppInfoAboutUsRepository aboutUsRepository;
+    private final AppInfoPrivacyPolicyRepository privacyPolicyRepository;
+    private final AppInfoTermsAndConditionRepository termsAndConditionRepository;
+
+    // ---------------------------------------------------------
+    // ABOUT US
+    // ---------------------------------------------------------
+
+    @Override
+    public AppInfoContentResponseDto getAboutUs() {
+
+        log.debug("Fetching About Us content");
+
+        AppInfoAboutUs detail = aboutUsRepository.findById(CONTENT_ID)
+                .orElseThrow(() -> {
+                    log.warn("About Us content not found");
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "About Us not found"
+                    );
+                });
+
+        return AppInfoContentResponseDto.builder().content(detail.getContent()).createdAt(detail.getCreatedAt()).updatedAt(detail.getUpdatedAt()).version(detail.getVersion()).updatedBy(detail.getUpdatedBy()).build();
+    }
+
+    // ---------------------------------------------------------
+    // PRIVACY POLICY
+    // ---------------------------------------------------------
+
+    @Override
+    public AppInfoContentResponseDto getPrivacyPolicy() {
+
+        log.debug("Fetching Privacy Policy content");
+
+        AppInfoPrivacyPolicy detail = privacyPolicyRepository.findById(CONTENT_ID)
+                .orElseThrow(() -> {
+                    log.warn("Privacy Policy content not found");
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Privacy Policy not found"
+                    );
+                });
+        return AppInfoContentResponseDto.builder().content(detail.getContent()).createdAt(detail.getCreatedAt()).updatedAt(detail.getUpdatedAt()).version(detail.getVersion()).updatedBy(detail.getUpdatedBy()).build();
+    }
+
+    // ---------------------------------------------------------
+    // TERMS AND CONDITIONS
+    // ---------------------------------------------------------
+
+    @Override
+    public AppInfoContentResponseDto getTermsAndConditions() {
+
+        log.debug("Fetching Terms and Conditions content");
+
+        AppInfoTermsAndCondition detail = termsAndConditionRepository.findById(CONTENT_ID)
+                .orElseThrow(() -> {
+                    log.warn("Terms and Conditions content not found");
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Terms and Conditions not found"
+                    );
+                });
+        return AppInfoContentResponseDto.builder().content(detail.getContent()).createdAt(detail.getCreatedAt()).updatedAt(detail.getUpdatedAt()).version(detail.getVersion()).updatedBy(detail.getUpdatedBy()).build();
     }
 
     private SupportTicketSummaryDto buildTicketSummary(String userId) {

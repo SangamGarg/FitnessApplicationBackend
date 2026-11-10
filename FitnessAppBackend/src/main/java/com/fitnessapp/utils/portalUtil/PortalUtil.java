@@ -17,6 +17,11 @@ public final class PortalUtil {
     public static final String PORTAL_AUTH_ENDPOINT = PORTAL_BASE_ENDPOINT + "/auth";
     public static final String PORTAL_SUPPORT_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/support";
     public static final String PORTAL_FEEDBACK_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/feedback";
+    public static final String PORTAL_FOLLOW_US_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/follow-us";
+    public static final String PORTAL_EMAIL_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/email";
+    public static final String PORTAL_CALCULATOR_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/calculator";
+    public static final String PORTAL_EXERCISE_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/exercise";
+    public static final String PORTAL_ASSET_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/assets";
     public static final String PORTAL_ADMIN_DEV_ENDPOINT = PORTAL_ADMIN_BASE_ENDPOINT + "/developers";
 
 

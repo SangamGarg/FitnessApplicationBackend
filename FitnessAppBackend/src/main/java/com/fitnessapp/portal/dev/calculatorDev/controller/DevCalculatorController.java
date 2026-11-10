@@ -1,9 +1,8 @@
 package com.fitnessapp.portal.dev.calculatorDev.controller;
 
 import com.fitnessapp.portal.dev.calculatorDev.model.DevCalculatorBurnedCaloriesRequestDto;
-import com.fitnessapp.portal.dev.calculatorDev.service.DevCalculatorService;
 import com.fitnessapp.portal.dev.calculatorDev.model.DevCalculatorUploadCaloriesInFoodRequestDto;
-import com.fitnessapp.portal.dev.shared.DevUtils;
+import com.fitnessapp.portal.dev.calculatorDev.service.DevCalculatorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -11,25 +10,20 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_CALCULATOR_ENDPOINT;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(DevUtils.API_PREFIX_CALCULATOR)
-@Tag(name = "Dev Calculator", description = "Endpoints for dev calculator")
+@RequestMapping(PORTAL_CALCULATOR_ENDPOINT)
 public class DevCalculatorController {
 
     private final DevCalculatorService devCalculatorService;
 
-    @Operation(summary = "Upload calories in food",
-            description = "Bulk-uploads calories-in-food items. Every field is required and names must be unique.")
     @PostMapping("/upload-calories-in-food")
     public ResponseEntity<?> uploadCaloriesInFood(
             @RequestBody @NotEmpty(message = "List cannot be empty")
@@ -47,8 +41,6 @@ public class DevCalculatorController {
         return response;
     }
 
-    @Operation(summary = "Patch calories in food",
-            description = "Updates the non-null fields of an existing calories-in-food item, matched by name.")
     @PatchMapping("/patch-calories-in-food")
     public ResponseEntity<?> patchCaloriesInFood(
             @RequestBody @Valid DevCalculatorUploadCaloriesInFoodRequestDto requestDto) {
@@ -63,8 +55,7 @@ public class DevCalculatorController {
         return response;
     }
 
-    @Operation(summary = "Upload burned calories",
-            description = "Bulk-uploads burned-calories activities. MET value and image URL are required and names must be unique.")
+
     @PostMapping("/upload-burned-calories")
     public ResponseEntity<?> uploadBurnedCalories(
             @RequestBody @NotEmpty(message = "List cannot be empty")
@@ -82,8 +73,6 @@ public class DevCalculatorController {
         return response;
     }
 
-    @Operation(summary = "Patch burned calories",
-            description = "Updates the non-null fields of an existing burned-calories activity, matched by name.")
     @PatchMapping("/patch-burned-calories")
     public ResponseEntity<?> patchBurnedCalories(
             @RequestBody @Valid DevCalculatorBurnedCaloriesRequestDto requestDto) {

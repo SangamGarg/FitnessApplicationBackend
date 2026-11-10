@@ -4,7 +4,6 @@ import com.fitnessapp.support.models.dtos.*;
 import com.fitnessapp.support.models.dtos.response.SupportHomeResponseDto;
 import com.fitnessapp.support.models.dtos.response.AppInfoContentResponseDto;
 import com.fitnessapp.support.service.SupportHelpService;
-import com.fitnessapp.support.service.SupportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,24 +23,23 @@ import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_SUPPORT_ENDPOINT;
 public class SupportHelpController {
 
     private final SupportHelpService supportHelpService;
-    private final SupportService supportService;
 
     @GetMapping("/about")
     public ResponseEntity<AppInfoContentResponseDto> getAboutUs() {
         log.debug("Fetching About Us content");
-        return ResponseEntity.ok(supportService.getAboutUs());
+        return ResponseEntity.ok(supportHelpService.getAboutUs());
     }
 
     @GetMapping("/privacy-policy")
     public ResponseEntity<AppInfoContentResponseDto> getPrivacyPolicy() {
         log.debug("Fetching Privacy Policy content");
-        return ResponseEntity.ok(supportService.getPrivacyPolicy());
+        return ResponseEntity.ok(supportHelpService.getPrivacyPolicy());
     }
 
     @GetMapping("/terms-condition")
     public ResponseEntity<AppInfoContentResponseDto> getTermsAndConditions() {
         log.debug("Fetching Terms and Conditions content");
-        return ResponseEntity.ok(supportService.getTermsAndConditions());
+        return ResponseEntity.ok(supportHelpService.getTermsAndConditions());
     }
 
 

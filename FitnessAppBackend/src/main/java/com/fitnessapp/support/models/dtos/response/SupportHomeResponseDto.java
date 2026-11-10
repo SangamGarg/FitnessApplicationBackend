@@ -16,7 +16,6 @@ import java.util.List;
 public class SupportHomeResponseDto {
     private List<SupportFaqCategoryDto> categories;
     private List<SupportFaqDto> popularFaqs;
-    private SupportTicketSummaryDto ticketSummary;
     private String appVersion;
     private String appBuild;
     private String footer;

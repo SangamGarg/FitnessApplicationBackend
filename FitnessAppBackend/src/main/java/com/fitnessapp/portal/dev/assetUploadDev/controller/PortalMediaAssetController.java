@@ -20,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import static com.fitnessapp.portal.dev.shared.DevUtils.API_PREFIX_ASSETS;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_ASSET_ENDPOINT;
 
 /**
  * Administrative REST Controller for managing application media assets.
@@ -31,7 +31,7 @@ import static com.fitnessapp.portal.dev.shared.DevUtils.API_PREFIX_ASSETS;
  */
 @Slf4j
 @RestController
-@RequestMapping(API_PREFIX_ASSETS)
+@RequestMapping(PORTAL_ASSET_ENDPOINT)
 @RequiredArgsConstructor
 @Tag(name = "Image And About", description = "Administrative endpoints for managing application media assets and illustrations")
 public class PortalMediaAssetController {
