@@ -1,4 +1,4 @@
-package com.fitnessapp.calculator.repo;
+package com.fitnessapp.calculator.repository;
 
 import com.fitnessapp.calculator.model.entities.BurnedCaloriesActivityEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,4 +1,4 @@
-package com.fitnessapp.portal.dev.calculatorDev.model;
+package com.fitnessapp.calculator.portal.model;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotBlank;

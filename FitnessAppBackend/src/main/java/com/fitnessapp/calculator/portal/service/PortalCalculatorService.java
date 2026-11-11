@@ -1,7 +1,7 @@
-package com.fitnessapp.portal.dev.calculatorDev.service;
+package com.fitnessapp.calculator.portal.service;
 
-import com.fitnessapp.portal.dev.calculatorDev.model.DevCalculatorUploadCaloriesInFoodRequestDto;
-import com.fitnessapp.portal.dev.calculatorDev.model.DevCalculatorBurnedCaloriesRequestDto;
+import com.fitnessapp.calculator.portal.model.DevCalculatorUploadCaloriesInFoodRequestDto;
+import com.fitnessapp.calculator.portal.model.DevCalculatorBurnedCaloriesRequestDto;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Dev-only operations for seeding and patching calculator reference data.
  */
-public interface DevCalculatorService {
+public interface PortalCalculatorService {
 
     /** Bulk-inserts calories-in-food items. All fields are required; names must be unique. */
     ResponseEntity<?> uploadCalculatorCaloriesInFood(List<DevCalculatorUploadCaloriesInFoodRequestDto> requestDto);

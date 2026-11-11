@@ -5,7 +5,16 @@ import com.fitnessapp.calculator.model.dtos.requestDto.BurnedCaloriesFromActivit
 import com.fitnessapp.calculator.model.dtos.requestDto.DailyCaloriesRequestDto;
 import org.springframework.http.ResponseEntity;
 
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
+
 public interface CalculatorService {
+
+    List<Map<String, Object>> getCatalog();
+    Map<String, Object> calculate(String key, Map<String, Object> in);
+    Map<String, Object> getFitnessScore(ZoneId zoneId);
+
     ResponseEntity<?> getBmi(float weightKg, float heightCm);
 
     ResponseEntity<?> getBodyFat(BodyFatRequestDto bodyFatRequestDto);

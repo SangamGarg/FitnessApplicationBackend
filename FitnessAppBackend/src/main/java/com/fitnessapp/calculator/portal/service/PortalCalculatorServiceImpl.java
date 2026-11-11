@@ -1,12 +1,11 @@
-package com.fitnessapp.portal.dev.calculatorDev.service;
+package com.fitnessapp.calculator.portal.service;
 
+import com.fitnessapp.calculator.portal.model.DevCalculatorBurnedCaloriesRequestDto;
+import com.fitnessapp.calculator.portal.model.DevCalculatorUploadCaloriesInFoodRequestDto;
 import com.fitnessapp.calculator.model.entities.BurnedCaloriesActivityEntity;
 import com.fitnessapp.calculator.model.entities.CaloriesInFoodEntity;
-import com.fitnessapp.calculator.repo.BurnedCaloriesFromActivityRepository;
-import com.fitnessapp.calculator.repo.CaloriesInFoodRepository;
-import com.fitnessapp.portal.dev.calculatorDev.DevCalculatorExceptionHandler;
-import com.fitnessapp.portal.dev.calculatorDev.model.DevCalculatorUploadCaloriesInFoodRequestDto;
-import com.fitnessapp.portal.dev.calculatorDev.model.DevCalculatorBurnedCaloriesRequestDto;
+import com.fitnessapp.calculator.repository.BurnedCaloriesFromActivityRepository;
+import com.fitnessapp.calculator.repository.CaloriesInFoodRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,24 +14,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * Dev-only service for seeding and patching calculator reference data.
- * <p>
- * Unexpected persistence failures are intentionally <b>not</b> caught here: they propagate so the
- * transaction rolls back cleanly and {@link DevCalculatorExceptionHandler} logs and maps them once.
- */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DevCalculatorServiceImpl implements DevCalculatorService {
+public class PortalCalculatorServiceImpl implements PortalCalculatorService {
 
     private final CaloriesInFoodRepository caloriesInFoodRepository;
     private final BurnedCaloriesFromActivityRepository burnedCaloriesFromActivityRepository;

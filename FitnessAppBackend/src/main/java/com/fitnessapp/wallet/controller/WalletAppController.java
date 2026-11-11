@@ -4,6 +4,8 @@ import com.fitnessapp.wallet.service.WalletService;
 import com.fitnessapp.wallet.model.dto.WalletBalanceResponseDto;
 import com.fitnessapp.wallet.model.dto.WalletTransactionResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,25 +21,21 @@ import org.springframework.http.HttpStatus;
 
 import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_WALLET_ENDPOINT;
 
+@Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(APP_WALLET_ENDPOINT)
 
 public class WalletAppController {
 
     private final WalletService service;
 
-    public WalletAppController(WalletService service) {
-        this.service = service;
-    }
-
     @GetMapping
-    @Operation(summary = "Get the authenticated user's wallet balance")
     public ResponseEntity<WalletBalanceResponseDto> getBalance(Authentication authentication) {
         return ResponseEntity.ok(service.getBalance(authentication.getName()));
     }
 
     @GetMapping("/transactions")
-    @Operation(summary = "Get the authenticated user's wallet transaction history")
     public ResponseEntity<Page<WalletTransactionResponseDto>> getTransactions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,

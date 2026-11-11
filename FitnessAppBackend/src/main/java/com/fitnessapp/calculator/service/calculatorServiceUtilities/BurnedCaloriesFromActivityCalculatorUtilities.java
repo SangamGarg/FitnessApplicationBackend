@@ -2,7 +2,7 @@ package com.fitnessapp.calculator.service.calculatorServiceUtilities;
 
 import com.fitnessapp.calculator.model.dtos.requestDto.BurnedCaloriesFromActivityRequestDto;
 import com.fitnessapp.calculator.model.entities.BurnedCaloriesActivityEntity;
-import com.fitnessapp.calculator.repo.BurnedCaloriesFromActivityRepository;
+import com.fitnessapp.calculator.repository.BurnedCaloriesFromActivityRepository;
 
 import java.util.HashMap;
 import java.util.Map;

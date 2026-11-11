@@ -5,8 +5,8 @@ import com.fitnessapp.calculator.model.dtos.requestDto.BurnedCaloriesFromActivit
 import com.fitnessapp.calculator.model.dtos.requestDto.DailyCaloriesRequestDto;
 import com.fitnessapp.calculator.model.entities.BurnedCaloriesActivityEntity;
 import com.fitnessapp.calculator.model.entities.CaloriesInFoodEntity;
-import com.fitnessapp.calculator.repo.BurnedCaloriesFromActivityRepository;
-import com.fitnessapp.calculator.repo.CaloriesInFoodRepository;
+import com.fitnessapp.calculator.repository.BurnedCaloriesFromActivityRepository;
+import com.fitnessapp.calculator.repository.CaloriesInFoodRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;

@@ -1,7 +1,7 @@
 package com.fitnessapp.calculator.service.calculatorServiceUtilities;
 
 import com.fitnessapp.calculator.model.entities.CaloriesInFoodEntity;
-import com.fitnessapp.calculator.repo.CaloriesInFoodRepository;
+import com.fitnessapp.calculator.repository.CaloriesInFoodRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 

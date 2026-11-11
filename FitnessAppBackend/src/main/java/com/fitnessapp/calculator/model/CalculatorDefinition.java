@@ -10,4 +10,5 @@ public record CalculatorDefinition(
         List<String> requiredInputs,
         String unit,
         boolean requiresSavedData
-) { }
+) {
+}
