@@ -2,6 +2,7 @@ package com.fitnessapp.support.controller;
 
 import com.fitnessapp.support.models.dtos.request.CreateSupportTicketRequestDTO;
 import com.fitnessapp.support.models.dtos.request.SupportTicketMessageRequestDTO;
+import com.fitnessapp.support.models.dtos.response.SupportTicketHomeResponseDto;
 import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
 import com.fitnessapp.support.service.SupportTicketService;
@@ -26,14 +27,22 @@ public class SupportTicketController {
 
     private final SupportTicketService supportTicketService;
 
+
+    @GetMapping("/tickets/home")
+    public ResponseEntity<SupportTicketHomeResponseDto> getTicketsHome(
+    ) {
+        log.info("REST request to fetch ticket home");
+        return ResponseEntity.ok(supportTicketService.getTicketsHome());
+    }
+
+
     @PostMapping(value = "/tickets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SupportTicketResponseDTO> createTicket(
-            @RequestAttribute("userEmail") String userEmail,
             @Valid @RequestPart("ticket") CreateSupportTicketRequestDTO request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
         log.info("REST multipart request from user to create support ticket");
-        SupportTicketResponseDTO response = supportTicketService.createTicket(userEmail, request, files);
+        SupportTicketResponseDTO response = supportTicketService.createTicket(request, files);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

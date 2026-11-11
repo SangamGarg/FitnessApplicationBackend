@@ -3,7 +3,7 @@ package com.fitnessapp.support.service.supportEmail;
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.support.models.dtos.SupportEmailAttachment;
-import com.fitnessapp.support.models.dtos.SupportEmailValidationDto;
+import com.fitnessapp.support.models.dtos.SupportValidationDto;
 import com.fitnessapp.support.models.dtos.SupportIssueCategoryDto;
 import com.fitnessapp.support.models.dtos.request.EmailFromUserRequestDto;
 import com.fitnessapp.support.models.dtos.response.EmailFromUserResponseDto;
@@ -63,8 +63,8 @@ public class SupportEmailServiceImpl implements SupportEmailService {
                                         .build())
                         .toList();
 
-        SupportEmailValidationDto validation =
-                SupportEmailValidationDto.builder()
+        SupportValidationDto validation =
+                SupportValidationDto.builder()
                         .subjectMinLength(5)
                         .subjectMaxLength(100)
                         .messageMinLength(10)
@@ -80,7 +80,7 @@ public class SupportEmailServiceImpl implements SupportEmailService {
                         .build();
 
         return SupportEmailHomeResponseDto.builder()
-                .title("Dedicated Ticket Desk")
+                .title("Email Support Desk")
                 .subtitle("Replies within ~12 business hours")
                 .description(
                         "Tell us about your issue and our support team will help you."

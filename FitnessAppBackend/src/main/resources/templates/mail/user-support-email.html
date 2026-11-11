@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>New Support Request</title>
 </head>
+
 <body style="font-family: Arial, sans-serif; background:#f5f5f5; padding:20px;">
 
 <div style="max-width:650px; margin:auto; background:#ffffff;
@@ -18,11 +20,11 @@
     <h3>User Information</h3>
 
     <p><strong>Email:</strong>
-        <span th:text="${userEmail}"></span>
+        <span th:text="${userEmail}">User email</span>
     </p>
 
     <p><strong>User ID:</strong>
-        <span th:text="${userId}"></span>
+        <span th:text="${userId}">User ID</span>
     </p>
 
     <hr>
@@ -30,11 +32,11 @@
     <h3>Issue Details</h3>
 
     <p><strong>Category:</strong>
-        <span th:text="${category}"></span>
+        <span th:text="${category}">Category</span>
     </p>
 
     <p><strong>Subject:</strong>
-        <span th:text="${subject}"></span>
+        <span th:text="${subject}">Subject</span>
     </p>
 
     <p><strong>Message:</strong></p>
@@ -42,42 +44,50 @@
     <div style="background:#f8f8f8; padding:15px; border-radius:8px;
                 white-space:pre-wrap;"
          th:text="${message}">
+        Message content
     </div>
 
     <hr>
 
     <h3>Device Diagnostics</h3>
 
-    <p><strong>Device:</strong>
-        <span th:text="${diagnostics.deviceModel}"></span>
-    </p>
+    <div th:if="${diagnostics != null}">
 
-    <p><strong>Manufacturer:</strong>
-        <span th:text="${diagnostics.deviceManufacturer}"></span>
-    </p>
+        <p><strong>Device:</strong>
+            <span th:text="${diagnostics.deviceModel != null ? diagnostics.deviceModel : 'Not provided'}"></span>
+        </p>
 
-    <p><strong>OS Version:</strong>
-        <span th:text="${diagnostics.osVersion}"></span>
-    </p>
+        <p><strong>Manufacturer:</strong>
+            <span th:text="${diagnostics.manufacturer != null ? diagnostics.manufacturer : 'Not provided'}"></span>
+        </p>
 
-    <p><strong>App Version:</strong>
-        <span th:text="${diagnostics.appVersion}"></span>
-    </p>
+        <p><strong>OS Version:</strong>
+            <span th:text="${diagnostics.osVersion != null ? diagnostics.osVersion : 'Not provided'}"></span>
+        </p>
 
-    <p><strong>Build Number:</strong>
-        <span th:text="${diagnostics.appBuildNumber}"></span>
-    </p>
+        <p><strong>App Version:</strong>
+            <span th:text="${diagnostics.appVersion != null ? diagnostics.appVersion : 'Not provided'}"></span>
+        </p>
 
-    <p><strong>Device Type:</strong>
-        <span th:text="${diagnostics.deviceType}"></span>
-    </p>
+        <p><strong>Device Type:</strong>
+            <span th:text="${diagnostics.deviceType != null ? diagnostics.deviceType : 'Not provided'}"></span>
+        </p>
 
+        <p><strong>Battery Optimization Ignored:</strong>
+            <span th:text="${diagnostics.isBatteryOptimizationIgnored != null ? diagnostics.isBatteryOptimizationIgnored : 'Not provided'}"></span>
+        </p>
+
+        <p><strong>Google Fit Linked:</strong>
+            <span th:text="${diagnostics.isGoogleFitLinked != null ? diagnostics.isGoogleFitLinked : 'Not provided'}"></span>
+        </p>
+    </div>
+    <p th:if="${diagnostics == null}">
+        Device diagnostic information was not provided.
+    </p>
     <hr>
-
     <p style="color:#777;">
         FitnessApp Support System
     </p>
-
 </div>
 </body>
 </html>

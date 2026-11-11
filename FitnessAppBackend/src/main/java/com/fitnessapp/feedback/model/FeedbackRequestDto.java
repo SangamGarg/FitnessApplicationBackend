@@ -13,15 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class FeedbackRequestDto {
-
-    @NotBlank(message = "Name is required")
-    private String name;
-
-    @NotBlank
-    @Email
-    @Size(max = 254)
-    String email;
-
     @NotBlank(message = "Feedback cannot be empty")
     @Size(max = 500, message = "Feedback cannot exceed 500 characters")
     private String feedback;

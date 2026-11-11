@@ -1,9 +1,10 @@
 package com.fitnessapp.support.service;
 
 import com.fitnessapp.support.models.dtos.request.CreateSupportTicketRequestDTO;
+import com.fitnessapp.support.models.dtos.response.SupportTicketHomeResponseDto;
 import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
-import com.fitnessapp.support.models.enums.TicketCategory;
+import com.fitnessapp.support.models.enums.SupportIssueCategory;
 import com.fitnessapp.support.models.enums.TicketStatus;
 import com.fitnessapp.support.models.dtos.request.UpdateTicketStatusRequestDTO;
 import org.springframework.data.domain.Page;
@@ -14,9 +15,9 @@ import java.util.List;
 
 public interface SupportTicketService {
 
+    SupportTicketHomeResponseDto getTicketsHome();
 
     SupportTicketResponseDTO createTicket(
-            String userEmail,
             CreateSupportTicketRequestDTO request,
             List<MultipartFile> attachments
     );
@@ -27,11 +28,11 @@ public interface SupportTicketService {
     SupportTicketResponseDTO getTicketByNumber(String ticketNumber);
 
 
-    Page<SupportTicketResponseDTO> getAllTickets(TicketStatus status, TicketCategory category, Pageable pageable);
+    Page<SupportTicketResponseDTO> getAllTickets(TicketStatus status, SupportIssueCategory category, Pageable pageable);
 
     Page<SupportTicketResponseDTO> searchTickets(
             TicketStatus status,
-            TicketCategory category,
+            SupportIssueCategory category,
             String query,
             Pageable pageable
     );

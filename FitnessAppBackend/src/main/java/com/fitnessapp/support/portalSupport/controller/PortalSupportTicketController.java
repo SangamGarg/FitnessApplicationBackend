@@ -4,13 +4,10 @@ import com.fitnessapp.portal.common.CurrentUserService;
 import com.fitnessapp.support.models.dtos.request.SupportAdminMessageRequestDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
+import com.fitnessapp.support.models.enums.SupportIssueCategory;
 import com.fitnessapp.support.service.SupportTicketService;
-import com.fitnessapp.support.models.enums.TicketCategory;
 import com.fitnessapp.support.models.enums.TicketStatus;
 import com.fitnessapp.support.models.dtos.request.UpdateTicketStatusRequestDTO;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,18 +28,15 @@ import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_SUPPORT_ENDPOINT
 @RestController
 @RequestMapping(PORTAL_SUPPORT_ENDPOINT)
 @RequiredArgsConstructor
-@Tag(name = "Portal Support Admin", description = "Administrative endpoints to triage, update, and resolve support tickets")
-@SecurityRequirement(name = "bearerAuth")
-public class PortalSupportController {
+public class PortalSupportTicketController {
 
     private final SupportTicketService supportTicketService;
     private final CurrentUserService currentUser;
 
-    @Operation(summary = "List and search support tickets with pagination")
     @GetMapping("/tickets")
     public ResponseEntity<Page<SupportTicketResponseDTO>> getAllTickets(
             @RequestParam(required = false) TicketStatus status,
-            @RequestParam(required = false) TicketCategory category,
+            @RequestParam(required = false) SupportIssueCategory category,
             @RequestParam(required = false) String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -54,13 +48,11 @@ public class PortalSupportController {
         return ResponseEntity.ok(supportTicketService.searchTickets(status, category, query, pageable));
     }
 
-    @Operation(summary = "Get support ticket details for administrators")
     @GetMapping("/tickets/{ticketNumber}")
     public ResponseEntity<SupportTicketResponseDTO> getTicket(@PathVariable String ticketNumber) {
         return ResponseEntity.ok(supportTicketService.getTicketForAdmin(ticketNumber));
     }
 
-    @Operation(summary = "Update ticket status, priority, or resolution notes")
     @PatchMapping("/tickets/{ticketNumber}/status")
     public ResponseEntity<SupportTicketResponseDTO> updateTicketStatus(
             @PathVariable String ticketNumber,
@@ -69,13 +61,11 @@ public class PortalSupportController {
         return ResponseEntity.ok(supportTicketService.updateTicketStatus(ticketNumber, request));
     }
 
-    @Operation(summary = "List ticket conversation and internal notes")
     @GetMapping("/tickets/{ticketNumber}/messages")
     public ResponseEntity<List<SupportTicketMessageResponseDTO>> getMessages(@PathVariable String ticketNumber) {
         return ResponseEntity.ok(supportTicketService.getTicketMessagesForAdmin(ticketNumber));
     }
 
-    @Operation(summary = "Add an internal note or user-visible reply")
     @PostMapping("/tickets/{ticketNumber}/messages")
     public ResponseEntity<SupportTicketMessageResponseDTO> addMessage(
             @PathVariable String ticketNumber,

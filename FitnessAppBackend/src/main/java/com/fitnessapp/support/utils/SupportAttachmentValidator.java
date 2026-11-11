@@ -1,3 +1,4 @@
+
 package com.fitnessapp.support.utils;
 
 import org.springframework.stereotype.Component;
@@ -5,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 @Component
@@ -13,13 +15,24 @@ public class SupportAttachmentValidator {
     private static final int MAX_ATTACHMENTS = 3;
 
     private static final long MAX_FILE_SIZE =
-            5 * 1024 * 1024;
+            5L * 1024 * 1024; // 5 MB per file
 
     private static final long MAX_TOTAL_SIZE =
-            10 * 1024 * 1024;
+            10L * 1024 * 1024; // 10 MB total
 
-    private static final Set<String> ALLOWED_TYPES =
-            Set.of("image/jpeg", "image/png", "image/webp");
+    private static final Set<String> ALLOWED_TYPES = Set.of(
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp"
+    );
+
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+            "jpg",
+            "jpeg",
+            "png",
+            "webp"
+    );
 
     public void validate(List<MultipartFile> files) {
 
@@ -29,7 +42,8 @@ public class SupportAttachmentValidator {
 
         if (files.size() > MAX_ATTACHMENTS) {
             throw new IllegalArgumentException(
-                    "Maximum 3 attachments are allowed");
+                    "Maximum " + MAX_ATTACHMENTS + " attachments are allowed."
+            );
         }
 
         long totalSize = 0;
@@ -38,29 +52,50 @@ public class SupportAttachmentValidator {
 
             if (file == null || file.isEmpty()) {
                 throw new IllegalArgumentException(
-                        "Empty attachment is not allowed");
+                        "Empty attachment is not allowed."
+                );
             }
 
+            // Validate individual file size
             if (file.getSize() > MAX_FILE_SIZE) {
                 throw new IllegalArgumentException(
-                        "Each attachment must be 5 MB or smaller");
+                        "Each attachment must be 5 MB or smaller."
+                );
             }
 
             totalSize += file.getSize();
 
+            // Validate total attachment size
             if (totalSize > MAX_TOTAL_SIZE) {
                 throw new IllegalArgumentException(
-                        "Total attachment size cannot exceed 10 MB");
+                        "Total attachment size cannot exceed 10 MB."
+                );
             }
 
+            // Validate MIME type
             String contentType = file.getContentType();
 
             if (contentType == null ||
-                    !ALLOWED_TYPES.contains(contentType.toLowerCase())) {
+                    !ALLOWED_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
+
                 throw new IllegalArgumentException(
-                        "Only JPEG, PNG and WebP images are allowed");
+                        "Only JPG, JPEG, PNG and WEBP images are allowed."
+                );
             }
 
+            // Validate extension
+            String filename = file.getOriginalFilename();
+            String extension = extractExtension(filename);
+
+            if (extension == null ||
+                    !ALLOWED_EXTENSIONS.contains(extension.toLowerCase(Locale.ROOT))) {
+
+                throw new IllegalArgumentException(
+                        "Invalid file extension. Only JPG, JPEG, PNG and WEBP are allowed."
+                );
+            }
+
+            // Validate actual file signature
             validateImageSignature(file);
         }
     }
@@ -77,12 +112,14 @@ public class SupportAttachmentValidator {
 
             if (!valid) {
                 throw new IllegalArgumentException(
-                        "Invalid image file content");
+                        "Invalid image file content."
+                );
             }
 
         } catch (IOException e) {
             throw new IllegalArgumentException(
-                    "Unable to read attachment");
+                    "Unable to read attachment."
+            );
         }
     }
 
@@ -117,76 +154,12 @@ public class SupportAttachmentValidator {
                 && b[11] == 'P';
     }
 
-
-
-
-
-    // 10 Megabytes in bytes
-    private static final long MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10,485,760 bytes
-    private static final int MAX_ATTACHMENT_COUNT = 3;
-
-    // Allowed MIME types
-    private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
-            "image/jpeg",
-            "image/jpg",
-            "image/png",
-            "image/webp",
-            "video/mp4"
-    );
-
-    // Allowed file extensions
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
-            "jpg", "jpeg", "png", "webp", "mp4"
-    );
-
-    public void validateAttachments(List<MultipartFile> files) {
-        if (files == null || files.isEmpty()) {
-            return; // Attachments are optional
-        }
-
-        if (files.size() > MAX_ATTACHMENT_COUNT) {
-            throw new IllegalArgumentException("You can upload a maximum of " + MAX_ATTACHMENT_COUNT + " attachments.");
-        }
-
-        for (MultipartFile file : files) {
-            if (file == null || file.isEmpty()) {
-                continue;
-            }
-
-            // 1. Validate File Size
-            if (file.getSize() > MAX_FILE_SIZE_BYTES) {
-                throw new IllegalArgumentException(
-                        String.format("File '%s' exceeds the 10MB limit. Current size: %.2f MB",
-                                file.getOriginalFilename(),
-                                (file.getSize() / (1024.0 * 1024.0)))
-                );
-            }
-
-            // 2. Validate MIME Type
-            String contentType = file.getContentType();
-            if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType.toLowerCase())) {
-                throw new IllegalArgumentException(
-                        "File format not supported for '" + file.getOriginalFilename() +
-                                "'. Only JPEG, PNG, WEBP, and MP4 files are allowed."
-                );
-            }
-
-            // 3. Validate File Extension
-            String originalFilename = file.getOriginalFilename();
-            String extension = extractExtension(originalFilename);
-            if (extension == null || !ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
-                throw new IllegalArgumentException(
-                        "Invalid file extension for '" + originalFilename +
-                                "'. Allowed extensions: .jpg, .jpeg, .png, .webp, .mp4"
-                );
-            }
-        }
-    }
-
     private String extractExtension(String filename) {
+
         if (filename == null || !filename.contains(".")) {
             return null;
         }
-        return filename.substring(filename.lastIndexOf(".") + 1);
+
+        return filename.substring(filename.lastIndexOf('.') + 1);
     }
 }

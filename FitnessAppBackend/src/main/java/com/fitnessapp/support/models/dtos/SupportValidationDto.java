@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SupportEmailValidationDto {
+public class SupportValidationDto {
 
     private int subjectMinLength;
     private int subjectMaxLength;

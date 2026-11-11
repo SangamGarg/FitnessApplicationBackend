@@ -1,21 +1,28 @@
 package com.fitnessapp.support.service;
 
+import com.fitnessapp.appAuth.model.entity.UserEntity;
+import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.portal.audit.PortalAuditService;
 import com.fitnessapp.portal.common.enums.UserRole;
 import com.fitnessapp.portal.dev.assetUploadDev.service.FileStorageService;
 import com.fitnessapp.portal.repository.PortalAccountRepository;
+import com.fitnessapp.support.models.dtos.SupportValidationDto;
+import com.fitnessapp.support.models.dtos.SupportIssueCategoryDto;
 import com.fitnessapp.support.models.dtos.request.CreateSupportTicketRequestDTO;
 import com.fitnessapp.support.models.dtos.request.UpdateTicketStatusRequestDTO;
+import com.fitnessapp.support.models.dtos.response.SupportTicketHomeResponseDto;
 import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
 import com.fitnessapp.support.models.entity.SupportTicketEntity;
 import com.fitnessapp.support.models.entity.SupportTicketMessageEntity;
-import com.fitnessapp.support.models.enums.TicketCategory;
+import com.fitnessapp.support.models.enums.SupportIssueCategory;
 import com.fitnessapp.support.models.enums.TicketPriority;
 import com.fitnessapp.support.models.enums.TicketStatus;
 import com.fitnessapp.support.repo.SupportTicketMessageRepository;
 import com.fitnessapp.support.repo.SupportTicketRepository;
 import com.fitnessapp.support.service.supportEmail.SupportEmailService;
+import com.fitnessapp.support.utils.SupportAttachmentValidator;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,8 +37,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -46,17 +52,60 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     private final FileStorageService fileStorageService;
     private final SupportEmailService emailService;
     private final PortalAuditService audit;
+    private final UserRepo userRepo;
+    private final SupportAttachmentValidator attachmentValidator;
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public SupportTicketHomeResponseDto getTicketsHome() {
+
+        List<SupportIssueCategoryDto> categories =
+                Arrays.stream(SupportIssueCategory.values())
+                        .map(category ->
+                                SupportIssueCategoryDto.builder()
+                                        .key(category.name())
+                                        .label(category.getLabel())
+                                        .build())
+                        .toList();
+
+        SupportValidationDto validation =
+                SupportValidationDto.builder()
+                        .subjectMinLength(5)
+                        .subjectMaxLength(100)
+                        .messageMinLength(10)
+                        .messageMaxLength(2000)
+                        .maxAttachments(3)
+                        .maxAttachmentSizeBytes(5L * 1024 * 1024)
+                        .maxTotalAttachmentSizeBytes(10L * 1024 * 1024)
+                        .allowedMimeTypes(List.of(
+                                "image/jpeg",
+                                "image/png",
+                                "image/webp"
+                        ))
+                        .build();
+
+        return SupportTicketHomeResponseDto.builder()
+                .title("Raise Support Ticket")
+                .subtitle("Replies within ~12 business hours")
+                .description(
+                        "Select a category and provide details about your issue. Attach the relevant files if any."
+                )
+                .categories(categories)
+                .validation(validation)
+                .build();
+    }
 
     @Override
     @Transactional
     public SupportTicketResponseDTO createTicket(
-            String userEmail,
             CreateSupportTicketRequestDTO request,
             List<MultipartFile> attachments) {
         String userId = currentUserId();
         log.info("Initiating ticket creation for user ID [{}] with {} attachment(s)",
                 userId, (attachments != null ? attachments.size() : 0));
 
+        attachmentValidator.validate(attachments);
         // 1. Process and upload attachments if present
         List<String> uploadedAttachmentUrls = new ArrayList<>();
         if (attachments != null && !attachments.isEmpty()) {
@@ -70,15 +119,19 @@ public class SupportTicketServiceImpl implements SupportTicketService {
         }
 
         // 2. Derive ticket priority
-        TicketPriority assignedPriority = (request.getCategory() == TicketCategory.BILLING_SUBSCRIPTION)
+        TicketPriority assignedPriority = (request.getCategory() == SupportIssueCategory.BILLING_SUBSCRIPTION)
                 ? TicketPriority.HIGH
                 : TicketPriority.MEDIUM;
 
         // 3. Build & save ticket entity
+
+        UserEntity user = userRepo.findById(userId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("User account not found"));
         SupportTicketEntity entity = SupportTicketEntity.builder()
                 .ticketNumber(generateUniqueTicketNumber())
                 .userId(userId)
-                .userEmail(userEmail)
+                .userEmail(user.getEmail())
                 .category(request.getCategory())
                 .subject(request.getSubject().trim())
                 .description(request.getDescription().trim())
@@ -125,14 +178,14 @@ public class SupportTicketServiceImpl implements SupportTicketService {
     }
 
     @Override
-    public Page<SupportTicketResponseDTO> getAllTickets(TicketStatus status, TicketCategory category, Pageable pageable) {
+    public Page<SupportTicketResponseDTO> getAllTickets(TicketStatus status, SupportIssueCategory category, Pageable pageable) {
         return searchTickets(status, category, null, pageable);
     }
 
     @Override
     public Page<SupportTicketResponseDTO> searchTickets(
             TicketStatus status,
-            TicketCategory category,
+            SupportIssueCategory category,
             String query,
             Pageable pageable
     ) {
@@ -291,11 +344,19 @@ public class SupportTicketServiceImpl implements SupportTicketService {
         );
     }
 
+
     private String generateUniqueTicketNumber() {
-        String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        int randomSuffix = ThreadLocalRandom.current().nextInt(1000, 9999);
-        return "TCK-" + datePart + "-" + randomSuffix;
+        String datePart = LocalDate.now()
+                .format(DateTimeFormatter.BASIC_ISO_DATE);
+
+        String uniquePart = UUID.randomUUID()
+                .toString()
+                .substring(0, 8)
+                .toUpperCase(Locale.ROOT);
+
+        return "TCK-" + datePart + "-" + uniquePart;
     }
+
 
     private String currentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

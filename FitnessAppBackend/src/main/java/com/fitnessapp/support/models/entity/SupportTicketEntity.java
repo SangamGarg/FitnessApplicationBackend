@@ -1,7 +1,7 @@
 package com.fitnessapp.support.models.entity;
 
 import com.fitnessapp.support.models.dtos.DeviceDiagnosticInfo;
-import com.fitnessapp.support.models.enums.TicketCategory;
+import com.fitnessapp.support.models.enums.SupportIssueCategory;
 import com.fitnessapp.support.models.enums.TicketPriority;
 import com.fitnessapp.support.models.enums.TicketStatus;
 import jakarta.persistence.*;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "support_tickets", indexes = {
+@Table(name = "app_support_tickets", indexes = {
         @Index(name = "idx_ticket_number", columnList = "ticket_number", unique = true),
         @Index(name = "idx_ticket_user_id", columnList = "user_id"),
         @Index(name = "idx_ticket_status", columnList = "status"),
@@ -43,7 +43,7 @@ public class SupportTicketEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
-    private TicketCategory category;
+    private SupportIssueCategory category;
 
     @Column(nullable = false, length = 200)
     private String subject;
@@ -67,7 +67,7 @@ public class SupportTicketEntity {
 
     // Supabase / S3 attachment URLs (screenshots, screen recordings)
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "support_ticket_attachments", joinColumns = @JoinColumn(name = "ticket_id"))
+    @CollectionTable(name = "app_support_ticket_attachments", joinColumns = @JoinColumn(name = "ticket_id"))
     @Column(name = "attachment_url", length = 500)
     @Builder.Default
     private List<String> attachmentUrls = new ArrayList<>();

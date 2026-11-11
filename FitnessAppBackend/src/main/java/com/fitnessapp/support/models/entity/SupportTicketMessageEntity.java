@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "support_ticket_messages", indexes = {
+@Table(name = "app_support_ticket_messages", indexes = {
         @Index(name = "idx_support_message_ticket_created", columnList = "ticket_id, created_at")
 })
 public class SupportTicketMessageEntity {

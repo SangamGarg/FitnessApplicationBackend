@@ -33,7 +33,7 @@ public class SupportEmailController {
         return ResponseEntity.ok(emailService.getEmailHome());
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/send", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<EmailFromUserResponseDto> sendEmail(
             @Valid
             @RequestPart("request")

@@ -1,7 +1,7 @@
 package com.fitnessapp.support.models.dtos.response;
 
 import com.fitnessapp.support.models.dtos.DeviceDiagnosticInfo;
-import com.fitnessapp.support.models.enums.TicketCategory;
+import com.fitnessapp.support.models.enums.SupportIssueCategory;
 import com.fitnessapp.support.models.enums.TicketPriority;
 import com.fitnessapp.support.models.enums.TicketStatus;
 import lombok.Builder;
@@ -16,7 +16,7 @@ public class SupportTicketResponseDTO {
     private String ticketNumber;
     private String userId;
     private String userEmail;
-    private TicketCategory category;
+    private SupportIssueCategory category;
     private String subject;
     private String description;
     private TicketStatus status;

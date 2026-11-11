@@ -2,9 +2,6 @@ package com.fitnessapp.support.portalSupport.controller;
 
 import com.fitnessapp.support.models.dtos.SupportFaqCategoryDto;
 import com.fitnessapp.support.portalSupport.models.dto.request.*;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
-import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
 import com.fitnessapp.support.portalSupport.service.AppInfoService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -25,7 +22,7 @@ import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_SUPPORT_ENDPOINT
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(PORTAL_SUPPORT_ENDPOINT)
-public class AppInfoController {
+public class PortalAppInfoController {
 
     private final AppInfoService appInfoService;
 

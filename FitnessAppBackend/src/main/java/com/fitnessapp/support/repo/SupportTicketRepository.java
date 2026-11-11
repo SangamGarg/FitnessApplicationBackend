@@ -1,8 +1,8 @@
 package com.fitnessapp.support.repo;
 
 import com.fitnessapp.support.models.entity.SupportTicketEntity;
+import com.fitnessapp.support.models.enums.SupportIssueCategory;
 import com.fitnessapp.support.models.enums.TicketStatus;
-import com.fitnessapp.support.models.enums.TicketCategory;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +40,7 @@ public interface SupportTicketRepository
     );
 
     Page<SupportTicketEntity> findAllByCategory(
-            TicketCategory category,
+            SupportIssueCategory category,
             Pageable pageable
     );
 
@@ -72,7 +72,7 @@ public interface SupportTicketRepository
     )
     Page<SupportTicketEntity> searchForAdmin(
             @Param("status") TicketStatus status,
-            @Param("category") TicketCategory category,
+            @Param("category") SupportIssueCategory category,
             @Param("query") String query,
             Pageable pageable
     );

@@ -1,6 +1,9 @@
 package com.fitnessapp.feedback.service;
 
 
+import com.fitnessapp.appAuth.model.entity.UserDetailsEntity;
+import com.fitnessapp.appAuth.model.entity.UserEntity;
+import com.fitnessapp.appAuth.repo.UserDetailsRepo;
 import com.fitnessapp.feedback.model.FeedbackDetailsDto;
 import com.fitnessapp.feedback.model.FeedbackEntity;
 import com.fitnessapp.feedback.model.FeedbackRequestDto;
@@ -25,17 +28,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class FeedbackServiceImpl implements FeedbackService {
 
     private final FeedbackRepository feedbackRepository;
+    private final UserDetailsRepo userDetailsRepo;
 
     @Override
     @Transactional
     public FeedbackResponseDto postFeedback(FeedbackRequestDto request) {
 
         String userId = currentUserId();
-
+        UserDetailsEntity user = userDetailsRepo.findByUserId(userId);
+        if (user == null) {
+            throw new EntityNotFoundException("User not found");
+        }
         FeedbackEntity entity = FeedbackEntity.builder()
                 .feedback(request.getFeedback().trim())
-                .name(request.getName())
-                .email(request.getEmail())
+                .name(user.getName())
+                .email(user.getEmail())
                 .userId(userId)
                 .build();
 

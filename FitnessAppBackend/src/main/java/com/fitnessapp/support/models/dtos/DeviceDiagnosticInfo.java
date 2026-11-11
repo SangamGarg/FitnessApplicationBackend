@@ -12,13 +12,13 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class DeviceDiagnosticInfo {
-    @NotBlank
+  //  @NotBlank
     @Size(max = 50)
     private String appVersion;
-    @NotBlank
+   // @NotBlank
     @Size(max = 50)
     private String osVersion;
-    @NotBlank
+  //  @NotBlank
     @Size(max = 100)
     private String deviceModel;
     @Size(max = 50)

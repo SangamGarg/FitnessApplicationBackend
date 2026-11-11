@@ -1,6 +1,6 @@
 package com.fitnessapp.support.models.dtos.response;
 
-import com.fitnessapp.support.models.dtos.SupportEmailValidationDto;
+import com.fitnessapp.support.models.dtos.SupportValidationDto;
 import com.fitnessapp.support.models.dtos.SupportIssueCategoryDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +21,7 @@ public class SupportEmailHomeResponseDto {
 
     private List<SupportIssueCategoryDto> categories;
 
-    private SupportEmailValidationDto validation;
+    private SupportValidationDto validation;
 
     private boolean diagnosticsEnabled;
 }
