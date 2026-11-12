@@ -12,7 +12,7 @@ import com.fitnessapp.appAuth.repo.RefreshTokenRepo;
 import com.fitnessapp.appAuth.repo.UserDetailsRepo;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.appAuth.utils.AppAuthUtils;
-import com.fitnessapp.calculator.service.CalculatorService;
+import com.fitnessapp.analytics.service.AnalyticsService;
 import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtTokenService;
 import com.fitnessapp.utils.appUtil.AppResponseStatus;
 import com.google.firebase.auth.AuthErrorCode;
@@ -48,7 +48,7 @@ public class AppAuthServiceImpl implements AppAuthService {
     private final UserRepo userRepo;
     private final UserDetailsRepo userDetailsRepo;
     private final JwtTokenService jwtTokenService;
-    private final CalculatorService calculatorService;
+    private final AnalyticsService analyticsService;
     private final RefreshTokenRepo refreshTokenRepo;
     private final AppAuthEmailService appAuthEmailService;
     private final AppOtpService appOtpService;
