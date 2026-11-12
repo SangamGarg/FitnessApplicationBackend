@@ -1,6 +1,6 @@
 package com.fitnessapp.portal.tableEntity;
 
-import com.fitnessapp.portal.common.enums.Gender;
+import com.fitnessapp.portal.common.enums.GenderPortal;
 import com.fitnessapp.portal.common.enums.UserRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,7 +53,7 @@ public class PortalAccountEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 24)
-    private Gender gender;
+    private GenderPortal genderPortal;
 
     @Column(length = 500)
     private String address;

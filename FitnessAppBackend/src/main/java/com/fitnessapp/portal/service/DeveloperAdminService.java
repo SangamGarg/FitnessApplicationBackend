@@ -75,7 +75,7 @@ public class DeveloperAdminService {
         account.setFullName(name);
         account.setEmail(email);
         account.setMobileNumber(normalizeOptional(request.mobileNumber()));
-        account.setGender(request.gender());
+        account.setGenderPortal(request.genderPortal());
         account.setAddress(normalizeOptional(request.address()));
         account.setRole(UserRole.DEVELOPER);
         account.setEnabled(true);
@@ -211,7 +211,7 @@ public class DeveloperAdminService {
         response.put("name", account.getFullName());
         response.put("email", account.getEmail());
         response.put("mobileNumber", account.getMobileNumber());
-        response.put("gender", account.getGender());
+        response.put("genderPortal", account.getGenderPortal());
         response.put("address", account.getAddress());
         response.put("role", account.getRole().name());
         response.put("roleId", account.getRole().getId());

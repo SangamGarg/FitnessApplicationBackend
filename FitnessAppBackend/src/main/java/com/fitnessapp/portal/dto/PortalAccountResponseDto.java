@@ -1,6 +1,6 @@
 package com.fitnessapp.portal.dto;
 
-import com.fitnessapp.portal.common.enums.Gender;
+import com.fitnessapp.portal.common.enums.GenderPortal;
 import com.fitnessapp.portal.common.enums.UserRole;
 
 import java.time.Instant;
@@ -10,7 +10,7 @@ public record PortalAccountResponseDto(
         String name,
         String email,
         String mobileNumber,
-        Gender gender,
+        GenderPortal genderPortal,
         String address,
         UserRole role,
         boolean enabled,

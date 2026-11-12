@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -14,12 +14,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class HealthSnapshotDto {
 
-    private BigDecimal bmi;
-    private String bmiStatus;
+    private String title;
+    private String subtitle;
 
-    private BigDecimal weightKg;
-    private BigDecimal heightCm;
-    private BigDecimal bodyFatPercentage;
+    private List<HealthMetricDto> metrics;
 
     private LocalDateTime lastUpdatedAt;
 }

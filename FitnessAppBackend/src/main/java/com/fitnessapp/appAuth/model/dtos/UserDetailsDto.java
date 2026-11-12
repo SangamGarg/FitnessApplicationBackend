@@ -27,7 +27,7 @@ public class UserDetailsDto {
 
     private String email;
 
-    @NotNull(message = "Gender cannot be null")
+    @NotNull(message = "GenderPortal cannot be null")
     private Gender gender;
 
     @NotNull(message = "Age cannot be null")

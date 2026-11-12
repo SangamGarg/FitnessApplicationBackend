@@ -68,7 +68,7 @@ public class PortalAccountAdminService {
         PortalAccountEntity account = findDeveloper(id);
         account.setFullName(request.name().trim());
         account.setMobileNumber(normalizeOptional(request.mobileNumber()));
-        account.setGender(request.gender());
+        account.setGenderPortal(request.genderPortal());
         account.setAddress(normalizeOptional(request.address()));
         account.setUpdatedAt(Instant.now());
 
@@ -117,7 +117,7 @@ public class PortalAccountAdminService {
                 account.getFullName(),
                 account.getEmail(),
                 account.getMobileNumber(),
-                account.getGender(),
+                account.getGenderPortal(),
                 account.getAddress(),
                 account.getRole(),
                 account.isEnabled(),
