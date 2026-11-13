@@ -9,7 +9,8 @@ import com.fitnessapp.gamification.dto.GamificationSummaryResponseDto;
 import com.fitnessapp.gamification.dto.RewardHistoryResponseDto;
 import com.fitnessapp.gamification.entity.*;
 import com.fitnessapp.gamification.repository.*;
-import com.fitnessapp.wallet.service.WalletService;
+import com.fitnessapp.wallet.service.AppWalletService;
+import com.fitnessapp.wallet.service.AppWalletServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +33,8 @@ public class GamificationRewardService {
     private final UserXpAccountRepository xpRepo;
     private final RewardLedgerRepository ledgerRepo;
     private final UserStreakRepository streakRepo;
-    private final WalletService walletService;
+    private final AppWalletServiceImpl walletServiceimpl;
+    private final AppWalletService appWalletService;
     @Value("${gamification.time-zone:Asia/Kolkata}")
     private String configuredTimeZone;
     @Value("${gamification.activity.minimum-duration-seconds:60}")
@@ -81,7 +83,7 @@ public class GamificationRewardService {
         xpRepo.save(xpAccount);
 
         if (coins > 0) {
-            walletService.creditForBusiness(userId, coins, "Activity completion reward", activity.getId().toString(),
+            walletServiceimpl.creditForBusiness(userId, coins, "Activity completion reward", activity.getId().toString(),
                     "GAMIFICATION_ACTIVITY_" + activity.getId());
         }
         ledgerRepo.saveAndFlush(new RewardLedgerEntity(user, eventKey, "ACTIVITY", activity.getId().toString(), xp, coins, rewardDate));
@@ -103,7 +105,7 @@ public class GamificationRewardService {
         UserXpAccountEntity account = xpRepo.findByUserId(userId).orElseGet(() -> xpRepo.save(new UserXpAccountEntity(user)));
         if (xp > 0) account.addXp(xp);
         xpRepo.save(account);
-        if (coins > 0) walletService.creditForBusiness(userId, coins, reason, sourceId, "GAMIFICATION_" + eventKey);
+        if (coins > 0) walletServiceimpl.creditForBusiness(userId, coins, reason, sourceId, "GAMIFICATION_" + eventKey);
         ledgerRepo.saveAndFlush(new RewardLedgerEntity(user, eventKey, sourceType, sourceId, xp, coins, day));
     }
 
@@ -115,7 +117,7 @@ public class GamificationRewardService {
         long xp = xpRepo.findByUserId(userId).map(UserXpAccountEntity::getTotalXp).orElse(0L);
         int level = (int) Math.floor(Math.sqrt(xp / 100.0)) + 1;
         long next = (long) level * level * 100;
-        long coins = walletService.getBalance(userId).balanceCoins();
+        long coins = appWalletService.getBalance().balanceCoins();
         UserStreakEntity streak = streakRepo.findByUserId(userId).orElse(null);
         return new GamificationSummaryResponseDto(xp, level, coins,
                 streak == null ? 0 : streak.getCurrentStreak(), streak == null ? 0 : streak.getLongestStreak(),

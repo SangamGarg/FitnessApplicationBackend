@@ -4,65 +4,69 @@ import com.fitnessapp.portal.audit.PortalAuditService;
 import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserRepo;
-import com.fitnessapp.wallet.model.dto.WalletAdjustmentRequestDto;
-import com.fitnessapp.wallet.model.dto.WalletBalanceResponseDto;
-import com.fitnessapp.wallet.model.dto.WalletTransactionResponseDto;
-import com.fitnessapp.wallet.model.WalletAccountEntity;
-import com.fitnessapp.wallet.model.WalletTransactionEntity;
+import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
+import com.fitnessapp.wallet.model.dto.response.WalletHomeResponseDto;
+import com.fitnessapp.wallet.model.dto.response.WalletRulesResponseDto;
+import com.fitnessapp.wallet.model.dto.response.WalletTransactionResponseDto;
+import com.fitnessapp.wallet.model.entity.WalletAccountEntity;
+import com.fitnessapp.wallet.model.entity.WalletTransactionEntity;
 import com.fitnessapp.wallet.model.WalletTransactionType;
 import com.fitnessapp.wallet.repo.WalletAccountRepository;
 import com.fitnessapp.wallet.repo.WalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class WalletService {
+@Slf4j
+public class AppWalletServiceImpl implements AppWalletService {
 
     private final UserRepo users;
     private final WalletAccountRepository wallets;
     private final WalletTransactionRepository transactions;
     private final PortalAuditService audit;
 
+
+    @Override
     @Transactional(readOnly = true)
-    public WalletBalanceResponseDto getBalance(String userId) {
+    public WalletHomeResponseDto getWalletHome() {
+        return null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public WalletRulesResponseDto getWalletRules() {
+        return null;
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public WalletBalanceResponseDto getBalance() {
+        String userId = currentUserId();
         UserEntity user = findUser(userId);
         return wallets.findByUserId(userId)
                 .map(wallet -> new WalletBalanceResponseDto(user.getId(), wallet.getBalanceCoins(), wallet.getUpdatedAt()))
                 .orElseGet(() -> new WalletBalanceResponseDto(user.getId(), 0, null));
     }
 
+
+    @Override
     @Transactional(readOnly = true)
-    public Page<WalletTransactionResponseDto> getTransactions(String userId, Pageable pageable) {
+    public Page<WalletTransactionResponseDto> getTransactions(Pageable pageable) {
+        String userId = currentUserId();
         findUser(userId);
         return transactions.findAllByWalletUserIdOrderByCreatedAtDesc(userId, pageable).map(this::toResponse);
     }
 
-    @Transactional
-    public WalletTransactionResponseDto adjustAsAdmin(String userId, String actorEmail, WalletAdjustmentRequestDto request) {
-        WalletTransactionEntity transaction = apply(
-                userId,
-                request.type(),
-                request.amountCoins(),
-                request.reason(),
-                request.reference(),
-                request.idempotencyKey(),
-                actorEmail,
-                false
-        );
-        audit.record(
-                "WALLET_" + request.type().name(),
-                "WALLET",
-                userId,
-                request.reason() + "; transaction=" + transaction.getId()
-        );
-        return toResponse(transaction);
-    }
 
     @Transactional
     public WalletTransactionResponseDto debitForBusiness(
@@ -182,7 +186,7 @@ public class WalletService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
         }
         return users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mobile user not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "App user not found"));
     }
 
     private String normalize(String value) {
@@ -200,5 +204,15 @@ public class WalletService {
                 transaction.getIdempotencyKey(),
                 transaction.getCreatedAt()
         );
+    }
+
+    private String currentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
+            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+        return authentication.getName();
     }
 }

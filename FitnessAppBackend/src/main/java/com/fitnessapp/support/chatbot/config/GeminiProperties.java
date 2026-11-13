@@ -1,4 +1,3 @@
-
 package com.fitnessapp.support.chatbot.config;
 
 import lombok.Getter;

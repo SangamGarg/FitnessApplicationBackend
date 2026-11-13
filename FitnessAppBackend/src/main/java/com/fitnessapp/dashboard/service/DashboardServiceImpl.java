@@ -7,15 +7,15 @@ import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserDetailsRepo;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.dashboard.dto.DashboardResponseDto;
-import com.fitnessapp.exercise.portal.WorkoutPlanService;
-import com.fitnessapp.exercise.app.service.WorkoutAnalyticsService;
 import com.fitnessapp.exercise.app.model.dto.response.WorkoutAnalyticsOverviewResponse;
+import com.fitnessapp.exercise.app.service.WorkoutAnalyticsService;
+import com.fitnessapp.exercise.portal.WorkoutPlanService;
 import com.fitnessapp.exercise.portal.dto.WorkoutPlanResponseDto;
 import com.fitnessapp.notification.service.UserNotificationService;
 import com.fitnessapp.nutrition.dto.response.DailyNutritionSummaryResponse;
 import com.fitnessapp.nutrition.service.NutritionService;
-import com.fitnessapp.wallet.service.WalletService;
-import com.fitnessapp.wallet.model.dto.WalletBalanceResponseDto;
+import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
+import com.fitnessapp.wallet.service.AppWalletService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -41,7 +41,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final UserRepo userRepo;
     private final UserDetailsRepo userDetailsRepo;
-    private final WalletService walletService;
+    private final AppWalletService appWalletService;
     private final UserNotificationService userNotificationService;
     private final WorkoutPlanService workoutPlanService;
     private final ActivityInterface activityService;
@@ -76,7 +76,7 @@ public class DashboardServiceImpl implements DashboardService {
                 ));
 
         UserDetailsEntity details = userDetailsRepo.findByUserId(userId);
-        WalletBalanceResponseDto wallet = walletService.getBalance(userId);
+        WalletBalanceResponseDto wallet = appWalletService.getBalance();
         long unreadCount = userNotificationService.getMyUnreadCount().unreadCount();
 
         ActivitySummaryResponseDto activity = activityService.getDailySummary(

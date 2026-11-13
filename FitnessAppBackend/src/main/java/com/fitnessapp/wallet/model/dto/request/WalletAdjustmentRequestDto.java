@@ -1,4 +1,4 @@
-package com.fitnessapp.wallet.model.dto;
+package com.fitnessapp.wallet.model.dto.request;
 
 import com.fitnessapp.wallet.model.WalletTransactionType;
 import jakarta.validation.constraints.NotBlank;

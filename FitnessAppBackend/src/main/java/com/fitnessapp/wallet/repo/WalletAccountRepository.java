@@ -1,6 +1,6 @@
 package com.fitnessapp.wallet.repo;
 
-import com.fitnessapp.wallet.model.WalletAccountEntity;
+import com.fitnessapp.wallet.model.entity.WalletAccountEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

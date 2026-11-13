@@ -1,4 +1,3 @@
-
 package com.fitnessapp.support.chatbot.repository;
 
 import com.fitnessapp.support.chatbot.entity.ChatConversationEntity;
@@ -12,13 +11,8 @@ import java.util.UUID;
 public interface ChatConversationRepository
         extends JpaRepository<ChatConversationEntity, UUID> {
 
-    Optional<ChatConversationEntity> findByIdAndUserId(
-            UUID id,
-            String userId
-    );
+    Optional<ChatConversationEntity> findByIdAndUserId(UUID id, String userId);
 
     Page<ChatConversationEntity> findByUserIdOrderByLastMessageAtDesc(
-            String userId,
-            Pageable pageable
-    );
+            String userId, Pageable pageable);
 }

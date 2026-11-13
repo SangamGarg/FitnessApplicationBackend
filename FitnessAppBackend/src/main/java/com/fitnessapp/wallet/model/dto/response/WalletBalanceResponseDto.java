@@ -1,4 +1,4 @@
-package com.fitnessapp.wallet.model.dto;
+package com.fitnessapp.wallet.model.dto.response;
 
 import java.time.Instant;
 

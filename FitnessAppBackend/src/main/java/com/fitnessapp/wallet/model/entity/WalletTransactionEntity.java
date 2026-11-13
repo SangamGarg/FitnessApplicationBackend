@@ -1,5 +1,6 @@
-package com.fitnessapp.wallet.model;
+package com.fitnessapp.wallet.model.entity;
 
+import com.fitnessapp.wallet.model.WalletTransactionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,4 +1,4 @@
-package com.fitnessapp.wallet.model;
+package com.fitnessapp.wallet.model.entity;
 
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import jakarta.persistence.Column;

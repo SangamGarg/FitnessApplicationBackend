@@ -1,6 +1,6 @@
 package com.fitnessapp.wallet.repo;
 
-import com.fitnessapp.wallet.model.WalletTransactionEntity;
+import com.fitnessapp.wallet.model.entity.WalletTransactionEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
