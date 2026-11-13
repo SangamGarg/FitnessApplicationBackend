@@ -1,17 +1,17 @@
 package com.fitnessapp.wallet.service;
 
-import com.fitnessapp.portal.audit.PortalAuditService;
-import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.model.entity.UserEntity;
+import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.repo.UserRepo;
+import com.fitnessapp.wallet.model.WalletTransactionType;
 import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletHomeResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletRulesResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletTransactionResponseDto;
 import com.fitnessapp.wallet.model.entity.WalletAccountEntity;
 import com.fitnessapp.wallet.model.entity.WalletTransactionEntity;
-import com.fitnessapp.wallet.model.WalletTransactionType;
 import com.fitnessapp.wallet.repo.WalletAccountRepository;
+import com.fitnessapp.wallet.repo.WalletRulesRepository;
 import com.fitnessapp.wallet.repo.WalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class AppWalletServiceImpl implements AppWalletService {
     private final UserRepo users;
     private final WalletAccountRepository wallets;
     private final WalletTransactionRepository transactions;
-    private final PortalAuditService audit;
+    private final WalletRulesRepository rulesRepo;
 
 
     @Override
@@ -44,7 +44,18 @@ public class AppWalletServiceImpl implements AppWalletService {
     @Override
     @Transactional(readOnly = true)
     public WalletRulesResponseDto getWalletRules() {
-        return null;
+        var rules = rulesRepo.findAllByActiveTrueOrderByDisplayOrderAsc().stream()
+                .map(rule -> WalletRulesResponseDto.WalletRuleDto.builder()
+                        .title(rule.getTitle())
+                        .description(rule.getDescription())
+                        .build())
+                .toList();
+
+        return WalletRulesResponseDto.builder()
+                .header("Wallet Rules")
+                .subheader("Terms and conditions for using the fitness wallet")
+                .rules(rules)
+                .build();
     }
 
 

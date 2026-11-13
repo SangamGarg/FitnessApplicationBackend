@@ -30,13 +30,14 @@ public class AppWalletController {
 
     private final AppWalletService service;
 
+    @GetMapping("/home")
+    public ResponseEntity<WalletHomeResponseDto> getWalletHome() {
+        return ResponseEntity.ok(service.getWalletHome());
+    }
+
     @GetMapping("/rules")
     public ResponseEntity<WalletRulesResponseDto> getWalletRules() {
         return ResponseEntity.ok(service.getWalletRules());
-    }
-      @GetMapping("/rules")
-    public ResponseEntity<WalletHomeResponseDto> getWalletHome() {
-        return ResponseEntity.ok(service.getWalletHome());
     }
 
     @GetMapping("/balance")

@@ -5,12 +5,15 @@ import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.portal.audit.PortalAuditService;
 import com.fitnessapp.wallet.model.entity.WalletAccountEntity;
+import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
 import com.fitnessapp.wallet.model.entity.WalletTransactionEntity;
 import com.fitnessapp.wallet.model.WalletTransactionType;
 import com.fitnessapp.wallet.model.dto.request.WalletAdjustmentRequestDto;
+import com.fitnessapp.wallet.model.dto.request.WalletRuleRequestDto;
 import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletTransactionResponseDto;
 import com.fitnessapp.wallet.repo.WalletAccountRepository;
+import com.fitnessapp.wallet.repo.WalletRulesRepository;
 import com.fitnessapp.wallet.repo.WalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +34,50 @@ public class PortalServiceImpl {
     private final UserRepo users;
     private final WalletAccountRepository wallets;
     private final WalletTransactionRepository transactions;
+    private final WalletRulesRepository rulesRepo;
     private final PortalAuditService audit;
+
+    @Transactional(readOnly = true)
+    public java.util.List<WalletRulesEntity> getAllWalletRules() {
+        return rulesRepo.findAll();
+    }
+
+    @Transactional
+    public WalletRulesEntity saveWalletRule(WalletRuleRequestDto request) {
+        WalletRulesEntity rule = WalletRulesEntity.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .displayOrder(request.getDisplayOrder())
+                .active(request.isActive())
+                .build();
+        rule = rulesRepo.save(rule);
+        audit.record("WALLET_RULE_CREATE", "WALLET", "SYSTEM", "Created rule: " + rule.getTitle());
+        return rule;
+    }
+
+    @Transactional
+    public WalletRulesEntity updateWalletRule(Long id, WalletRuleRequestDto request) {
+        WalletRulesEntity rule = rulesRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet rule not found"));
+
+        rule.setTitle(request.getTitle());
+        rule.setDescription(request.getDescription());
+        rule.setDisplayOrder(request.getDisplayOrder());
+        rule.setActive(request.isActive());
+
+        rule = rulesRepo.save(rule);
+        audit.record("WALLET_RULE_UPDATE", "WALLET", "SYSTEM", "Updated rule: " + id);
+        return rule;
+    }
+
+    @Transactional
+    public void deleteWalletRule(Long id) {
+        if (!rulesRepo.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet rule not found");
+        }
+        rulesRepo.deleteById(id);
+        audit.record("WALLET_RULE_DELETE", "WALLET", "SYSTEM", "Deleted rule: " + id);
+    }
 
     @Transactional(readOnly = true)
     public WalletBalanceResponseDto getBalance( String userId ) {

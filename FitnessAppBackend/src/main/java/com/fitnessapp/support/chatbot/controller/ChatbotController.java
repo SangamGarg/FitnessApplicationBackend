@@ -1,12 +1,14 @@
 package com.fitnessapp.support.chatbot.controller;
 
 import com.fitnessapp.support.chatbot.dto.request.CreateChatConversationRequest;
+import com.fitnessapp.support.chatbot.dto.request.EscalateChatRequest;
 import com.fitnessapp.support.chatbot.dto.request.SendChatMessageRequest;
 import com.fitnessapp.support.chatbot.dto.request.SubmitChatFeedbackRequest;
 import com.fitnessapp.support.chatbot.dto.response.*;
 import com.fitnessapp.support.chatbot.service.ChatbotConversationService;
 import com.fitnessapp.support.chatbot.service.ChatbotMessagePersistenceService;
 import com.fitnessapp.support.chatbot.service.ChatbotMessageService;
+import com.fitnessapp.support.chatbot.service.ChatbotTicketEscalationService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -31,6 +33,7 @@ public class ChatbotController {
     private final ChatbotConversationService conversationService;
     private final ChatbotMessageService messageService;
     private final ChatbotMessagePersistenceService persistenceService;
+    private final ChatbotTicketEscalationService ticketEscalationService;
 
     @GetMapping("/home")
     public ResponseEntity<ChatbotHomeResponse> getHome() {
@@ -112,6 +115,33 @@ public class ChatbotController {
         );
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/conversations/{conversationId}/escalate")
+    public ResponseEntity<ChatTicketResponse> escalateConversation(
+            @PathVariable UUID conversationId,
+            @Valid @RequestBody EscalateChatRequest request,
+            Authentication authentication) {
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ticketEscalationService.escalate(
+                        conversationId,
+                        authenticatedUserId(authentication),
+                        request
+                ));
+    }
+
+    @GetMapping("/conversations/{conversationId}/ticket")
+    public ResponseEntity<ChatTicketResponse> getLinkedTicket(
+            @PathVariable UUID conversationId,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(
+                ticketEscalationService.getLinkedTicket(
+                        conversationId,
+                        authenticatedUserId(authentication)
+                )
+        );
     }
 
     private String authenticatedUserId(Authentication authentication) {

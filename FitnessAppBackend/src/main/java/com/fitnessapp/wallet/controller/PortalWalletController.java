@@ -1,8 +1,10 @@
 package com.fitnessapp.wallet.controller;
 
 import com.fitnessapp.wallet.model.dto.request.WalletAdjustmentRequestDto;
+import com.fitnessapp.wallet.model.dto.request.WalletRuleRequestDto;
 import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletTransactionResponseDto;
+import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
 import com.fitnessapp.wallet.service.PortalServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +49,30 @@ public class PortalWalletController {
             Authentication authentication
     ) {
         return ResponseEntity.ok(service.adjustAsAdmin(userId, authentication.getName(), request));
+    }
+
+    @GetMapping("/rules")
+    public ResponseEntity<java.util.List<WalletRulesEntity>> getAllRules() {
+        return ResponseEntity.ok(service.getAllWalletRules());
+    }
+
+    @PostMapping("/rules")
+    public ResponseEntity<WalletRulesEntity> createRule(@Valid @RequestBody WalletRuleRequestDto request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.saveWalletRule(request));
+    }
+
+    @PatchMapping("/rules/{id}")
+    public ResponseEntity<WalletRulesEntity> updateRule(
+            @PathVariable Long id,
+            @Valid @RequestBody WalletRuleRequestDto request
+    ) {
+        return ResponseEntity.ok(service.updateWalletRule(id, request));
+    }
+
+    @DeleteMapping("/rules/{id}")
+    public ResponseEntity<Void> deleteRule(@PathVariable Long id) {
+        service.deleteWalletRule(id);
+        return ResponseEntity.noContent().build();
     }
 
     private Pageable pageable(int page, int size) {
