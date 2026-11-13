@@ -1,5 +1,6 @@
 package com.fitnessapp.analytics.model.dtos.requestDto;
 
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,4 +20,6 @@ public class CalculatorCatalogRequestDto {
     private List<String> requiredInputs;
     private String unit;
     private Boolean requiresSavedData;
+    private boolean popular;
+    private Integer displayOrder;
 }

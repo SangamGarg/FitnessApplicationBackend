@@ -1,6 +1,7 @@
 package com.fitnessapp.analytics.service;
 
 import com.fitnessapp.analytics.model.dtos.responseDto.AnalyticsHomeResponseDto;
+import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorHomeResponseDto;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -9,6 +10,8 @@ import java.util.Map;
 public interface AnalyticsService {
 
     AnalyticsHomeResponseDto getAnalyticsHome();
+
+    CalculatorHomeResponseDto getCalculatorHome();
 
     List<Map<String, Object>> getCatalog();
 

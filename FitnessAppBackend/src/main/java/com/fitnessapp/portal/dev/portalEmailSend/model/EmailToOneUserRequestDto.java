@@ -1,4 +1,4 @@
-package com.fitnessapp.portal.dev.EmailDev.model;
+package com.fitnessapp.portal.dev.portalEmailSend.model;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,20 +9,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EmailToAllUsersRequestDto {
-//
-//    @NotBlank(message = "Name is required")
-//    @Size(max = 50, message = "Name should not exceed 50 characters")
-//    private String name;
+public class EmailToOneUserRequestDto {
+    @NotBlank(message = "Name is required")
+    @Size(max = 50, message = "Name should not exceed 50 characters")
+    private String name;
 
-    @Size(min = 1, message = "At least one email is required")
-    private List<@Email(message = "Invalid email format") @NotBlank(message = "Email cannot be blank") String> emails;
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    private String email;
 
     @NotBlank(message = "Subject is required")
     @Size(max = 100, message = "Subject should not exceed 100 characters")
@@ -35,4 +33,5 @@ public class EmailToAllUsersRequestDto {
     @NotBlank(message = "Html Body is required")
     @Pattern(regexp = ".*<[^>]+>.*", message = "Html Body must contain at least one HTML tag")
     private String htmlBody;
+
 }

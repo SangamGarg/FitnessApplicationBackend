@@ -58,8 +58,8 @@ public class CalculatorUtils {
     }
 
     public String gender(Map<String, Object> m) {
-        String g = str(m, "genderPortal").toLowerCase(Locale.ROOT);
-        if (!g.equals("male") && !g.equals("female")) bad("genderPortal must be male or female");
+        String g = str(m, "gender").toLowerCase(Locale.ROOT);
+        if (!g.equals("male") && !g.equals("female")) bad("gender must be male or female");
         return g;
     }
 

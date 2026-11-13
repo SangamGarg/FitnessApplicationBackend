@@ -1,8 +1,8 @@
-package com.fitnessapp.portal.dev.EmailDev;
+package com.fitnessapp.portal.dev.portalEmailSend;
 
-import com.fitnessapp.portal.dev.EmailDev.model.EmailToAllUsersRequestDto;
-import com.fitnessapp.portal.dev.EmailDev.model.EmailToMoreThanOneUserRequestDto;
-import com.fitnessapp.portal.dev.EmailDev.model.EmailToOneUserRequestDto;
+import com.fitnessapp.portal.dev.portalEmailSend.model.EmailToAllUsersRequestDto;
+import com.fitnessapp.portal.dev.portalEmailSend.model.EmailToMoreThanOneUserRequestDto;
+import com.fitnessapp.portal.dev.portalEmailSend.model.EmailToOneUserRequestDto;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

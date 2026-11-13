@@ -1,4 +1,4 @@
-package com.fitnessapp.portal.dev.EmailDev.model;
+package com.fitnessapp.portal.dev.portalEmailSend.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EmailToMoreThanOneUserResponseDto {
+public class EmailToAllUsersResponseDto {
     private String status;
     private Integer statusCode;
     private String message;

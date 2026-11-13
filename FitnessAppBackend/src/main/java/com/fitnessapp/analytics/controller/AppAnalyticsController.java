@@ -2,6 +2,7 @@ package com.fitnessapp.analytics.controller;
 
 import com.fitnessapp.analytics.model.SmartCalculationRequest;
 import com.fitnessapp.analytics.model.dtos.responseDto.AnalyticsHomeResponseDto;
+import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorHomeResponseDto;
 import com.fitnessapp.analytics.service.AnalyticsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,14 @@ public class AppAnalyticsController {
         return ResponseEntity.ok(catalog);
     }
 
+
+
+    @GetMapping("/calculator/home")
+    public ResponseEntity<CalculatorHomeResponseDto> getCalculatorHome() {
+        log.info("Fetching calculator home screen configuration");
+        return ResponseEntity.ok(analyticsService.getCalculatorHome());
+    }
+
     @PostMapping("/{calculatorKey}")
     public ResponseEntity<Map<String, Object>> calculate(
             @PathVariable String calculatorKey,
@@ -70,5 +79,4 @@ public class AppAnalyticsController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid timeZone. Use an IANA zone such as Asia/Kolkata.", ex);
         }
     }
-
 }

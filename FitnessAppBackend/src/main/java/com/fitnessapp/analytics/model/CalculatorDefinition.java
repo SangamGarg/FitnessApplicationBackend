@@ -9,6 +9,8 @@ public record CalculatorDefinition(
         String description,
         List<String> requiredInputs,
         String unit,
-        boolean requiresSavedData
+        boolean requiresSavedData,
+        boolean popular,
+        Integer displayOrder
 ) {
 }

@@ -1,4 +1,4 @@
-package com.fitnessapp.portal.controller;
+package com.fitnessapp.wallet.controller;
 
 import com.fitnessapp.wallet.service.WalletService;
 import com.fitnessapp.wallet.model.dto.WalletAdjustmentRequestDto;

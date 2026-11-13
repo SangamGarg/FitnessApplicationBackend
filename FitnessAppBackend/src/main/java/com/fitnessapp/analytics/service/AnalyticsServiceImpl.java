@@ -3,22 +3,29 @@ package com.fitnessapp.analytics.service;
 import com.fitnessapp.activity.models.entities.ActivityRecordEntity;
 import com.fitnessapp.activity.models.enums.ActivityStatus;
 import com.fitnessapp.activity.repository.ActivityRepository;
+import com.fitnessapp.analytics.model.*;
 import com.fitnessapp.analytics.model.dtos.responseDto.AnalyticsHomeResponseDto;
+import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorCategoryDto;
+import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorHomeResponseDto;
 import com.fitnessapp.analytics.model.entity.CalculatorCatalogEntity;
 import com.fitnessapp.analytics.repository.CalculatorCatalogRepository;
 import com.fitnessapp.analytics.utils.CalculatorUtils;
+import com.fitnessapp.appAuth.model.entity.UserDetailsEntity;
+import com.fitnessapp.appAuth.repo.UserDetailsRepo;
 import com.fitnessapp.gamification.entity.UserStreakEntity;
 import com.fitnessapp.gamification.entity.UserXpAccountEntity;
 import com.fitnessapp.gamification.repository.UserStreakRepository;
 import com.fitnessapp.gamification.repository.UserXpAccountRepository;
 import com.fitnessapp.nutrition.model.entity.MealEntryEntity;
 import com.fitnessapp.nutrition.repository.MealEntryRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -39,10 +46,143 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private final UserStreakRepository userStreakRepository;
     private final UserXpAccountRepository userXpAccountRepository;
     private final CalculatorCatalogRepository catalogRepository;
+    private final UserDetailsRepo userDetailsRepo;
 
     @Override
     public AnalyticsHomeResponseDto getAnalyticsHome() {
-        return null;
+        String userId = currentUserId();
+        UserDetailsEntity user = userDetailsRepo.findByUserId(userId);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User details not found");
+        }
+
+        HealthSnapshotDto snapshot = HealthSnapshotDto.builder()
+                .title("Health Snapshot")
+                .subtitle("Your current physical metrics")
+                .metrics(new ArrayList<>())
+                .lastUpdatedAt(user.getUpdatedAt() != null ? user.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime() : null)
+                .build();
+
+        // Basic metrics
+        addMetric(snapshot, "GENDER", "Gender", user.getGender() != null ? user.getGender().name() : "N/A", null, "person");
+        addMetric(snapshot, "HEIGHT", "Height", user.getHeightCm() != null ? user.getHeightCm().toString() : "N/A", "cm", "height");
+        addMetric(snapshot, "WEIGHT", "Weight", user.getWeightKg() != null ? user.getWeightKg().toString() : "N/A", "kg", "monitor_weight");
+        addMetric(snapshot, "ACTIVITY_LEVEL", "Activity Level", user.getActivityLevel() != null ? user.getActivityLevel().name() : "N/A", null, "fitness_center");
+        addMetric(snapshot, "FITNESS_GOAL", "Goal", user.getGoal() != null ? user.getGoal().name() : "N/A", null, "flag");
+
+        // Calculated metrics
+        Map<String, Object> input = new HashMap<>();
+        input.put("weightKg", user.getWeightKg());
+        input.put("heightCm", user.getHeightCm());
+        input.put("age", user.getAge());
+        input.put("gender", user.getGender() != null ? user.getGender().name().toLowerCase() : "male");
+        input.put("activityLevel", user.getActivityLevel() != null ? user.getActivityLevel().name() : "SEDENTARY");
+
+        if (user.getHeightCm() != null && user.getWeightKg() != null) {
+            Map<String, Object> bmiRes = calculate("bmi", input);
+            addMetric(snapshot, "BMI", "BMI", bmiRes.get("value").toString(), "kg/m²", "speed");
+
+            Map<String, Object> idealWeightRes = calculate("ideal-weight", input);
+            addMetric(snapshot, "IDEAL-WEIGHT", "Ideal Weight", idealWeightRes.get("value").toString(), "kg", "star");
+
+            Map<String, Object> tdeeRes = calculate("tdee", input);
+            addMetric(snapshot, "DAILY-CALORIES", "Daily Calories", tdeeRes.get("value").toString(), "kcal", "local_fire_department");
+
+            if (user.getAge() != null) {
+                input.put("bmi", bmiRes.get("value"));
+                Map<String, Object> bodyFatRes = calculate("body-fat", input);
+                addMetric(snapshot, "BODY_FAT", "Body Fat", bodyFatRes.get("value").toString(), "%", "opacity");
+            }
+        }
+
+        MeasureOthersDto measureOthers = MeasureOthersDto.builder()
+                .title("Measure Other Metrics")
+                .description("Calculate metrics for family members, friends, or other individuals.")
+                .buttonText("Measure Now")
+                .action("OPEN_OTHER_MEASUREMENTS")
+                .build();
+
+        List<PopularCalculatorDto> popularCalculators = catalogRepository.findByPopularTrueOrderByDisplayOrderAsc().stream()
+                .limit(5)
+                .map(c -> PopularCalculatorDto.builder()
+                        .key(c.getKey())
+                        .name(c.getName())
+                        .category(c.getCategory())
+                        .description(c.getDescription())
+                        .unit(c.getUnit())
+                        .requiresSavedData(c.isRequiresSavedData())
+                        .build())
+                .toList();
+
+        return AnalyticsHomeResponseDto.builder()
+                .title("Analytics")
+                .subtitle("Your fitness insights")
+                .description("Detailed overview of your health and activity")
+                .healthSnapshot(snapshot)
+                .weightAnalytics(null)
+                .measureOthers(measureOthers)
+                .popularCalculators(popularCalculators)
+                .build();
+    }
+
+    @Override
+    public CalculatorHomeResponseDto getCalculatorHome() {
+        List<CalculatorCatalogEntity> allCalculators = catalogRepository.findAll();
+
+        // Group by category
+        Map<String, List<PopularCalculatorDto>> grouped = new LinkedHashMap<>();
+        for (CalculatorCatalogEntity calc : allCalculators) {
+            PopularCalculatorDto dto = PopularCalculatorDto.builder()
+                    .key(calc.getKey())
+                    .name(calc.getName())
+                    .category(calc.getCategory())
+                    .description(calc.getDescription())
+                    .unit(calc.getUnit())
+                    .requiresSavedData(calc.isRequiresSavedData())
+                    .iconKey(calc.getKey()) // Assuming key is used as iconKey or it's mapped elsewhere
+                    .build();
+            grouped.computeIfAbsent(calc.getCategory(), k -> new ArrayList<>()).add(dto);
+        }
+
+        List<CalculatorCategoryDto> categories = new ArrayList<>();
+        grouped.forEach((cat, list) -> categories.add(new CalculatorCategoryDto(cat, list)));
+
+        // Popular calculators
+        List<PopularCalculatorDto> popular = catalogRepository.findByPopularTrueOrderByDisplayOrderAsc().stream()
+                .map(calc -> PopularCalculatorDto.builder()
+                        .key(calc.getKey())
+                        .name(calc.getName())
+                        .category(calc.getCategory())
+                        .description(calc.getDescription())
+                        .unit(calc.getUnit())
+                        .requiresSavedData(calc.isRequiresSavedData())
+                        .iconKey(calc.getKey())
+                        .build())
+                .toList();
+
+        // Recently used - currently not tracked in the database, so returning empty list
+        // In a real scenario, we might fetch this from a user preference or a specific log table
+        List<PopularCalculatorDto> recentlyUsed = new ArrayList<>();
+
+        return CalculatorHomeResponseDto.builder()
+                .title("Calculators")
+                .subtitle("Fitness & Health Tools")
+                .description("Explore our range of health and fitness calculators to track your progress.")
+                .calculatorCategories(categories)
+                .popularCalculators(popular)
+                .recentlyUsedCalculators(recentlyUsed)
+                .build();
+    }
+
+    private void addMetric(HealthSnapshotDto snapshot, String key, String title, String value, String unit, String iconKey) {
+        snapshot.getMetrics().add(HealthMetricDto.builder()
+                .key(key)
+                .title(title)
+                .value(value)
+                .unit(unit)
+                .iconKey(iconKey)
+                .displayOrder(snapshot.getMetrics().size() + 1)
+                .build());
     }
 
     @Override

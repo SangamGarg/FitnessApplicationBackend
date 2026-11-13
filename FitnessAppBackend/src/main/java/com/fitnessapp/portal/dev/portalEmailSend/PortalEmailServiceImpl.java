@@ -1,6 +1,6 @@
-package com.fitnessapp.portal.dev.EmailDev;
+package com.fitnessapp.portal.dev.portalEmailSend;
 
-import com.fitnessapp.portal.dev.EmailDev.model.*;
+import com.fitnessapp.portal.dev.portalEmailSend.model.*;
 import com.fitnessapp.utils.appUtil.AppResponseStatus;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

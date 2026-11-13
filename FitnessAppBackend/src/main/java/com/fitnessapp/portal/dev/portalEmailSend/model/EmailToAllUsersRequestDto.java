@@ -1,4 +1,4 @@
-package com.fitnessapp.portal.dev.EmailDev.model;
+package com.fitnessapp.portal.dev.portalEmailSend.model;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -15,15 +15,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EmailToMoreThanOneUserRequestDto {
-
+public class EmailToAllUsersRequestDto {
+//
 //    @NotBlank(message = "Name is required")
 //    @Size(max = 50, message = "Name should not exceed 50 characters")
 //    private String name;
 
     @Size(min = 1, message = "At least one email is required")
     private List<@Email(message = "Invalid email format") @NotBlank(message = "Email cannot be blank") String> emails;
-
 
     @NotBlank(message = "Subject is required")
     @Size(max = 100, message = "Subject should not exceed 100 characters")
