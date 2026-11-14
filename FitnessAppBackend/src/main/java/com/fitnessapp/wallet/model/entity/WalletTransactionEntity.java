@@ -24,7 +24,7 @@ import java.time.Instant;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "wallet_transactions",
+@Table(name = "app_user_wallet_transactions",
         uniqueConstraints = @UniqueConstraint(
                 name = "uq_wallet_transaction_idempotency",
                 columnNames = {"wallet_id", "idempotency_key"}

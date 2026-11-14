@@ -1,6 +1,6 @@
 package com.fitnessapp.support.chatbot.repository;
 
-import com.fitnessapp.support.chatbot.entity.ChatMessageEntity;
+import com.fitnessapp.support.chatbot.model.entity.ChatMessageEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

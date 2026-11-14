@@ -16,6 +16,7 @@ import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.appAuth.utils.AppAuthUtils;
 import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtTokenService;
 import com.fitnessapp.utils.appUtil.AppResponseStatus;
+import com.fitnessapp.wallet.service.AppWalletService;
 import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -52,11 +53,12 @@ public class AppAuthServiceImpl implements AppAuthService {
     private final RefreshTokenRepo refreshTokenRepo;
     private final AppAuthEmailService appAuthEmailService;
     private final AppOtpService appOtpService;
+    private final AppWalletService walletService;
 
     // ------------------------------------------------------------------ login / register
 
     @Override
-    public ResponseEntity<UserRegisterResponseDto> loginOrRegisterUser(String authorizationHeader) {
+    public ResponseEntity<UserRegisterResponseDto> loginOrRegisterUser(String authorizationHeader, String referralCode) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ") || authorizationHeader.substring(7).isBlank()) {
             log.warn("Authorization header is missing, invalid, or empty");
             return errorResponseRegister(HttpStatus.UNAUTHORIZED, "Verification failed: Kindly Try Again.");
@@ -101,6 +103,15 @@ public class AppAuthServiceImpl implements AppAuthService {
                 try {
                     user = userRepo.saveAndFlush(appUser); // persist before issuing tokens
                     isNewUser = true;
+                    if (referralCode != null && !referralCode.isBlank()) {
+                        try {
+                            walletService.linkReferral(uid, referralCode);
+                        } catch (Exception e) {
+                            log.error("Failed to link referral for user {}: {}", uid, e.getMessage());
+                            // We don't fail the whole signup if referral linking fails, 
+                            // but we could if we wanted strictness.
+                        }
+                    }
                     if (!appOtpService.consumeSignupVerification(normalizedEmail)) {
                         // If the verification expired or was consumed concurrently, don't leave a new user behind.
                         userRepo.deleteById(uid);

@@ -1,10 +1,11 @@
 package com.fitnessapp.support.chatbot.service;
 
-import com.fitnessapp.support.chatbot.dto.request.CreateChatConversationRequest;
-import com.fitnessapp.support.chatbot.dto.response.ChatConversationResponse;
-import com.fitnessapp.support.chatbot.dto.response.ChatMessageResponse;
-import com.fitnessapp.support.chatbot.dto.response.ChatPageResponse;
-import com.fitnessapp.support.chatbot.entity.ChatConversationEntity;
+import com.fitnessapp.support.chatbot.model.dto.request.CreateChatConversationRequest;
+import com.fitnessapp.support.chatbot.model.dto.response.ChatConversationResponse;
+import com.fitnessapp.support.chatbot.model.dto.response.ChatMessageResponse;
+import com.fitnessapp.support.chatbot.model.dto.response.ChatPageResponse;
+import com.fitnessapp.support.chatbot.model.entity.ChatConversationEntity;
+import com.fitnessapp.support.chatbot.exception.ChatConversationNotFoundException;
 import com.fitnessapp.support.chatbot.repository.ChatConversationRepository;
 import com.fitnessapp.support.chatbot.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;

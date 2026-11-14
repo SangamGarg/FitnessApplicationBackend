@@ -21,7 +21,7 @@ import java.time.Instant;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "wallet_accounts")
+@Table(name = "app_user_wallet_accounts")
 public class WalletAccountEntity {
 
     @Id

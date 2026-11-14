@@ -7,8 +7,12 @@ import com.fitnessapp.analytics.model.*;
 import com.fitnessapp.analytics.model.dtos.responseDto.AnalyticsHomeResponseDto;
 import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorCategoryDto;
 import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorHomeResponseDto;
+import com.fitnessapp.analytics.model.entity.BodyMeasurementEntity;
 import com.fitnessapp.analytics.model.entity.CalculatorCatalogEntity;
+import com.fitnessapp.analytics.model.entity.UserCalculatorHistoryEntity;
+import com.fitnessapp.analytics.repository.BodyMeasurementRepository;
 import com.fitnessapp.analytics.repository.CalculatorCatalogRepository;
+import com.fitnessapp.analytics.repository.UserCalculatorHistoryRepository;
 import com.fitnessapp.analytics.utils.CalculatorUtils;
 import com.fitnessapp.appAuth.model.entity.UserDetailsEntity;
 import com.fitnessapp.appAuth.repo.UserDetailsRepo;
@@ -21,6 +25,7 @@ import com.fitnessapp.nutrition.repository.MealEntryRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,8 +33,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -47,6 +54,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private final UserXpAccountRepository userXpAccountRepository;
     private final CalculatorCatalogRepository catalogRepository;
     private final UserDetailsRepo userDetailsRepo;
+    private final UserCalculatorHistoryRepository historyRepository;
+    private final BodyMeasurementRepository bodyMeasurementRepository;
 
     @Override
     public AnalyticsHomeResponseDto getAnalyticsHome() {
@@ -79,18 +88,18 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         input.put("activityLevel", user.getActivityLevel() != null ? user.getActivityLevel().name() : "SEDENTARY");
 
         if (user.getHeightCm() != null && user.getWeightKg() != null) {
-            Map<String, Object> bmiRes = calculate("bmi", input);
+            Map<String, Object> bmiRes = calculateInternal("bmi", input, false);
             addMetric(snapshot, "BMI", "BMI", bmiRes.get("value").toString(), "kg/m²", "speed");
 
-            Map<String, Object> idealWeightRes = calculate("ideal-weight", input);
+            Map<String, Object> idealWeightRes = calculateInternal("ideal-weight", input, false);
             addMetric(snapshot, "IDEAL-WEIGHT", "Ideal Weight", idealWeightRes.get("value").toString(), "kg", "star");
 
-            Map<String, Object> tdeeRes = calculate("tdee", input);
+            Map<String, Object> tdeeRes = calculateInternal("tdee", input, false);
             addMetric(snapshot, "DAILY-CALORIES", "Daily Calories", tdeeRes.get("value").toString(), "kcal", "local_fire_department");
 
             if (user.getAge() != null) {
                 input.put("bmi", bmiRes.get("value"));
-                Map<String, Object> bodyFatRes = calculate("body-fat", input);
+                Map<String, Object> bodyFatRes = calculateInternal("body-fat", input, false);
                 addMetric(snapshot, "BODY_FAT", "Body Fat", bodyFatRes.get("value").toString(), "%", "opacity");
             }
         }
@@ -104,14 +113,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
         List<PopularCalculatorDto> popularCalculators = catalogRepository.findByPopularTrueOrderByDisplayOrderAsc().stream()
                 .limit(5)
-                .map(c -> PopularCalculatorDto.builder()
-                        .key(c.getKey())
-                        .name(c.getName())
-                        .category(c.getCategory())
-                        .description(c.getDescription())
-                        .unit(c.getUnit())
-                        .requiresSavedData(c.isRequiresSavedData())
-                        .build())
+                .map(this::mapToPopularDto)
                 .toList();
 
         return AnalyticsHomeResponseDto.builder()
@@ -119,29 +121,67 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .subtitle("Your fitness insights")
                 .description("Detailed overview of your health and activity")
                 .healthSnapshot(snapshot)
-                .weightAnalytics(null)
+                .weightAnalytics(getWeightAnalytics(userId))
                 .measureOthers(measureOthers)
                 .popularCalculators(popularCalculators)
                 .build();
     }
 
+    private WeightAnalyticsDto getWeightAnalytics(String userId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime thirtyDaysAgo = now.minusDays(30);
+
+        List<BodyMeasurementEntity> measurements = bodyMeasurementRepository.findByUserIdAndMeasuredAtBetweenOrderByMeasuredAtAsc(userId, thirtyDaysAgo, now);
+
+        if (measurements.isEmpty()) {
+            return null;
+        }
+
+        List<WeightTrendPointDto> trend = measurements.stream()
+                .map(m -> WeightTrendPointDto.builder()
+                        .date(m.getMeasuredAt().toLocalDate())
+                        .label(m.getMeasuredAt().getDayOfMonth() + " " + m.getMeasuredAt().getMonth().name().substring(0, 3))
+                        .value(m.getWeightKg())
+                        .build())
+                .toList();
+
+        List<AnalyticsInsightDto> insights = new ArrayList<>();
+        if (measurements.size() >= 2) {
+            BigDecimal first = measurements.get(0).getWeightKg();
+            BigDecimal last = measurements.get(measurements.size() - 1).getWeightKg();
+            BigDecimal diff = last.subtract(first);
+            String trendStr = diff.compareTo(BigDecimal.ZERO) > 0 ? "INCREASED" : (diff.compareTo(BigDecimal.ZERO) < 0 ? "DECREASED" : "UNCHANGED");
+
+            insights.add(AnalyticsInsightDto.builder()
+                    .key("WEIGHT_CHANGE")
+                    .title("Weight Change (30d)")
+                    .value(diff.abs())
+                    .unit("kg")
+                    .trend(trendStr)
+                    .description("Your weight has " + trendStr.toLowerCase() + " by " + diff.abs() + " kg in the last 30 days.")
+                    .build());
+        }
+
+        return WeightAnalyticsDto.builder()
+                .title("Weight Trends")
+                .subtitle("Last 30 days")
+                .metric("Weight")
+                .unit("kg")
+                .period("30D")
+                .trend(trend)
+                .insights(insights)
+                .build();
+    }
+
     @Override
     public CalculatorHomeResponseDto getCalculatorHome() {
+        String userId = currentUserId();
         List<CalculatorCatalogEntity> allCalculators = catalogRepository.findAll();
 
         // Group by category
         Map<String, List<PopularCalculatorDto>> grouped = new LinkedHashMap<>();
         for (CalculatorCatalogEntity calc : allCalculators) {
-            PopularCalculatorDto dto = PopularCalculatorDto.builder()
-                    .key(calc.getKey())
-                    .name(calc.getName())
-                    .category(calc.getCategory())
-                    .description(calc.getDescription())
-                    .unit(calc.getUnit())
-                    .requiresSavedData(calc.isRequiresSavedData())
-                    .iconKey(calc.getKey()) // Assuming key is used as iconKey or it's mapped elsewhere
-                    .build();
-            grouped.computeIfAbsent(calc.getCategory(), k -> new ArrayList<>()).add(dto);
+            grouped.computeIfAbsent(calc.getCategory(), k -> new ArrayList<>()).add(mapToPopularDto(calc));
         }
 
         List<CalculatorCategoryDto> categories = new ArrayList<>();
@@ -149,20 +189,15 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
         // Popular calculators
         List<PopularCalculatorDto> popular = catalogRepository.findByPopularTrueOrderByDisplayOrderAsc().stream()
-                .map(calc -> PopularCalculatorDto.builder()
-                        .key(calc.getKey())
-                        .name(calc.getName())
-                        .category(calc.getCategory())
-                        .description(calc.getDescription())
-                        .unit(calc.getUnit())
-                        .requiresSavedData(calc.isRequiresSavedData())
-                        .iconKey(calc.getKey())
-                        .build())
+                .map(this::mapToPopularDto)
                 .toList();
 
-        // Recently used - currently not tracked in the database, so returning empty list
-        // In a real scenario, we might fetch this from a user preference or a specific log table
+        // Recently used
+        List<UserCalculatorHistoryEntity> history = historyRepository.findByUserIdOrderByLastUsedAtDesc(userId, PageRequest.of(0, 10));
         List<PopularCalculatorDto> recentlyUsed = new ArrayList<>();
+        for (UserCalculatorHistoryEntity h : history) {
+            catalogRepository.findById(h.getCalculatorKey()).ifPresent(calc -> recentlyUsed.add(mapToPopularDto(calc)));
+        }
 
         return CalculatorHomeResponseDto.builder()
                 .title("Calculators")
@@ -171,6 +206,18 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .calculatorCategories(categories)
                 .popularCalculators(popular)
                 .recentlyUsedCalculators(recentlyUsed)
+                .build();
+    }
+
+    private PopularCalculatorDto mapToPopularDto(CalculatorCatalogEntity calc) {
+        return PopularCalculatorDto.builder()
+                .key(calc.getKey())
+                .name(calc.getName())
+                .category(calc.getCategory())
+                .description(calc.getDescription())
+                .unit(calc.getUnit())
+                .requiresSavedData(calc.isRequiresSavedData())
+                .iconKey(calc.getKey())
                 .build();
     }
 
@@ -198,8 +245,17 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public Map<String, Object> calculate(String key, Map<String, Object> input) {
+        return calculateInternal(key, input, true);
+    }
+
+    private Map<String, Object> calculateInternal(String key, Map<String, Object> input, boolean recordHistory) {
         CalculatorCatalogEntity def = catalogRepository.findById(key)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Unknown calculator: " + key));
+
+        if (recordHistory) {
+            recordUsage(key);
+        }
+
         double value;
         Map<String, Object> result = new LinkedHashMap<>();
         switch (key) {
@@ -396,6 +452,21 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 Map.entry("components", Map.of("activityConsistency", Math.round(activityConsistency), "workoutVolume", Math.round(workoutVolume), "nutrition", Math.round(nutritionScore), "gamificationXp", Math.round(xpScore), "streak", Math.round(streakScore))),
                 Map.entry("methodology", "Activity consistency 25%, completed workout volume 15%, nutrition logging consistency 25%, accumulated gamification XP 20%, current streak 15%. This is an engagement score, not a medical fitness assessment.")
         );
+    }
+
+    private void recordUsage(String key) {
+        try {
+            String userId = currentUserId();
+            UserCalculatorHistoryEntity usage = historyRepository.findByUserIdAndCalculatorKey(userId, key)
+                    .orElse(UserCalculatorHistoryEntity.builder()
+                            .userId(userId)
+                            .calculatorKey(key)
+                            .build());
+            usage.setLastUsedAt(Instant.now());
+            historyRepository.save(usage);
+        } catch (Exception e) {
+            log.error("Failed to record calculator usage for key: {}", key, e);
+        }
     }
 
     private String currentUserId() {

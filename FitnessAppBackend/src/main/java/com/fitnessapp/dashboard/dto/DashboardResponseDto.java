@@ -4,7 +4,7 @@ import com.fitnessapp.activity.models.dtos.responseDto.ActivitySummaryResponseDt
 import com.fitnessapp.appAuth.model.enums.ActivityLevel;
 import com.fitnessapp.appAuth.model.enums.FitnessGoal;
 import com.fitnessapp.appAuth.model.enums.Gender;
-import com.fitnessapp.nutrition.dto.response.DailyNutritionSummaryResponse;
+import com.fitnessapp.nutrition.model.dto.response.DailyNutritionSummaryResponse;
 import com.fitnessapp.exercise.app.model.dto.response.WorkoutAnalyticsOverviewResponse;
 
 import java.math.BigDecimal;

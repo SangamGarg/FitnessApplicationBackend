@@ -8,19 +8,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "nutrition_user_preferences",
-       uniqueConstraints = @UniqueConstraint(name = "uk_nutrition_pref_user", columnNames = "user_id"))
-@Getter @Setter @NoArgsConstructor
+        uniqueConstraints = @UniqueConstraint(name = "uk_nutrition_pref_user", columnNames = "user_id"))
+@Getter
+@Setter
+@NoArgsConstructor
 public class UserDietPreferenceEntity {
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true,
-        foreignKey = @ForeignKey(name = "fk_nutrition_pref_user"))
+            foreignKey = @ForeignKey(name = "fk_nutrition_pref_user"))
     private UserEntity user;
     @Enumerated(EnumType.STRING)
     @Column(name = "dietary_preference", nullable = false, length = 20)

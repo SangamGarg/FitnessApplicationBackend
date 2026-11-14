@@ -1,10 +1,10 @@
 package com.fitnessapp.support.chatbot.controller;
 
-import com.fitnessapp.support.chatbot.dto.request.CreateChatConversationRequest;
-import com.fitnessapp.support.chatbot.dto.request.EscalateChatRequest;
-import com.fitnessapp.support.chatbot.dto.request.SendChatMessageRequest;
-import com.fitnessapp.support.chatbot.dto.request.SubmitChatFeedbackRequest;
-import com.fitnessapp.support.chatbot.dto.response.*;
+import com.fitnessapp.support.chatbot.model.dto.request.CreateChatConversationRequest;
+import com.fitnessapp.support.chatbot.model.dto.request.EscalateChatRequest;
+import com.fitnessapp.support.chatbot.model.dto.request.SendChatMessageRequest;
+import com.fitnessapp.support.chatbot.model.dto.request.SubmitChatFeedbackRequest;
+import com.fitnessapp.support.chatbot.model.dto.response.*;
 import com.fitnessapp.support.chatbot.service.ChatbotConversationService;
 import com.fitnessapp.support.chatbot.service.ChatbotMessagePersistenceService;
 import com.fitnessapp.support.chatbot.service.ChatbotMessageService;

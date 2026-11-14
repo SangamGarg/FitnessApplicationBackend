@@ -18,6 +18,7 @@ public class ChallengeService {
     private final UserChallengeRepository memberships;
     private final UserRepo users;
     private final GamificationRewardService rewards;
+    private final com.fitnessapp.wallet.service.AppWalletService walletService;
 
     @Transactional(readOnly = true)
     public List<ChallengeResponseDto> available(String userId) {
@@ -53,8 +54,14 @@ public class ChallengeService {
             if (c.getActivityType() != null && !c.getActivityType().equalsIgnoreCase(activityType)) continue;
             boolean completed = m.addProgress(amount);
             memberships.save(m);
-            if (completed)
+            if (completed) {
                 rewards.awardExternalReward(userId, "CHALLENGE_COMPLETION:" + c.getId(), "CHALLENGE", String.valueOf(c.getId()), c.getRewardXp(), c.getRewardCoins(), "Challenge completion reward");
+                try {
+                    walletService.processReferralReward(userId);
+                } catch (Exception e) {
+                    // Log and continue - we don't want to fail challenge completion if referral reward fails
+                }
+            }
         }
     }
 

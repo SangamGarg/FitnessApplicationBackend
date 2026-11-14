@@ -24,9 +24,11 @@ public class AppAuthController {
 
     @PostMapping("/loginRegister")
     public ResponseEntity<UserRegisterResponseDto> loginOrRegisterUser(
-            @RequestHeader(value = "Authorization", required = false) String authorization) {
-        log.info("Received request for user login/registration. Auth header present: {}", authorization != null && !authorization.isBlank());
-        ResponseEntity<UserRegisterResponseDto> response = authService.loginOrRegisterUser(authorization);
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestParam(required = false) String referralCode) {
+        log.info("Received request for user login/registration. Auth header present: {}, referralCode: {}",
+                authorization != null && !authorization.isBlank(), referralCode);
+        ResponseEntity<UserRegisterResponseDto> response = authService.loginOrRegisterUser(authorization, referralCode);
         log.info("User login/registration completed with status: {}", response.getStatusCode());
         return response;
     }

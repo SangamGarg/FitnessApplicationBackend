@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -16,17 +17,20 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "nutrition_meal_entries", indexes = {
-    @Index(name = "idx_meal_user_date", columnList = "user_id, meal_date"),
-    @Index(name = "idx_meal_user_date_type", columnList = "user_id, meal_date, meal_type")
+        @Index(name = "idx_meal_user_date", columnList = "user_id, meal_date"),
+        @Index(name = "idx_meal_user_date_type", columnList = "user_id, meal_date, meal_type")
 }, uniqueConstraints = @UniqueConstraint(name = "uk_meal_user_client_id",
         columnNames = {"user_id", "client_meal_id"}))
-@Getter @Setter @NoArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
 public class MealEntryEntity {
-    @Id @GeneratedValue(strategy = GenerationType.UUID)
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false,
-        foreignKey = @ForeignKey(name = "fk_meal_entry_user"))
+            foreignKey = @ForeignKey(name = "fk_meal_entry_user"))
     private UserEntity user;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "food_item_id", foreignKey = @ForeignKey(name = "fk_meal_entry_food"))

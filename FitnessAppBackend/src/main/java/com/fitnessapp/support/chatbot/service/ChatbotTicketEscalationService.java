@@ -1,8 +1,9 @@
 package com.fitnessapp.support.chatbot.service;
 
-import com.fitnessapp.support.chatbot.dto.request.EscalateChatRequest;
-import com.fitnessapp.support.chatbot.dto.response.ChatTicketResponse;
-import com.fitnessapp.support.chatbot.entity.ChatConversationEntity;
+import com.fitnessapp.support.chatbot.model.dto.request.EscalateChatRequest;
+import com.fitnessapp.support.chatbot.model.dto.response.ChatTicketResponse;
+import com.fitnessapp.support.chatbot.model.entity.ChatConversationEntity;
+import com.fitnessapp.support.chatbot.exception.ChatConversationNotFoundException;
 import com.fitnessapp.support.chatbot.repository.ChatConversationRepository;
 import com.fitnessapp.support.models.dtos.request.CreateSupportTicketRequestDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;

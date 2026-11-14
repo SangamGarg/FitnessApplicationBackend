@@ -1,6 +1,6 @@
 package com.fitnessapp.support.chatbot.repository;
 
-import com.fitnessapp.support.chatbot.entity.ChatConversationEntity;
+import com.fitnessapp.support.chatbot.model.entity.ChatConversationEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

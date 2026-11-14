@@ -1,14 +1,15 @@
 package com.fitnessapp.support.chatbot.service;
 
-import com.fitnessapp.support.chatbot.ai.ChatAiRequest;
-import com.fitnessapp.support.chatbot.ai.ChatAiResponse;
-import com.fitnessapp.support.chatbot.ai.ChatAiService;
-import com.fitnessapp.support.chatbot.ai.ChatbotSystemPrompt;
-import com.fitnessapp.support.chatbot.ai.GeminiApiException;
-import com.fitnessapp.support.chatbot.dto.request.SendChatMessageRequest;
-import com.fitnessapp.support.chatbot.dto.response.ChatMessageResponse;
-import com.fitnessapp.support.chatbot.dto.response.SendChatMessageResponse;
-import com.fitnessapp.support.chatbot.entity.ChatMessageEntity;
+import com.fitnessapp.support.chatbot.aiSupport.ChatAiRequest;
+import com.fitnessapp.support.chatbot.aiSupport.ChatAiResponse;
+import com.fitnessapp.support.chatbot.aiSupport.ChatAiService;
+import com.fitnessapp.support.chatbot.aiSupport.ChatbotSystemPrompt;
+import com.fitnessapp.support.chatbot.aiSupport.GeminiApiException;
+import com.fitnessapp.support.chatbot.model.dto.request.SendChatMessageRequest;
+import com.fitnessapp.support.chatbot.model.dto.response.ChatMessageResponse;
+import com.fitnessapp.support.chatbot.model.dto.response.SendChatMessageResponse;
+import com.fitnessapp.support.chatbot.model.entity.ChatMessageEntity;
+import com.fitnessapp.support.chatbot.exception.ChatAiUnavailableException;
 import com.fitnessapp.support.chatbot.knowledge.FaqReferenceResponse;
 import com.fitnessapp.support.chatbot.knowledge.FaqRetrievalService;
 import com.fitnessapp.support.chatbot.knowledge.RetrievedFaq;

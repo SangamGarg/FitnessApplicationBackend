@@ -1,11 +1,13 @@
 package com.fitnessapp.support.chatbot.service;
 
-import com.fitnessapp.support.chatbot.entity.ChatConversationEntity;
-import com.fitnessapp.support.chatbot.entity.ChatFeedbackEntity;
-import com.fitnessapp.support.chatbot.entity.ChatMessageEntity;
-import com.fitnessapp.support.chatbot.enums.ChatConversationStatus;
-import com.fitnessapp.support.chatbot.enums.ChatFeedbackRating;
-import com.fitnessapp.support.chatbot.enums.ChatSenderType;
+import com.fitnessapp.support.chatbot.model.entity.ChatConversationEntity;
+import com.fitnessapp.support.chatbot.model.entity.ChatFeedbackEntity;
+import com.fitnessapp.support.chatbot.model.entity.ChatMessageEntity;
+import com.fitnessapp.support.chatbot.model.enums.ChatConversationStatus;
+import com.fitnessapp.support.chatbot.model.enums.ChatFeedbackRating;
+import com.fitnessapp.support.chatbot.model.enums.ChatSenderType;
+import com.fitnessapp.support.chatbot.exception.ChatConversationNotFoundException;
+import com.fitnessapp.support.chatbot.exception.ChatMessageNotFoundException;
 import com.fitnessapp.support.chatbot.repository.ChatConversationRepository;
 import com.fitnessapp.support.chatbot.repository.ChatFeedbackRepository;
 import com.fitnessapp.support.chatbot.repository.ChatMessageRepository;

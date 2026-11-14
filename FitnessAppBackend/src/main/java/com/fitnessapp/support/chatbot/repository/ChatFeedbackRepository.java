@@ -1,6 +1,6 @@
 package com.fitnessapp.support.chatbot.repository;
 
-import com.fitnessapp.support.chatbot.entity.ChatFeedbackEntity;
+import com.fitnessapp.support.chatbot.model.entity.ChatFeedbackEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

@@ -9,7 +9,7 @@ import com.fitnessapp.appAuth.model.dtos.responseDto.UserRegisterResponseDto;
 import org.springframework.http.ResponseEntity;
 
 public interface AppAuthService {
-    ResponseEntity<UserRegisterResponseDto> loginOrRegisterUser(String authorizationHeader);
+    ResponseEntity<UserRegisterResponseDto> loginOrRegisterUser(String authorizationHeader, String referralCode);
     ResponseEntity<RefreshTokenResponseDto> refreshToken(RefreshTokenRequestDto request);
     ResponseEntity<Void> logout(RefreshTokenRequestDto request, boolean logoutEverywhere);
     ResponseEntity<UserDetailsResponseDto> getUserDetails();
