@@ -43,7 +43,6 @@ public class AppAnalyticsController {
     }
 
 
-
     @GetMapping("/calculator/home")
     public ResponseEntity<CalculatorHomeResponseDto> getCalculatorHome() {
         log.info("Fetching calculator home screen configuration");
@@ -65,6 +64,8 @@ public class AppAnalyticsController {
         return ResponseEntity.ok(result);
     }
 
+
+    //Will apply later
     @GetMapping("/fitness-score")
     public ResponseEntity<Map<String, Object>> getFitnessScore(
             @RequestParam(defaultValue = "Asia/Kolkata") String timeZone) {

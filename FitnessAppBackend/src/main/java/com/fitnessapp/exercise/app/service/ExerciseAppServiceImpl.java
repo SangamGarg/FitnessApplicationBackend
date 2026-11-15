@@ -1,7 +1,5 @@
 package com.fitnessapp.exercise.app.service;
 
-import lombok.extern.slf4j.Slf4j;
-import com.fitnessapp.exercise.shared.ExerciseUtils;
 import com.fitnessapp.exercise.app.model.dto.response.ExerciseCategoryResponseDto;
 import com.fitnessapp.exercise.app.model.dto.response.ExerciseDetailResponseDto;
 import com.fitnessapp.exercise.app.model.dto.response.ExerciseLevelResponseDto;
@@ -13,6 +11,7 @@ import com.fitnessapp.exercise.app.repo.ExerciseCategoryRepository;
 import com.fitnessapp.exercise.app.repo.ExerciseDetailsRepository;
 import com.fitnessapp.exercise.app.repo.ExerciseLevelRepository;
 import com.fitnessapp.exercise.app.repo.ExerciseSubCategoryRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -53,7 +52,7 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
             return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ExerciseUtils.errorDto(e));
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -74,7 +73,7 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
 //            return ResponseEntity.ok(mapper.toLevelDTOs(levels));
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ExerciseUtils.errorDto(e));
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -94,7 +93,7 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
             // return ResponseEntity.ok(mapper.toSubCategoryDTOs(subCategories));
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ExerciseUtils.errorDto(e));
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -127,7 +126,7 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
             // return ResponseEntity.ok(mapper.toExerciseDTOs(exercises));
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ExerciseUtils.errorDto(e));
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -148,7 +147,7 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
             }
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ExerciseUtils.errorDto(e));
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -169,7 +168,7 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
             }
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ExerciseUtils.errorDto(e));
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -188,7 +187,7 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
             }
         } catch (Exception e) {
             log.error("Request failed: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(ExerciseUtils.errorDto(e));
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

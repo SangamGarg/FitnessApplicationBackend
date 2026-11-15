@@ -16,8 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_EXERCISE_ENDPOINT;
+
 @RestController
-@RequestMapping("/api/v1/app/workouts/sessions")
+@RequestMapping(APP_EXERCISE_ENDPOINT + "workouts/sessions")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Mobile - Workout Sessions", description = "User workout session lifecycle and exercise set logging")

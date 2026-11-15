@@ -30,15 +30,10 @@ public class AppNutritionController {
     private final NutritionService nutritionService;
 
 
-    @GetMapping("/home")
-    //To get the food nutrition info
-    public ResponseEntity<NutritionHomeResponse> getNutritionHome() {
-        return ResponseEntity.ok(nutritionService.getNutritionHome());
-    }
-    @GetMapping("/summary")
-    public ResponseEntity<DailyNutritionSummaryResponse> summary(
+    @GetMapping("/home/summary")
+    public ResponseEntity<DailyNutritionHomeSummaryResponse> summary(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return ResponseEntity.ok(nutritionService.getDailySummary(date));
+        return ResponseEntity.ok(nutritionService.getNutritionHomeSummary(date));
     }
 
     @GetMapping("/foods")

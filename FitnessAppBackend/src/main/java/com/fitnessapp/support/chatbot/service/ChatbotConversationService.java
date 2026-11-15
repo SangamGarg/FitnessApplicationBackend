@@ -1,24 +1,30 @@
 package com.fitnessapp.support.chatbot.service;
 
+import com.fitnessapp.support.chatbot.exception.ChatConversationNotFoundException;
 import com.fitnessapp.support.chatbot.model.dto.request.CreateChatConversationRequest;
 import com.fitnessapp.support.chatbot.model.dto.response.ChatConversationResponse;
 import com.fitnessapp.support.chatbot.model.dto.response.ChatMessageResponse;
 import com.fitnessapp.support.chatbot.model.dto.response.ChatPageResponse;
 import com.fitnessapp.support.chatbot.model.entity.ChatConversationEntity;
-import com.fitnessapp.support.chatbot.exception.ChatConversationNotFoundException;
 import com.fitnessapp.support.chatbot.repository.ChatConversationRepository;
 import com.fitnessapp.support.chatbot.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChatbotConversationService {
 
     private final ChatConversationRepository conversationRepository;
@@ -26,7 +32,8 @@ public class ChatbotConversationService {
 
     @Transactional
     public ChatConversationResponse createConversation(
-            String userId, CreateChatConversationRequest request) {
+            CreateChatConversationRequest request) {
+        String userId = currentUserId();
 
         String title = request == null ? null : normalizeTitle(request.title());
 
@@ -40,7 +47,8 @@ public class ChatbotConversationService {
 
     @Transactional(readOnly = true)
     public ChatPageResponse<ChatConversationResponse> getConversations(
-            String userId, int page, int size) {
+            int page, int size) {
+        String userId = currentUserId();
 
         Page<ChatConversationResponse> result = conversationRepository
                 .findByUserIdOrderByLastMessageAtDesc(
@@ -53,15 +61,15 @@ public class ChatbotConversationService {
     }
 
     @Transactional(readOnly = true)
-    public ChatConversationResponse getConversation(UUID conversationId, String userId) {
-        return ChatConversationResponse.from(getOwnedConversation(conversationId, userId));
+    public ChatConversationResponse getConversation(UUID conversationId) {
+        return ChatConversationResponse.from(getOwnedConversation(conversationId));
     }
 
     @Transactional(readOnly = true)
     public ChatPageResponse<ChatMessageResponse> getMessages(
-            UUID conversationId, String userId, int page, int size) {
+            UUID conversationId, int page, int size) {
 
-        getOwnedConversation(conversationId, userId);
+        getOwnedConversation(conversationId);
 
         Page<ChatMessageResponse> result = messageRepository
                 .findByConversation_IdOrderByCreatedAtDesc(
@@ -81,7 +89,8 @@ public class ChatbotConversationService {
         return ChatPageResponse.from(chronologicalPage);
     }
 
-    ChatConversationEntity getOwnedConversation(UUID conversationId, String userId) {
+    ChatConversationEntity getOwnedConversation(UUID conversationId) {
+        String userId = currentUserId();
         return conversationRepository.findByIdAndUserId(conversationId, userId)
                 .orElseThrow(ChatConversationNotFoundException::new);
     }
@@ -91,5 +100,16 @@ public class ChatbotConversationService {
             return null;
         }
         return title.trim();
+    }
+
+
+    private String currentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
+            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+        return authentication.getName();
     }
 }

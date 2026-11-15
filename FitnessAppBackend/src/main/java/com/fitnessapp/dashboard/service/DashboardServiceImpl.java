@@ -1,7 +1,7 @@
 package com.fitnessapp.dashboard.service;
 
-import com.fitnessapp.activity.models.dtos.responseDto.ActivitySummaryResponseDto;
-import com.fitnessapp.activity.service.ActivityInterface;
+import com.fitnessapp.gamify.activity.models.dtos.responseDto.ActivitySummaryResponseDto;
+import com.fitnessapp.gamify.activity.service.ActivityInterface;
 import com.fitnessapp.appAuth.model.entity.UserDetailsEntity;
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserDetailsRepo;
@@ -12,7 +12,7 @@ import com.fitnessapp.exercise.app.service.WorkoutAnalyticsService;
 import com.fitnessapp.exercise.portal.WorkoutPlanService;
 import com.fitnessapp.exercise.portal.dto.WorkoutPlanResponseDto;
 import com.fitnessapp.notification.service.UserNotificationService;
-import com.fitnessapp.nutrition.model.dto.response.DailyNutritionSummaryResponse;
+import com.fitnessapp.nutrition.model.dto.response.DailyNutritionHomeSummaryResponse;
 import com.fitnessapp.nutrition.service.NutritionService;
 import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
 import com.fitnessapp.wallet.service.AppWalletService;
@@ -84,7 +84,7 @@ public class DashboardServiceImpl implements DashboardService {
                 zoneId
         );
 
-        DailyNutritionSummaryResponse nutrition = nutritionService.getDailySummary(
+        DailyNutritionHomeSummaryResponse nutrition = nutritionService.getNutritionHomeSummary(
                 LocalDate.now(zoneId)
         );
         LocalDate today = LocalDate.now(zoneId);

@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_EXERCISE_ENDPOINT;
+
 @RestController
-@RequestMapping("/api/v1/app/catalog/workout-plans")
+@RequestMapping(APP_EXERCISE_ENDPOINT + "/catalog/workout-plans")
 @Tag(name = "Mobile - Published Workout Plans", description = "Published workout plans for the mobile application")
 public class PublishedWorkoutPlanController {
 

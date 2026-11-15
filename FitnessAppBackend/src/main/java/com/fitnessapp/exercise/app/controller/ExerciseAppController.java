@@ -1,9 +1,6 @@
 package com.fitnessapp.exercise.app.controller;
 
 import com.fitnessapp.exercise.app.service.ExerciseAppService;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.Operation;
-import com.fitnessapp.exercise.shared.ExerciseUtils;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,8 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_EXERCISE_ENDPOINT;
+
 @RestController
-@RequestMapping(ExerciseUtils.API_PREFIX)
+@RequestMapping(APP_EXERCISE_ENDPOINT)
 @Validated
 @RequiredArgsConstructor
 public class ExerciseAppController {

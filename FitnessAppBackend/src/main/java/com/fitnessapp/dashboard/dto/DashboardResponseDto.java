@@ -1,10 +1,10 @@
 package com.fitnessapp.dashboard.dto;
 
-import com.fitnessapp.activity.models.dtos.responseDto.ActivitySummaryResponseDto;
+import com.fitnessapp.gamify.activity.models.dtos.responseDto.ActivitySummaryResponseDto;
 import com.fitnessapp.appAuth.model.enums.ActivityLevel;
 import com.fitnessapp.appAuth.model.enums.FitnessGoal;
 import com.fitnessapp.appAuth.model.enums.Gender;
-import com.fitnessapp.nutrition.model.dto.response.DailyNutritionSummaryResponse;
+import com.fitnessapp.nutrition.model.dto.response.DailyNutritionHomeSummaryResponse;
 import com.fitnessapp.exercise.app.model.dto.response.WorkoutAnalyticsOverviewResponse;
 
 import java.math.BigDecimal;
@@ -12,7 +12,7 @@ import java.time.Instant;
 
 public record DashboardResponseDto(
         UserSummary user, ActivitySummaryResponseDto activity,
-        DailyNutritionSummaryResponse nutrition,
+        DailyNutritionHomeSummaryResponse nutrition,
         WorkoutAnalyticsOverviewResponse workoutAnalytics,
         WalletSummary wallet, NotificationSummary notifications,
         WorkoutRecommendation recommendedWorkout, Instant generatedAt

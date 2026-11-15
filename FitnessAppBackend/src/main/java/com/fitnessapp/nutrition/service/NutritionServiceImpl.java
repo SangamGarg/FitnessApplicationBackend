@@ -40,10 +40,6 @@ public class NutritionServiceImpl implements NutritionService {
     private final UserDietPreferenceRepository preferenceRepo;
     private final RecipeRepository recipeRepo;
 
-    @Override
-    public NutritionHomeResponse getNutritionHome() {
-        return null;
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -197,7 +193,7 @@ public class NutritionServiceImpl implements NutritionService {
 
     @Override
     @Transactional(readOnly = true)
-    public DailyNutritionSummaryResponse getDailySummary(LocalDate date) {
+    public DailyNutritionHomeSummaryResponse getNutritionHomeSummary(LocalDate date) {
         String userId = currentUserId();
 
 
@@ -215,12 +211,12 @@ public class NutritionServiceImpl implements NutritionService {
         NutritionGoalResponse target = goalRepository.findByUser_Id(userId)
                 .map(this::toGoalResponse).orElse(null);
 
-        DailyNutritionSummaryResponse.NutrientTotals consumed =
-                new DailyNutritionSummaryResponse.NutrientTotals(
+        DailyNutritionHomeSummaryResponse.NutrientTotals consumed =
+                new DailyNutritionHomeSummaryResponse.NutrientTotals(
                         calories, protein, carbs, fat, fiber, sugar);
 
-        DailyNutritionSummaryResponse.NutrientTotals remaining = target == null ? null
-                : new DailyNutritionSummaryResponse.NutrientTotals(
+        DailyNutritionHomeSummaryResponse.NutrientTotals remaining = target == null ? null
+                : new DailyNutritionHomeSummaryResponse.NutrientTotals(
                 subtract(target.dailyCalories(), calories),
                 subtract(target.dailyProtein(), protein),
                 subtract(target.dailyCarbohydrates(), carbs),
@@ -231,7 +227,9 @@ public class NutritionServiceImpl implements NutritionService {
                 ? null : calories.multiply(BigDecimal.valueOf(100))
                 .divide(target.dailyCalories(), 2, RoundingMode.HALF_UP);
 
-        return new DailyNutritionSummaryResponse(
+        return new DailyNutritionHomeSummaryResponse("Diet and AI Chef",
+                "Track your diet",
+                "Smart macros, recipes and fridge scanner",
                 requestedDate, target, consumed, remaining, progress,
                 entries.stream().map(this::toMealResponse).toList());
     }

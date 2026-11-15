@@ -23,6 +23,8 @@ public final class PortalUtil {
     public static final String PORTAL_EXERCISE_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/exercise";
     public static final String PORTAL_ASSET_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/assets";
     public static final String PORTAL_NUTRITION_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/nutrition";
+    public static final String PORTAL_CHALLENGE_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/challenge";
+    public static final String PORTAL_GAMIFICATION_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/gamification";
     public static final String PORTAL_ADMIN_DEV_ENDPOINT = PORTAL_ADMIN_BASE_ENDPOINT + "/developers";
     public static final String PORTAL_ADMIN_WALLET_ENDPOINT = PORTAL_ADMIN_BASE_ENDPOINT + "/wallets";
 

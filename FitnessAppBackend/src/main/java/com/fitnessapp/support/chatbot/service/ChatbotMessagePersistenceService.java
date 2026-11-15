@@ -1,20 +1,25 @@
 package com.fitnessapp.support.chatbot.service;
 
+import com.fitnessapp.support.chatbot.exception.ChatConversationNotFoundException;
+import com.fitnessapp.support.chatbot.exception.ChatMessageNotFoundException;
 import com.fitnessapp.support.chatbot.model.entity.ChatConversationEntity;
 import com.fitnessapp.support.chatbot.model.entity.ChatFeedbackEntity;
 import com.fitnessapp.support.chatbot.model.entity.ChatMessageEntity;
 import com.fitnessapp.support.chatbot.model.enums.ChatConversationStatus;
 import com.fitnessapp.support.chatbot.model.enums.ChatFeedbackRating;
 import com.fitnessapp.support.chatbot.model.enums.ChatSenderType;
-import com.fitnessapp.support.chatbot.exception.ChatConversationNotFoundException;
-import com.fitnessapp.support.chatbot.exception.ChatMessageNotFoundException;
 import com.fitnessapp.support.chatbot.repository.ChatConversationRepository;
 import com.fitnessapp.support.chatbot.repository.ChatFeedbackRepository;
 import com.fitnessapp.support.chatbot.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -22,6 +27,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
+
 @RequiredArgsConstructor
 public class ChatbotMessagePersistenceService {
 
@@ -34,7 +41,8 @@ public class ChatbotMessagePersistenceService {
 
     @Transactional
     public ChatMessageEntity saveUserMessage(
-            UUID conversationId, String userId, String messageText) {
+            UUID conversationId,  String messageText) {
+        String userId = currentUserId();
 
         ChatConversationEntity conversation = getActiveConversation(conversationId, userId);
 
@@ -86,7 +94,8 @@ public class ChatbotMessagePersistenceService {
 
     @Transactional
     public ChatMessageEntity saveAssistantMessage(
-            UUID conversationId, String userId, String answer) {
+            UUID conversationId,  String answer) {
+        String userId = currentUserId();
 
         ChatConversationEntity conversation = getActiveConversation(conversationId, userId);
 
@@ -106,7 +115,8 @@ public class ChatbotMessagePersistenceService {
 
     @Transactional
     public void submitFeedback(
-            UUID messageId, String userId, ChatFeedbackRating rating, String feedbackText) {
+            UUID messageId,  ChatFeedbackRating rating, String feedbackText) {
+        String userId = currentUserId();
 
         ChatMessageEntity message = messageRepository
                 .findByIdAndConversation_UserId(messageId, userId)
@@ -154,5 +164,15 @@ public class ChatbotMessagePersistenceService {
             return normalized;
         }
         return normalized.substring(0, 57) + "...";
+    }
+
+    private String currentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
+            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+        return authentication.getName();
     }
 }

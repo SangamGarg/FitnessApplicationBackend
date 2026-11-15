@@ -445,6 +445,7 @@ public class AppWalletServiceImpl implements AppWalletService {
         ));
     }
 
+    @Override
     @Transactional
     public WalletTransactionResponseDto creditForBusiness(
             String userId,

@@ -36,4 +36,12 @@ public interface AppWalletService {
 
     void processReferralReward(String referredUserId);
 
+    WalletTransactionResponseDto creditForBusiness(
+            String userId,
+            long amountCoins,
+            String reason,
+            String reference,
+            String idempotencyKey
+    );
+
 }

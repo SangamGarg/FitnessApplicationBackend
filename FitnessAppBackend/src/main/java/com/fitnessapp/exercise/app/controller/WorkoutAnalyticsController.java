@@ -19,8 +19,10 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 
+import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_EXERCISE_ENDPOINT;
+
 @RestController
-@RequestMapping("/api/v1/app/workouts/analytics")
+@RequestMapping(APP_EXERCISE_ENDPOINT + "workouts/analytics")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Mobile - Workout Analytics", description = "Workout statistics, personal records and training progress")

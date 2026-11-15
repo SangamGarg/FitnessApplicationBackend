@@ -1,8 +1,5 @@
 package com.fitnessapp.analytics.service;
 
-import com.fitnessapp.activity.models.entities.ActivityRecordEntity;
-import com.fitnessapp.activity.models.enums.ActivityStatus;
-import com.fitnessapp.activity.repository.ActivityRepository;
 import com.fitnessapp.analytics.model.*;
 import com.fitnessapp.analytics.model.dtos.responseDto.AnalyticsHomeResponseDto;
 import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorCategoryDto;
@@ -16,13 +13,15 @@ import com.fitnessapp.analytics.repository.UserCalculatorHistoryRepository;
 import com.fitnessapp.analytics.utils.CalculatorUtils;
 import com.fitnessapp.appAuth.model.entity.UserDetailsEntity;
 import com.fitnessapp.appAuth.repo.UserDetailsRepo;
-import com.fitnessapp.gamification.entity.UserStreakEntity;
-import com.fitnessapp.gamification.entity.UserXpAccountEntity;
-import com.fitnessapp.gamification.repository.UserStreakRepository;
-import com.fitnessapp.gamification.repository.UserXpAccountRepository;
+import com.fitnessapp.gamify.activity.models.entities.ActivityRecordEntity;
+import com.fitnessapp.gamify.activity.models.enums.ActivityStatus;
+import com.fitnessapp.gamify.activity.repository.ActivityRepository;
+import com.fitnessapp.gamify.gamification.model.entity.UserStreakEntity;
+import com.fitnessapp.gamify.gamification.model.entity.UserXpAccountEntity;
+import com.fitnessapp.gamify.gamification.repository.UserStreakRepository;
+import com.fitnessapp.gamify.gamification.repository.UserXpAccountRepository;
 import com.fitnessapp.nutrition.model.entity.MealEntryEntity;
 import com.fitnessapp.nutrition.repository.MealEntryRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +29,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -73,11 +71,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .build();
 
         // Basic metrics
-        addMetric(snapshot, "GENDER", "Gender", user.getGender() != null ? user.getGender().name() : "N/A", null, "person");
         addMetric(snapshot, "HEIGHT", "Height", user.getHeightCm() != null ? user.getHeightCm().toString() : "N/A", "cm", "height");
         addMetric(snapshot, "WEIGHT", "Weight", user.getWeightKg() != null ? user.getWeightKg().toString() : "N/A", "kg", "monitor_weight");
         addMetric(snapshot, "ACTIVITY_LEVEL", "Activity Level", user.getActivityLevel() != null ? user.getActivityLevel().name() : "N/A", null, "fitness_center");
         addMetric(snapshot, "FITNESS_GOAL", "Goal", user.getGoal() != null ? user.getGoal().name() : "N/A", null, "flag");
+        addMetric(snapshot, "GENDER", "Gender", user.getGender() != null ? user.getGender().name() : "N/A", null, "person");
 
         // Calculated metrics
         Map<String, Object> input = new HashMap<>();
@@ -147,8 +145,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
         List<AnalyticsInsightDto> insights = new ArrayList<>();
         if (measurements.size() >= 2) {
-            BigDecimal first = measurements.get(0).getWeightKg();
-            BigDecimal last = measurements.get(measurements.size() - 1).getWeightKg();
+            BigDecimal first = measurements.getFirst().getWeightKg();
+            BigDecimal last = measurements.getLast().getWeightKg();
             BigDecimal diff = last.subtract(first);
             String trendStr = diff.compareTo(BigDecimal.ZERO) > 0 ? "INCREASED" : (diff.compareTo(BigDecimal.ZERO) < 0 ? "DECREASED" : "UNCHANGED");
 
@@ -181,7 +179,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         // Group by category
         Map<String, List<PopularCalculatorDto>> grouped = new LinkedHashMap<>();
         for (CalculatorCatalogEntity calc : allCalculators) {
-            grouped.computeIfAbsent(calc.getCategory(), k -> new ArrayList<>()).add(mapToPopularDto(calc));
+            grouped.computeIfAbsent(calc.getCategory(), _ -> new ArrayList<>()).add(mapToPopularDto(calc));
         }
 
         List<CalculatorCategoryDto> categories = new ArrayList<>();
@@ -237,7 +235,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         List<CalculatorCatalogEntity> all = catalogRepository.findAll();
         Map<String, List<CalculatorCatalogEntity>> grouped = new LinkedHashMap<>();
         for (CalculatorCatalogEntity item : all)
-            grouped.computeIfAbsent(item.getCategory(), k -> new ArrayList<>()).add(item);
+            grouped.computeIfAbsent(item.getCategory(), _ -> new ArrayList<>()).add(item);
         List<Map<String, Object>> result = new ArrayList<>();
         grouped.forEach((category, items) -> result.add(Map.of("category", category, "calculators", items)));
         return result;

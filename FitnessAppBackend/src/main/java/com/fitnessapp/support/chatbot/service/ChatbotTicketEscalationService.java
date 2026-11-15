@@ -1,15 +1,18 @@
 package com.fitnessapp.support.chatbot.service;
 
+import com.fitnessapp.support.chatbot.exception.ChatConversationNotFoundException;
 import com.fitnessapp.support.chatbot.model.dto.request.EscalateChatRequest;
 import com.fitnessapp.support.chatbot.model.dto.response.ChatTicketResponse;
 import com.fitnessapp.support.chatbot.model.entity.ChatConversationEntity;
-import com.fitnessapp.support.chatbot.exception.ChatConversationNotFoundException;
 import com.fitnessapp.support.chatbot.repository.ChatConversationRepository;
 import com.fitnessapp.support.models.dtos.request.CreateSupportTicketRequestDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
 import com.fitnessapp.support.service.SupportTicketService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,6 +22,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChatbotTicketEscalationService {
 
     private static final int MAX_TICKET_DESCRIPTION_LENGTH = 2000;
@@ -30,8 +34,9 @@ public class ChatbotTicketEscalationService {
     @Transactional
     public ChatTicketResponse escalate(
             UUID conversationId,
-            String userId,
+
             EscalateChatRequest request) {
+        String userId = currentUserId();
 
         ChatConversationEntity conversation = conversationRepository
                 .findByIdAndUserIdForUpdate(conversationId, userId)
@@ -89,9 +94,8 @@ public class ChatbotTicketEscalationService {
 
     @Transactional(readOnly = true)
     public ChatTicketResponse getLinkedTicket(
-            UUID conversationId,
-            String userId) {
-
+            UUID conversationId) {
+        String userId = currentUserId();
         ChatConversationEntity conversation = conversationRepository
                 .findByIdAndUserId(conversationId, userId)
                 .orElseThrow(ChatConversationNotFoundException::new);
@@ -118,7 +122,7 @@ public class ChatbotTicketEscalationService {
         String description = """
                 User's issue description:
                 %s
-
+                
                 Recent chatbot conversation:
                 %s
                 """.formatted(
@@ -134,5 +138,15 @@ public class ChatbotTicketEscalationService {
         }
 
         return description;
+    }
+
+    private String currentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
+            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+        return authentication.getName();
     }
 }

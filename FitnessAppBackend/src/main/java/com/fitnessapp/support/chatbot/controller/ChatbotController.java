@@ -15,7 +15,6 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,63 +52,58 @@ public class ChatbotController {
     @PostMapping("/conversations")
     public ResponseEntity<ChatConversationResponse> createConversation(
             @RequestBody(required = false)
-            @Valid CreateChatConversationRequest request,
-            Authentication authentication) {
+            @Valid CreateChatConversationRequest request) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(conversationService.createConversation(
-                        authenticatedUserId(authentication), request));
+                        request));
     }
 
     @GetMapping("/conversations")
     public ResponseEntity<ChatPageResponse<ChatConversationResponse>> getConversations(
-            Authentication authentication,
+
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size) {
 
         return ResponseEntity.ok(conversationService.getConversations(
-                authenticatedUserId(authentication), page, size));
+                page, size));
     }
 
     @GetMapping("/conversations/{conversationId}")
     public ResponseEntity<ChatConversationResponse> getConversation(
-            @PathVariable UUID conversationId,
-            Authentication authentication) {
+            @PathVariable UUID conversationId) {
 
         return ResponseEntity.ok(conversationService.getConversation(
-                conversationId, authenticatedUserId(authentication)));
+                conversationId));
     }
 
     @GetMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<ChatPageResponse<ChatMessageResponse>> getMessages(
             @PathVariable UUID conversationId,
-            Authentication authentication,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "30") @Min(1) @Max(100) int size) {
 
         return ResponseEntity.ok(conversationService.getMessages(
-                conversationId, authenticatedUserId(authentication), page, size));
+                conversationId, page, size));
     }
 
     @PostMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<SendChatMessageResponse> sendMessage(
             @PathVariable UUID conversationId,
-            @Valid @RequestBody SendChatMessageRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody SendChatMessageRequest request) {
 
         return ResponseEntity.ok(messageService.sendMessage(
-                conversationId, authenticatedUserId(authentication), request));
+                conversationId, request));
     }
 
     @PostMapping("/messages/{messageId}/feedback")
     public ResponseEntity<Void> submitFeedback(
             @PathVariable UUID messageId,
-            @Valid @RequestBody SubmitChatFeedbackRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody SubmitChatFeedbackRequest request) {
 
         persistenceService.submitFeedback(
                 messageId,
-                authenticatedUserId(authentication),
+
                 request.rating(),
                 request.feedbackText()
         );
@@ -120,46 +114,22 @@ public class ChatbotController {
     @PostMapping("/conversations/{conversationId}/escalate")
     public ResponseEntity<ChatTicketResponse> escalateConversation(
             @PathVariable UUID conversationId,
-            @Valid @RequestBody EscalateChatRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody EscalateChatRequest request) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ticketEscalationService.escalate(
                         conversationId,
-                        authenticatedUserId(authentication),
+
                         request
                 ));
     }
 
     @GetMapping("/conversations/{conversationId}/ticket")
     public ResponseEntity<ChatTicketResponse> getLinkedTicket(
-            @PathVariable UUID conversationId,
-            Authentication authentication) {
+            @PathVariable UUID conversationId) {
 
         return ResponseEntity.ok(
-                ticketEscalationService.getLinkedTicket(
-                        conversationId,
-                        authenticatedUserId(authentication)
-                )
+                ticketEscalationService.getLinkedTicket(conversationId)
         );
-    }
-
-    private String authenticatedUserId(Authentication authentication) {
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || authentication.getName() == null
-                || authentication.getName().isBlank()
-                || "anonymousUser".equals(authentication.getName())) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Authentication is required");
-        }
-
-        /*
-         * IMPORTANT:
-         * This assumes Authentication.getName() contains the Firebase UID
-         * (the subject stored in your app JWT). If your JWT filter exposes
-         * a custom principal, adapt this method to read that principal's UID.
-         */
-        return authentication.getName();
     }
 }

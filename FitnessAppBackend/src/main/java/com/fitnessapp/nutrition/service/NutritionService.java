@@ -11,7 +11,6 @@ import java.util.UUID;
 
 public interface NutritionService {
 
-    NutritionHomeResponse getNutritionHome();
     Page<FoodItemResponse> searchFoods(String query, int page, int size);
 
     MealEntryResponse logMeal(LogMealRequest request);
@@ -27,7 +26,7 @@ public interface NutritionService {
 
     void deleteMeal(UUID mealId);
 
-    DailyNutritionSummaryResponse getDailySummary(LocalDate date);
+    DailyNutritionHomeSummaryResponse getNutritionHomeSummary(LocalDate date);
 
     Page<MealEntryResponse> getMealHistory(int page, int size);
 
