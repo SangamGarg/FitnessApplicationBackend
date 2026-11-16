@@ -3,9 +3,9 @@ package com.fitnessapp.support.service;
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.portal.audit.PortalAuditService;
-import com.fitnessapp.portal.common.enums.UserRole;
-import com.fitnessapp.portal.dev.assetUploadDev.service.FileStorageService;
-import com.fitnessapp.portal.repository.PortalAccountRepository;
+import com.fitnessapp.portal.portalAuth.model.enums.UserRole;
+import com.fitnessapp.assets.service.FileStorageService;
+import com.fitnessapp.portal.portalAuth.repository.PortalAccountRepository;
 import com.fitnessapp.support.models.dtos.SupportValidationDto;
 import com.fitnessapp.support.models.dtos.SupportIssueCategoryDto;
 import com.fitnessapp.support.models.dtos.request.CreateSupportTicketRequestDTO;
@@ -38,7 +38,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Service

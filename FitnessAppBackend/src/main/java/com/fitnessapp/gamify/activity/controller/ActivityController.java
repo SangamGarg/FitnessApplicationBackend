@@ -31,7 +31,6 @@ import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_ACTIVITY_ENDPOINT
 @RequestMapping(APP_ACTIVITY_ENDPOINT)
 @RequiredArgsConstructor
 @Validated
-@SecurityRequirement(name = "bearerAuth")
 public class ActivityController {
 
     private final ActivityInterface activityService;

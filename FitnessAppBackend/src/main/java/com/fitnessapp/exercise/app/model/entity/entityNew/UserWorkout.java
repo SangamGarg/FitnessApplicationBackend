@@ -1,7 +1,7 @@
 package com.fitnessapp.exercise.app.model.entity.entityNew;
 
-import com.fitnessapp.exercise.app.model.WorkoutSessionMode;
-import com.fitnessapp.exercise.app.model.WorkoutStatus;
+import com.fitnessapp.exercise.app.model.enums.WorkoutSessionMode;
+import com.fitnessapp.exercise.app.model.enums.WorkoutStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +13,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.time.Instant;
 
 @Entity
 @Table(

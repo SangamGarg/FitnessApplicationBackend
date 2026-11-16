@@ -1,7 +1,7 @@
 package com.fitnessapp.exercise.app.repo;
 
-import com.fitnessapp.exercise.app.model.ExerciseDifficulty;
-import com.fitnessapp.exercise.app.model.ExerciseType;
+import com.fitnessapp.exercise.app.model.enums.ExerciseDifficulty;
+import com.fitnessapp.exercise.app.model.enums.ExerciseType;
 import com.fitnessapp.exercise.app.model.entity.entityNew.Exercise;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,11 +1,11 @@
 package com.fitnessapp.appAuth.repo;
 
 import com.fitnessapp.appAuth.model.entity.UserEntity;
-import com.fitnessapp.portal.dto.MobileUserAdminResponseDto;
 import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
+import com.fitnessapp.portal.portalAuth.model.dto.response.MobileUserAdminResponseDto;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -25,7 +25,7 @@ public interface UserRepo extends JpaRepository<UserEntity, String> {
 
     @Query(
             value = """
-                    select new com.fitnessapp.portal.dto.MobileUserAdminResponseDto(
+                    select new com.fitnessapp.portal.portalAuth.model.dto.response.MobileUserAdminResponseDto(
                         u.id, u.email, d.name, d.gender, d.age, d.profileImageUrl,
                         d.heightCm, d.weightKg, d.activityLevel, d.goal, u.accountStatus
                     )
@@ -53,7 +53,7 @@ public interface UserRepo extends JpaRepository<UserEntity, String> {
     );
 
     @Query("""
-            select new com.fitnessapp.portal.dto.MobileUserAdminResponseDto(
+            select new com.fitnessapp.portal.portalAuth.model.dto.response.MobileUserAdminResponseDto(
                 u.id, u.email, d.name, d.gender, d.age, d.profileImageUrl,
                 d.heightCm, d.weightKg, d.activityLevel, d.goal, u.accountStatus
             )

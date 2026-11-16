@@ -1,7 +1,7 @@
 package com.fitnessapp.exercise.portal.dto;
 
-import com.fitnessapp.exercise.app.model.ExerciseDifficulty;
-import com.fitnessapp.exercise.app.model.ExerciseType;
+import com.fitnessapp.exercise.app.model.enums.ExerciseDifficulty;
+import com.fitnessapp.exercise.app.model.enums.ExerciseType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

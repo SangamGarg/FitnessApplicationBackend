@@ -1,9 +1,10 @@
 package com.fitnessapp.portal.audit;
 
-import com.fitnessapp.portal.common.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,17 +13,33 @@ import org.springframework.transaction.annotation.Transactional;
 public class PortalAuditService {
 
     private final PortalAuditEventRepository events;
-    private final CurrentUserService currentUser;
 
     @Transactional
     public void record(String action, String resourceType, String resourceId, String details) {
         events.save(new PortalAuditEventEntity(
-                currentUser.getEmail(),
+                getCurrentUserPortal(),
                 action,
                 resourceType,
                 resourceId,
                 details
         ));
+    }
+    public String getCurrentUserPortal() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication.getName() == null
+                || authentication.getName().isBlank()
+                || "anonymousUser".equals(authentication.getName())) {
+
+            throw new IllegalStateException(
+                    "No authenticated user found"
+            );
+        }
+
+        return authentication.getName();
     }
 
     @Transactional(readOnly = true)

@@ -1,6 +1,6 @@
 package com.fitnessapp.exercise.app.model.entity.entityNew;
 
-import com.fitnessapp.exercise.app.model.MediaType;
+import com.fitnessapp.exercise.app.model.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,13 +1,12 @@
 package com.fitnessapp.support.portalSupport.controller;
 
-import com.fitnessapp.portal.common.CurrentUserService;
 import com.fitnessapp.support.models.dtos.request.SupportAdminMessageRequestDTO;
+import com.fitnessapp.support.models.dtos.request.UpdateTicketStatusRequestDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
 import com.fitnessapp.support.models.enums.SupportIssueCategory;
-import com.fitnessapp.support.service.SupportTicketService;
 import com.fitnessapp.support.models.enums.TicketStatus;
-import com.fitnessapp.support.models.dtos.request.UpdateTicketStatusRequestDTO;
+import com.fitnessapp.support.service.SupportTicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +16,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -31,7 +32,6 @@ import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_SUPPORT_ENDPOINT
 public class PortalSupportTicketController {
 
     private final SupportTicketService supportTicketService;
-    private final CurrentUserService currentUser;
 
     @GetMapping("/tickets")
     public ResponseEntity<Page<SupportTicketResponseDTO>> getAllTickets(
@@ -72,11 +72,29 @@ public class PortalSupportTicketController {
             @Valid @RequestBody SupportAdminMessageRequestDTO request
     ) {
         SupportTicketMessageResponseDTO message = supportTicketService.addAdminMessage(
-                currentUser.getEmail(),
+                getCurrentUserPortal(),
                 ticketNumber,
                 request.message(),
                 request.internalNote()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(message);
+    }
+
+    public String getCurrentUserPortal() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication.getName() == null
+                || authentication.getName().isBlank()
+                || "anonymousUser".equals(authentication.getName())) {
+
+            throw new IllegalStateException(
+                    "No authenticated user found"
+            );
+        }
+
+        return authentication.getName();
     }
 }

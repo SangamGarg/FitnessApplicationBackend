@@ -1,8 +1,8 @@
 package com.fitnessapp.exercise.portal.dto;
 
-import com.fitnessapp.exercise.app.model.ExerciseDifficulty;
-import com.fitnessapp.exercise.app.model.ExerciseType;
-import com.fitnessapp.exercise.app.model.MediaType;
+import com.fitnessapp.exercise.app.model.enums.ExerciseDifficulty;
+import com.fitnessapp.exercise.app.model.enums.ExerciseType;
+import com.fitnessapp.exercise.app.model.enums.MediaType;
 
 import java.time.Instant;
 import java.util.List;

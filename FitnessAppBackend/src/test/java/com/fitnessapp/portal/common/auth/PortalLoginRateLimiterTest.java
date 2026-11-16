@@ -1,5 +1,6 @@
 package com.fitnessapp.portal.common.auth;
 
+import com.fitnessapp.portal.portalAuth.tokenJwt.PortalLoginRateLimiter;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;

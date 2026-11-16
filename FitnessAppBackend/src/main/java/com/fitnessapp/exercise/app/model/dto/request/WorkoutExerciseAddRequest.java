@@ -1,6 +1,6 @@
 package com.fitnessapp.exercise.app.model.dto.request;
 
-import com.fitnessapp.exercise.app.model.TrackingMethod;
+import com.fitnessapp.exercise.app.model.enums.TrackingMethod;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 

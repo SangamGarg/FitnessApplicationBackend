@@ -1,7 +1,7 @@
 package com.fitnessapp.exercise.app.model.entity.entityNew;
 
-import com.fitnessapp.exercise.app.model.ExerciseDifficulty;
-import com.fitnessapp.exercise.app.model.ExerciseType;
+import com.fitnessapp.exercise.app.model.enums.ExerciseDifficulty;
+import com.fitnessapp.exercise.app.model.enums.ExerciseType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,11 +1,12 @@
 package com.fitnessapp.exercise.app.service;
 
 import com.fitnessapp.appAuth.repo.UserRepo;
-import com.fitnessapp.exercise.app.model.TrackingMethod;
-import com.fitnessapp.exercise.app.model.WorkoutStatus;
+import com.fitnessapp.exercise.app.model.enums.TrackingMethod;
+import com.fitnessapp.exercise.app.model.enums.WorkoutStatus;
 import com.fitnessapp.exercise.app.model.dto.request.*;
 import com.fitnessapp.exercise.app.model.dto.response.WorkoutSessionResponse;
 import com.fitnessapp.exercise.app.model.entity.entityNew.*;
+import com.fitnessapp.exercise.app.model.enums.WorkoutSessionMode;
 import com.fitnessapp.exercise.app.repo.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -79,7 +80,7 @@ public class WorkoutSessionService {
                     log.setExercise(item.getExercise());
                     log.setSortOrder(order++);
                     log.setStatus("PENDING");
-                    log.setTrackingMethod(request.sessionMode() == com.fitnessapp.exercise.app.model.WorkoutSessionMode.AI
+                    log.setTrackingMethod(request.sessionMode() == WorkoutSessionMode.AI
                             ? TrackingMethod.AI : TrackingMethod.MANUAL);
                     workout.getExerciseLogs().add(log);
                 }

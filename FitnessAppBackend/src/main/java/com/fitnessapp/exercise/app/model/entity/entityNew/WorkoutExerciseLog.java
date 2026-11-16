@@ -1,13 +1,12 @@
 package com.fitnessapp.exercise.app.model.entity.entityNew;
 
-import com.fitnessapp.exercise.app.model.TrackingMethod;
+import com.fitnessapp.exercise.app.model.enums.TrackingMethod;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;

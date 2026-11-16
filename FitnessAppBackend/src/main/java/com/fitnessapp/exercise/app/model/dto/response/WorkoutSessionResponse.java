@@ -1,7 +1,7 @@
 package com.fitnessapp.exercise.app.model.dto.response;
 
-import com.fitnessapp.exercise.app.model.WorkoutSessionMode;
-import com.fitnessapp.exercise.app.model.WorkoutStatus;
+import com.fitnessapp.exercise.app.model.enums.WorkoutSessionMode;
+import com.fitnessapp.exercise.app.model.enums.WorkoutStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

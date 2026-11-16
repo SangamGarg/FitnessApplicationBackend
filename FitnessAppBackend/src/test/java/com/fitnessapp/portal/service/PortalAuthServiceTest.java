@@ -1,11 +1,12 @@
 package com.fitnessapp.portal.service;
 
-import com.fitnessapp.portal.common.auth.PortalLoginRateLimiter;
-import com.fitnessapp.portal.common.auth.PortalRefreshTokenRepository;
-import com.fitnessapp.portal.common.auth.PortalTokenService;
-import com.fitnessapp.portal.common.enums.UserRole;
-import com.fitnessapp.portal.repository.PortalAccountRepository;
-import com.fitnessapp.portal.tableEntity.PortalAccountEntity;
+import com.fitnessapp.portal.portalAuth.tokenJwt.PortalLoginRateLimiter;
+import com.fitnessapp.portal.portalAuth.repository.PortalRefreshTokenRepository;
+import com.fitnessapp.portal.portalAuth.tokenJwt.PortalTokenService;
+import com.fitnessapp.portal.portalAuth.model.enums.UserRole;
+import com.fitnessapp.portal.portalAuth.repository.PortalAccountRepository;
+import com.fitnessapp.portal.portalAuth.model.entity.PortalAccountEntity;
+import com.fitnessapp.portal.portalAuth.service.PortalAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

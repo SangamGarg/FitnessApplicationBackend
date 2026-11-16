@@ -1,6 +1,6 @@
 package com.fitnessapp.exercise.app.controller;
 
-import com.fitnessapp.exercise.portal.WorkoutPlanService;
+import com.fitnessapp.exercise.portal.service.WorkoutPlanService;
 import com.fitnessapp.exercise.portal.dto.WorkoutPlanResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

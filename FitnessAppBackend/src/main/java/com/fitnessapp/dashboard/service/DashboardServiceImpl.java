@@ -9,7 +9,7 @@ import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.dashboard.dto.DashboardResponseDto;
 import com.fitnessapp.exercise.app.model.dto.response.WorkoutAnalyticsOverviewResponse;
 import com.fitnessapp.exercise.app.service.WorkoutAnalyticsService;
-import com.fitnessapp.exercise.portal.WorkoutPlanService;
+import com.fitnessapp.exercise.portal.service.WorkoutPlanService;
 import com.fitnessapp.exercise.portal.dto.WorkoutPlanResponseDto;
 import com.fitnessapp.notification.service.UserNotificationService;
 import com.fitnessapp.nutrition.model.dto.response.DailyNutritionHomeSummaryResponse;

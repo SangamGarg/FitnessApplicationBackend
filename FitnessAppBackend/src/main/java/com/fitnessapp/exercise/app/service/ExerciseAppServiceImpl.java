@@ -1,9 +1,6 @@
 package com.fitnessapp.exercise.app.service;
 
-import com.fitnessapp.exercise.app.model.dto.response.ExerciseCategoryResponseDto;
-import com.fitnessapp.exercise.app.model.dto.response.ExerciseDetailResponseDto;
-import com.fitnessapp.exercise.app.model.dto.response.ExerciseLevelResponseDto;
-import com.fitnessapp.exercise.app.model.dto.response.ExerciseSubCategoryResponseDto;
+import com.fitnessapp.exercise.app.model.dto.response.*;
 import com.fitnessapp.exercise.app.model.entity.ExerciseCategoryEntity;
 import com.fitnessapp.exercise.app.model.entity.ExerciseDetailEntity;
 import com.fitnessapp.exercise.app.model.entity.ExerciseSubCategoryEntity;
@@ -33,6 +30,11 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
         this.levelRepository = levelRepository;
         this.subCategoryRepository = subCategoryRepository;
         this.exerciseRepository = exerciseRepository;
+    }
+
+    @Override
+    public ResponseEntity<ExerciseHomeResponseDto> getExerciseHome() {
+        return null;
     }
 
     @Override

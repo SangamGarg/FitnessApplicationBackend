@@ -1,7 +1,7 @@
 package com.fitnessapp.config.springSecurityConfig;
 
 import com.fitnessapp.config.springSecurityConfig.jwt.JwtFilter;
-import com.fitnessapp.portal.common.auth.PortalJwtFilter;
+import com.fitnessapp.portal.portalAuth.tokenJwt.PortalJwtFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
