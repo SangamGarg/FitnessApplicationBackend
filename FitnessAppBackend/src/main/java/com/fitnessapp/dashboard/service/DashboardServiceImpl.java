@@ -1,5 +1,6 @@
 package com.fitnessapp.dashboard.service;
 
+import com.fitnessapp.exercise.service.ExerciseAppService;
 import com.fitnessapp.gamify.activity.models.dtos.responseDto.ActivitySummaryResponseDto;
 import com.fitnessapp.gamify.activity.service.ActivityInterface;
 import com.fitnessapp.appAuth.model.entity.UserDetailsEntity;
@@ -7,10 +8,9 @@ import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserDetailsRepo;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.dashboard.dto.DashboardResponseDto;
-import com.fitnessapp.exercise.app.model.dto.response.WorkoutAnalyticsOverviewResponse;
-import com.fitnessapp.exercise.app.service.WorkoutAnalyticsService;
-import com.fitnessapp.exercise.portal.service.WorkoutPlanService;
-import com.fitnessapp.exercise.portal.dto.WorkoutPlanResponseDto;
+import com.fitnessapp.exercise.model.dto.response.WorkoutAnalyticsOverviewResponse;
+import com.fitnessapp.exercise.service.WorkoutAnalyticsService;
+import com.fitnessapp.exercise.model.dto.response.WorkoutPlanResponseDto;
 import com.fitnessapp.notification.service.UserNotificationService;
 import com.fitnessapp.nutrition.model.dto.response.DailyNutritionHomeSummaryResponse;
 import com.fitnessapp.nutrition.service.NutritionService;
@@ -43,7 +43,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final UserDetailsRepo userDetailsRepo;
     private final AppWalletService appWalletService;
     private final UserNotificationService userNotificationService;
-    private final WorkoutPlanService workoutPlanService;
+    private final ExerciseAppService exerciseAppService;
     private final ActivityInterface activityService;
     private final NutritionService nutritionService;
     private final WorkoutAnalyticsService workoutAnalyticsService;
@@ -147,7 +147,7 @@ public class DashboardServiceImpl implements DashboardService {
             return null;
         }
 
-        var plans = workoutPlanService.search(
+        var plans = exerciseAppService.getPublishedWorkoutPlansList(
                 null,
                 details.getGoal().name(),
                 null,

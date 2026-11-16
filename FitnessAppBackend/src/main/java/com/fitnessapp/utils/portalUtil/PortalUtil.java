@@ -45,6 +45,6 @@ public final class PortalUtil {
     public static final String CLAIM_NAME = "name";
     public static final String EXPECTED_TOKEN_TYPE = "portal";
     public static final long EXPIRATION_SECONDS = 1800L; // 30 minutes
-    public static final long CLOCK_SKEW_SECONDS = 60L;    // 1 minute tolerance
+    public static final long CLOCK_SKEW_SECONDS = 60L;    // 1-minute tolerance
 
 }
