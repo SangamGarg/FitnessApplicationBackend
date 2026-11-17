@@ -24,7 +24,12 @@ public interface ExerciseAppService {
     );
 
     ExerciseResponseDto getPublishedExercise(Long id, boolean publishedOnly);
-
+    Page<ExerciseResponseDto> searchExercisesByMuscleGroup(
+            String muscle,
+            String role,
+            Boolean published,
+            Pageable pageable
+    );
     ExerciseResponseDto createExercise(ExerciseUpsertRequestDto request);
 
     ExerciseResponseDto updateExercise(Long id, ExerciseUpsertRequestDto request);

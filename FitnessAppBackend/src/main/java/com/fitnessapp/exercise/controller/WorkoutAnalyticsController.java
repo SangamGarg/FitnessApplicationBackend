@@ -32,7 +32,6 @@ import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_EXERCISE_ENDPOINT
 @RequestMapping(APP_EXERCISE_ENDPOINT + "/workouts")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "Mobile - Workout Analytics", description = "Workout statistics, personal records and training progress")
 public class WorkoutAnalyticsController {
 
     private final WorkoutAnalyticsService workoutAnalyticsService;

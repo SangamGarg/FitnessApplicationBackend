@@ -1,7 +1,7 @@
 
 package com.fitnessapp.exercise.repo;
 
-import com.fitnessapp.exercise.model.entity.WorkoutPlan;
+import com.fitnessapp.exercise.model.entity.workoutPlanEntity.WorkoutPlan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

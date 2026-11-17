@@ -1,4 +1,4 @@
-package com.fitnessapp.exercise.model.entity;
+package com.fitnessapp.exercise.model.entity.workoutPlanEntity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

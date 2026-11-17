@@ -5,27 +5,37 @@ import com.fitnessapp.exercise.model.dto.request.WorkoutPlanUpsertRequestDto;
 import com.fitnessapp.exercise.model.dto.response.ExerciseHomeResponseDto;
 import com.fitnessapp.exercise.model.dto.response.ExerciseResponseDto;
 import com.fitnessapp.exercise.model.dto.response.WorkoutPlanResponseDto;
-import com.fitnessapp.exercise.model.entity.*;
+import com.fitnessapp.exercise.model.entity.UserWorkout;
 import com.fitnessapp.exercise.model.entity.exerciseEntity.Exercise;
 import com.fitnessapp.exercise.model.entity.exerciseEntity.ExerciseMedia;
+import com.fitnessapp.exercise.model.entity.workoutPlanEntity.WorkoutPlan;
+import com.fitnessapp.exercise.model.entity.workoutPlanEntity.WorkoutPlanDay;
+import com.fitnessapp.exercise.model.entity.workoutPlanEntity.WorkoutPlanExercise;
 import com.fitnessapp.exercise.model.enums.ExerciseDifficulty;
 import com.fitnessapp.exercise.model.enums.ExerciseType;
+import com.fitnessapp.exercise.model.enums.WorkoutStatus;
 import com.fitnessapp.exercise.repo.ExerciseRepository;
+import com.fitnessapp.exercise.repo.UserWorkoutRepository;
 import com.fitnessapp.exercise.repo.WorkoutPlanRepository;
 import com.fitnessapp.portal.audit.PortalAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -37,12 +47,97 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
 
     private final ExerciseRepository exercises;
     private final WorkoutPlanRepository plans;
+    private final UserWorkoutRepository workouts;
     private final ObjectMapper objectMapper;
     private final PortalAuditService audit;
 
+    private static final int HOME_FEATURED_PLAN_LIMIT = 5;
+
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ExerciseHomeResponseDto> getExerciseHome() {
-        return null;
+        long totalExercises = exercises.countByPublishedTrue();
+
+        List<ExerciseHomeResponseDto.MuscleGroupSummary> muscleGroups = exercises.countPublishedByMuscleGroup().stream()
+                .map(row -> new ExerciseHomeResponseDto.MuscleGroupSummary(
+                        row.getMuscleKey(),
+                        row.getName(),
+                        row.getExerciseCount() == null ? 0 : row.getExerciseCount()
+                ))
+                .toList();
+
+        List<ExerciseHomeResponseDto.PlanSummary> featuredPlans = plans
+                .search("", "", "", true, PageRequest.of(0, HOME_FEATURED_PLAN_LIMIT))
+                .stream()
+                .map(plan -> new ExerciseHomeResponseDto.PlanSummary(
+                        plan.getId(),
+                        plan.getPlanKey(),
+                        plan.getName(),
+                        plan.getGoal(),
+                        plan.getDifficulty(),
+                        plan.getDurationWeeks(),
+                        plan.getDaysPerWeek(),
+                        plan.getEstimatedSessionMinutes() == null ? null : plan.getEstimatedSessionMinutes().intValue()
+                ))
+                .toList();
+
+        List<ExerciseHomeResponseDto.ExerciseSummary> newExercises = exercises
+                .findTop6ByPublishedTrueOrderByCreatedAtDesc().stream()
+                .map(this::toSummary)
+                .toList();
+
+        ExerciseHomeResponseDto.Filters filters = new ExerciseHomeResponseDto.Filters(
+                Arrays.stream(ExerciseType.values()).map(Enum::name).toList(),
+                Arrays.stream(ExerciseDifficulty.values()).map(Enum::name).toList()
+        );
+
+        // Personal sections: only filled for an authenticated user.
+        ExerciseHomeResponseDto.ActiveWorkout activeWorkout = null;
+        ExerciseHomeResponseDto.Stats stats = null;
+        List<ExerciseHomeResponseDto.RecentWorkout> recentWorkouts = List.of();
+
+        String userId = currentUserIdOrNull();
+        if (userId != null) {
+            activeWorkout = workouts
+                    .findFirstByUserIdAndStatusInOrderByStartedAtDesc(
+                            userId, List.of(WorkoutStatus.IN_PROGRESS, WorkoutStatus.PAUSED))
+                    .map(w -> new ExerciseHomeResponseDto.ActiveWorkout(
+                            w.getId(),
+                            w.getStatus(),
+                            w.getStartedAt(),
+                            w.getWorkoutPlanId(),
+                            w.getExerciseLogs().size()
+                    ))
+                    .orElse(null);
+
+            stats = new ExerciseHomeResponseDto.Stats(
+                    workouts.countByUserIdAndStatus(userId, WorkoutStatus.COMPLETED),
+                    workouts.countByUserIdAndStatusAndCompletedAtGreaterThanEqual(
+                            userId, WorkoutStatus.COMPLETED, Instant.now().minus(7, ChronoUnit.DAYS))
+            );
+
+            recentWorkouts = workouts.findTop3ByUserIdAndStatusOrderByStartedAtDesc(userId, WorkoutStatus.COMPLETED)
+                    .stream()
+                    .map(this::toRecentWorkout)
+                    .toList();
+        }
+
+        String description = totalExercises == 0
+                ? "Exercises are coming soon"
+                : totalExercises + " exercises across " + muscleGroups.size() + " muscle groups";
+
+        return ResponseEntity.ok(new ExerciseHomeResponseDto(
+                "Exercises",
+                "Find exercises, follow plans and track your workouts",
+                description,
+                activeWorkout,
+                stats,
+                recentWorkouts,
+                featuredPlans,
+                muscleGroups,
+                newExercises,
+                filters
+        ));
     }
 
 
@@ -69,6 +164,29 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found");
         }
         return toResponse(exercise);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ExerciseResponseDto> searchExercisesByMuscleGroup(
+            String muscle,
+            String role,
+            Boolean published,
+            Pageable pageable
+    ) {
+        if (muscle == null || muscle.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Muscle group is required");
+        }
+        String normalizedRole = role == null ? "" : role.trim().toUpperCase(Locale.ROOT);
+        if (!normalizedRole.isEmpty() && !normalizedRole.equals("PRIMARY") && !normalizedRole.equals("SECONDARY")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role must be PRIMARY or SECONDARY");
+        }
+        return exercises.searchByMuscleGroup(
+                muscle.trim().toLowerCase(Locale.ROOT),
+                normalizedRole,
+                published,
+                pageable
+        ).map(this::toResponse);
     }
 
     @Transactional
@@ -482,6 +600,42 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
         }
         return exercises.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found"));
+    }
+
+    private String currentUserIdOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getName() == null || "anonymousUser".equals(auth.getName())) {
+            return null;
+        }
+        return auth.getName();
+    }
+
+    private ExerciseHomeResponseDto.RecentWorkout toRecentWorkout(UserWorkout w) {
+        return new ExerciseHomeResponseDto.RecentWorkout(
+                w.getId(),
+                w.getWorkoutPlanId(),
+                w.getStartedAt(),
+                w.getCompletedAt(),
+                w.getDurationSeconds(),
+                w.getExerciseLogs().size()
+        );
+    }
+
+    private ExerciseHomeResponseDto.ExerciseSummary toSummary(Exercise exercise) {
+        String thumbnail = exercise.getMedia().stream()
+                .min(Comparator.comparing((ExerciseMedia m) -> !m.isPrimary())
+                        .thenComparingInt(ExerciseMedia::getSortOrder))
+                .map(m -> m.getThumbnailUrl() != null ? m.getThumbnailUrl() : m.getMediaUrl())
+                .orElse(null);
+        return new ExerciseHomeResponseDto.ExerciseSummary(
+                exercise.getId(),
+                exercise.getExerciseKey(),
+                exercise.getName(),
+                exercise.getDifficulty(),
+                exercise.getExerciseType(),
+                exercise.getEquipment(),
+                thumbnail
+        );
     }
 
     private String trimToNull(String value) {

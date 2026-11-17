@@ -52,6 +52,25 @@ public class ExerciseAppController {
         ));
     }
 
+    @GetMapping("/catalog/by-muscle")
+    //Search published exercises by muscle group (muscle key or name), optionally by role PRIMARY/SECONDARY
+    public ResponseEntity<Page<ExerciseResponseDto>> searchExercisesByMuscleGroup(
+            @RequestParam String muscle,
+            @RequestParam(required = false) String role,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page must be non-negative and size must be between 1 and 100");
+        }
+        return ResponseEntity.ok(exerciseAppService.searchExercisesByMuscleGroup(
+                muscle,
+                role,
+                true,
+                PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"))
+        ));
+    }
+
     @GetMapping("/catalog/{id}")
     //Get a published exercise
     public ResponseEntity<ExerciseResponseDto> getPublishedExercise(@PathVariable Long id) {
