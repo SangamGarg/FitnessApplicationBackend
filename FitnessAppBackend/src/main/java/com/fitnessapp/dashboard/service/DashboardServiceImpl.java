@@ -11,15 +11,21 @@ import com.fitnessapp.dashboard.dto.DashboardResponseDto;
 import com.fitnessapp.exercise.model.dto.response.WorkoutAnalyticsOverviewResponse;
 import com.fitnessapp.exercise.service.WorkoutAnalyticsService;
 import com.fitnessapp.exercise.model.dto.response.WorkoutPlanResponseDto;
+import com.fitnessapp.gamify.achievement.model.AchievementResponseDto;
+import com.fitnessapp.gamify.achievement.service.AchievementService;
+import com.fitnessapp.gamify.challenge.model.dto.ChallengeResponseDto;
+import com.fitnessapp.gamify.challenge.model.enums.ChallengeStatus;
+import com.fitnessapp.gamify.challenge.service.ChallengeService;
+import com.fitnessapp.gamify.gamification.model.dto.response.GamificationHomeSummaryResponseDto;
+import com.fitnessapp.gamify.gamification.service.GamificationService;
 import com.fitnessapp.notification.service.UserNotificationService;
 import com.fitnessapp.nutrition.model.dto.response.DailyNutritionHomeSummaryResponse;
 import com.fitnessapp.nutrition.service.NutritionService;
-import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
-import com.fitnessapp.wallet.service.AppWalletService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -33,6 +39,7 @@ import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -41,12 +48,17 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final UserRepo userRepo;
     private final UserDetailsRepo userDetailsRepo;
-    private final AppWalletService appWalletService;
     private final UserNotificationService userNotificationService;
     private final ExerciseAppService exerciseAppService;
     private final ActivityInterface activityService;
     private final NutritionService nutritionService;
     private final WorkoutAnalyticsService workoutAnalyticsService;
+    private final GamificationService gamificationService;
+    private final AchievementService achievementService;
+    private final ChallengeService challengeService;
+
+    @Value("${gamification.time-zone:Asia/Kolkata}")
+    private String configuredTimeZone;
 
     @Override
     @Transactional(readOnly = true)
@@ -59,10 +71,17 @@ public class DashboardServiceImpl implements DashboardService {
             );
         }
 
+        String requestedTimeZone = StringUtils.hasText(timeZone) ? timeZone.trim() : configuredTimeZone;
         ZoneId zoneId;
         try {
-            zoneId = ZoneId.of(timeZone);
+            zoneId = ZoneId.of(requestedTimeZone);
         } catch (DateTimeException exception) {
+            if (!StringUtils.hasText(timeZone)) {
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Configured gamification.time-zone is invalid."
+                );
+            }
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Invalid timeZone. Use an IANA zone such as Asia/Kolkata."
@@ -76,29 +95,51 @@ public class DashboardServiceImpl implements DashboardService {
                 ));
 
         UserDetailsEntity details = userDetailsRepo.findByUserId(userId);
-        WalletBalanceResponseDto wallet = appWalletService.getBalance();
         long unreadCount = userNotificationService.getMyUnreadCount().unreadCount();
 
-        ActivitySummaryResponseDto activity = activityService.getDailySummary(
-                LocalDate.now(zoneId),
-                zoneId
-        );
-
-        DailyNutritionHomeSummaryResponse nutrition = nutritionService.getNutritionHomeSummary(
-                LocalDate.now(zoneId)
-        );
         LocalDate today = LocalDate.now(zoneId);
+        ActivitySummaryResponseDto activity = activityService.getDailySummary(today, zoneId);
+
+        DailyNutritionHomeSummaryResponse nutrition = nutritionService.getNutritionHomeSummary(today);
         WorkoutAnalyticsOverviewResponse workoutAnalytics = workoutAnalyticsService.overviewForUser(
                 userId, today.minusDays(6), today, zoneId
         );
+        GamificationHomeSummaryResponseDto gamification =
+                gamificationService.getGamificationHomeSummary();
+        List<AchievementResponseDto> achievements = achievementService.list();
+        List<AchievementResponseDto> recentAchievements = achievements.stream()
+                .filter(AchievementResponseDto::unlocked)
+                .limit(3)
+                .toList();
+        List<ChallengeResponseDto> joinedChallenges = challengeService.mine();
+        List<ChallengeResponseDto> activeChallenges = joinedChallenges.stream()
+                .filter(challenge -> challenge.joined() && challenge.status() == ChallengeStatus.ACTIVE)
+                .limit(3)
+                .toList();
+
         DashboardResponseDto responseDto = new DashboardResponseDto(
                 toUserSummary(user, details),
                 activity,
                 nutrition,
                 workoutAnalytics,
-                new DashboardResponseDto.WalletSummary(wallet.balanceCoins()),
+                new DashboardResponseDto.WalletSummary(gamification.coins()),
                 new DashboardResponseDto.NotificationSummary(unreadCount),
                 findRecommendedWorkout(details),
+                new DashboardResponseDto.GamificationSummary(
+                        gamification.totalXp(),
+                        gamification.level(),
+                        gamification.coins(),
+                        gamification.currentStreak(),
+                        gamification.longestStreak(),
+                        gamification.lastActiveDate(),
+                        gamification.xpToNextLevel()
+                ),
+                new DashboardResponseDto.AchievementSummary(
+                        (int) achievements.stream().filter(AchievementResponseDto::unlocked).count(),
+                        achievements.size(),
+                        recentAchievements
+                ),
+                new DashboardResponseDto.ChallengeSummary(activeChallenges.size(), activeChallenges),
                 Instant.now()
         );
 

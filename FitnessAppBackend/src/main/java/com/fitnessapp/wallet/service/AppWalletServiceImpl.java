@@ -123,7 +123,7 @@ public class AppWalletServiceImpl implements AppWalletService {
 
                     String referralCode;
                     do {
-                        referralCode = prefix + "-MP-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+                        referralCode = prefix + "MP" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
                     } while (referralRepo.existsByReferralCode(referralCode));
 
                     WalletReferralEntity newReferral = WalletReferralEntity.builder()

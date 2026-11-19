@@ -150,10 +150,29 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
             Boolean published,
             Pageable pageable
     ) {
+        return getPublishedExercisesList(query, difficulty, type, null, null, published, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ExerciseResponseDto> getPublishedExercisesList(
+            String query,
+            ExerciseDifficulty difficulty,
+            ExerciseType type,
+            String muscle,
+            String role,
+            Boolean published,
+            Pageable pageable
+    ) {
         String normalizedQuery = query == null || query.isBlank()
                 ? ""
                 : query.trim().toLowerCase(Locale.ROOT);
-        return exercises.search(normalizedQuery, difficulty, type, published, pageable).map(this::toResponse);
+        String normalizedMuscle = muscle == null || muscle.isBlank()
+                ? ""
+                : muscle.trim().toLowerCase(Locale.ROOT);
+        String normalizedRole = normalizeMuscleRole(role);
+        return exercises.search(normalizedQuery, difficulty, type, normalizedMuscle, normalizedRole, published, pageable)
+                .map(this::toResponse);
     }
 
     @Override
@@ -177,10 +196,7 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
         if (muscle == null || muscle.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Muscle group is required");
         }
-        String normalizedRole = role == null ? "" : role.trim().toUpperCase(Locale.ROOT);
-        if (!normalizedRole.isEmpty() && !normalizedRole.equals("PRIMARY") && !normalizedRole.equals("SECONDARY")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role must be PRIMARY or SECONDARY");
-        }
+        String normalizedRole = normalizeMuscleRole(role);
         return exercises.searchByMuscleGroup(
                 muscle.trim().toLowerCase(Locale.ROOT),
                 normalizedRole,
@@ -499,6 +515,7 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
         List<WorkoutPlanResponseDto.Day> days = plan.getDays().stream()
                 .sorted(java.util.Comparator.comparingInt(WorkoutPlanDay::getDayNumber))
                 .map(day -> new WorkoutPlanResponseDto.Day(
+                        day.getId(),
                         day.getDayNumber(),
                         day.getName(),
                         day.isRestDay(),
@@ -600,6 +617,14 @@ public class ExerciseAppServiceImpl implements ExerciseAppService {
         }
         return exercises.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found"));
+    }
+
+    private String normalizeMuscleRole(String role) {
+        String normalized = role == null ? "" : role.trim().toUpperCase(Locale.ROOT);
+        if (!normalized.isEmpty() && !normalized.equals("PRIMARY") && !normalized.equals("SECONDARY")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role must be PRIMARY or SECONDARY");
+        }
+        return normalized;
     }
 
     private String currentUserIdOrNull() {

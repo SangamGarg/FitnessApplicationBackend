@@ -21,6 +21,7 @@ public record WorkoutPlanResponseDto(
         Instant updatedAt
 ) {
     public record Day(
+            Long id,
             int dayNumber,
             String name,
             boolean restDay,

@@ -23,13 +23,25 @@ public interface ExerciseAppService {
             Pageable pageable
     );
 
+    Page<ExerciseResponseDto> getPublishedExercisesList(
+            String query,
+            ExerciseDifficulty difficulty,
+            ExerciseType type,
+            String muscle,
+            String role,
+            Boolean published,
+            Pageable pageable
+    );
+
     ExerciseResponseDto getPublishedExercise(Long id, boolean publishedOnly);
+
     Page<ExerciseResponseDto> searchExercisesByMuscleGroup(
             String muscle,
             String role,
             Boolean published,
             Pageable pageable
     );
+
     ExerciseResponseDto createExercise(ExerciseUpsertRequestDto request);
 
     ExerciseResponseDto updateExercise(Long id, ExerciseUpsertRequestDto request);

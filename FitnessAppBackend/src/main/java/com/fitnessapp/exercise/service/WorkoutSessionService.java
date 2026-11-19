@@ -58,6 +58,11 @@ public class WorkoutSessionService {
             return toResponse(old);
         }
 
+        if (workouts.existsByUserIdAndStatusIn(userId, List.of(WorkoutStatus.IN_PROGRESS, WorkoutStatus.PAUSED))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "You already have an active workout. Complete or cancel it before starting a new one");
+        }
+
         if (request.planDayId() != null && request.workoutPlanId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "workoutPlanId is required when planDayId is supplied");
         }

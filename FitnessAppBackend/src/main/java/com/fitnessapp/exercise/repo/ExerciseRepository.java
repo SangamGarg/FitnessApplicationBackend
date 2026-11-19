@@ -54,6 +54,16 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
                            or lower(e.name) like concat('%', :query, '%')
                            or lower(e.exerciseKey) like concat('%', :query, '%')
                       )
+                      and (
+                           :muscle = ''
+                           or exists (
+                                select 1 from ExerciseMuscle em
+                                join em.exerciseMuscleGroup mg
+                                where em.exercise = e
+                                  and (lower(mg.muscleKey) = :muscle or lower(mg.name) = :muscle)
+                                  and (:role = '' or upper(em.role) = :role)
+                           )
+                      )
                     """,
             countQuery = """
                     select count(e) from Exercise e
@@ -65,12 +75,24 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
                            or lower(e.name) like concat('%', :query, '%')
                            or lower(e.exerciseKey) like concat('%', :query, '%')
                       )
+                      and (
+                           :muscle = ''
+                           or exists (
+                                select 1 from ExerciseMuscle em
+                                join em.exerciseMuscleGroup mg
+                                where em.exercise = e
+                                  and (lower(mg.muscleKey) = :muscle or lower(mg.name) = :muscle)
+                                  and (:role = '' or upper(em.role) = :role)
+                           )
+                      )
                     """
     )
     Page<Exercise> search(
             @Param("query") String query,
             @Param("difficulty") ExerciseDifficulty difficulty,
             @Param("type") ExerciseType type,
+            @Param("muscle") String muscle,
+            @Param("role") String role,
             @Param("published") Boolean published,
             Pageable pageable
     );

@@ -37,6 +37,8 @@ public class ExerciseAppController {
             @RequestParam(required = false) String query,
             @RequestParam(required = false) ExerciseDifficulty difficulty,
             @RequestParam(required = false) ExerciseType type,
+            @RequestParam(required = false) String muscle,
+            @RequestParam(required = false) String role,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
@@ -47,6 +49,8 @@ public class ExerciseAppController {
                 query,
                 difficulty,
                 type,
+                muscle,
+                role,
                 true,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"))
         ));
