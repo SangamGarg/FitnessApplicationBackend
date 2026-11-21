@@ -15,20 +15,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_ASSET_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_ASSET_ENDPOINT;
 
-/**
- * Controller for managing the catalog of asset categories and registered key slots.
- */
+
 @Slf4j
 @RestController
-@RequestMapping(PORTAL_ASSET_ENDPOINT + "/catalog")
+@RequestMapping(PORTAL_DEV_ASSET_ENDPOINT + "/catalog")
 @RequiredArgsConstructor
-@Tag(name = "Asset Catalog", description = "Endpoints for managing asset categories and key definition slots")
 public class AssetCatalogController {
 
     private final AssetCatalogService service;
-
 
     @GetMapping("/categories")
     public ResponseEntity<List<AssetCategory>> getCategories() {
@@ -40,7 +36,6 @@ public class AssetCatalogController {
 
     @GetMapping("/keys")
     public ResponseEntity<List<AssetKeyDefinitionResponseDTO>> getKeys(
-            @Parameter(description = "Optional category filter to restrict key definitions", example = "APP_BRANDING")
             @RequestParam(required = false) AssetCategory category) {
         log.info("REST request to fetch catalog keys filtered by category: [{}]", category != null ? category : "ALL");
         List<AssetKeyDefinitionResponseDTO> keys = service.getKeys(category);
@@ -50,7 +45,6 @@ public class AssetCatalogController {
 
     @PostMapping("/keys")
     public ResponseEntity<AssetKeyDefinitionResponseDTO> registerKey(
-            @Parameter(description = "Asset key definition details", required = true)
             @Valid @RequestBody AssetKeyDefinitionRequestDTO request) {
         log.info("REST request to register new catalog key: [{}] under category: [{}]",
                 request.getAssetKey(), request.getCategory());
@@ -61,7 +55,6 @@ public class AssetCatalogController {
 
     @PostMapping("/keys/batch")
     public ResponseEntity<List<AssetKeyDefinitionResponseDTO>> registerKeysBatch(
-            @Parameter(description = "List of asset key definitions to register", required = true)
             @Valid @RequestBody List<AssetKeyDefinitionRequestDTO> requests) {
         log.info("REST request to batch-register {} catalog key definitions", requests.size());
         List<AssetKeyDefinitionResponseDTO> responses = service.registerKeysBatch(requests);
@@ -70,9 +63,7 @@ public class AssetCatalogController {
 
     @PatchMapping("/keys/{assetKey}/status")
     public ResponseEntity<AssetKeyDefinitionResponseDTO> toggleKeyStatus(
-            @Parameter(description = "The unique asset key identifier", required = true, example = "HOME_HERO_BANNER")
             @PathVariable String assetKey,
-            @Parameter(description = "Target enabled state", required = true, example = "false")
             @RequestParam boolean enabled) {
         log.info("REST request to toggle status of catalog key: [{}] to enabled={}", assetKey, enabled);
         AssetKeyDefinitionResponseDTO response = service.toggleKeyStatus(assetKey, enabled);
@@ -81,7 +72,6 @@ public class AssetCatalogController {
 
     @DeleteMapping("/keys/{assetKey}")
     public ResponseEntity<Void> deleteKey(
-            @Parameter(description = "The unique asset key identifier to permanently remove", required = true, example = "OLD_PROMO_BANNER")
             @PathVariable String assetKey) {
         log.info("REST request to delete catalog key definition: [{}]", assetKey);
         service.deleteKey(assetKey);

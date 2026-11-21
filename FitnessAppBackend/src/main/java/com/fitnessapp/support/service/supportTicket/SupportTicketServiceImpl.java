@@ -1,0 +1,404 @@
+package com.fitnessapp.support.service.supportTicket;
+
+import com.fitnessapp.appAuth.model.entity.UserEntity;
+import com.fitnessapp.appAuth.repo.UserRepo;
+import com.fitnessapp.notification.dto.FcmNotificationRequest;
+import com.fitnessapp.notification.service.UserNotificationService;
+import com.fitnessapp.portal.audit.PortalAuditService;
+import com.fitnessapp.portal.portalAuth.model.enums.UserRole;
+import com.fitnessapp.assets.service.FileStorageService;
+import com.fitnessapp.portal.portalAuth.repository.PortalAccountRepository;
+import com.fitnessapp.support.models.dtos.SupportValidationDto;
+import com.fitnessapp.support.models.dtos.SupportIssueCategoryDto;
+import com.fitnessapp.support.models.dtos.request.CreateSupportTicketRequestDTO;
+import com.fitnessapp.support.models.dtos.request.UpdateTicketStatusRequestDTO;
+import com.fitnessapp.support.models.dtos.response.SupportTicketHomeResponseDto;
+import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
+import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
+import com.fitnessapp.support.models.entity.SupportTicketEntity;
+import com.fitnessapp.support.models.entity.SupportTicketMessageEntity;
+import com.fitnessapp.support.models.enums.SupportIssueCategory;
+import com.fitnessapp.support.models.enums.TicketPriority;
+import com.fitnessapp.support.models.enums.TicketStatus;
+import com.fitnessapp.support.repo.SupportTicketMessageRepository;
+import com.fitnessapp.support.repo.SupportTicketRepository;
+import com.fitnessapp.support.service.supportEmail.SupportEmailService;
+import com.fitnessapp.support.utils.SupportAttachmentValidator;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class SupportTicketServiceImpl implements SupportTicketService {
+
+    private final SupportTicketRepository ticketRepository;
+    private final SupportTicketMessageRepository messageRepository;
+    private final PortalAccountRepository portalAccounts;
+    private final FileStorageService fileStorageService;
+    private final SupportEmailService emailService;
+    private final PortalAuditService audit;
+    private final UserRepo userRepo;
+    private final SupportAttachmentValidator attachmentValidator;
+    private final UserNotificationService userNotificationService;
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public SupportTicketHomeResponseDto getTicketsHome() {
+
+        List<SupportIssueCategoryDto> categories =
+                Arrays.stream(SupportIssueCategory.values())
+                        .map(category ->
+                                SupportIssueCategoryDto.builder()
+                                        .key(category.name())
+                                        .label(category.getLabel())
+                                        .build())
+                        .toList();
+
+        SupportValidationDto validation =
+                SupportValidationDto.builder()
+                        .subjectMinLength(5)
+                        .subjectMaxLength(100)
+                        .messageMinLength(10)
+                        .messageMaxLength(2000)
+                        .maxAttachments(3)
+                        .maxAttachmentSizeBytes(5L * 1024 * 1024)
+                        .maxTotalAttachmentSizeBytes(10L * 1024 * 1024)
+                        .allowedMimeTypes(List.of(
+                                "image/jpeg",
+                                "image/png",
+                                "image/webp"
+                        ))
+                        .build();
+
+        return SupportTicketHomeResponseDto.builder()
+                .title("Raise Support Ticket")
+                .subtitle("Replies within ~12 business hours")
+                .description(
+                        "Select a category and provide details about your issue. Attach the relevant files if any."
+                )
+                .categories(categories)
+                .validation(validation)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public SupportTicketResponseDTO createTicket(
+            CreateSupportTicketRequestDTO request,
+            List<MultipartFile> attachments) {
+        String userId = currentUserId();
+        log.info("Initiating ticket creation for user ID [{}] with {} attachment(s)",
+                userId, (attachments != null ? attachments.size() : 0));
+
+        attachmentValidator.validate(attachments);
+        // 1. Process and upload attachments if present
+        List<String> uploadedAttachmentUrls = new ArrayList<>();
+        if (attachments != null && !attachments.isEmpty()) {
+            for (MultipartFile file : attachments) {
+                if (!file.isEmpty()) {
+                    String uploadedUrl = fileStorageService.uploadFile(file, "support-attachments");
+                    uploadedAttachmentUrls.add(uploadedUrl);
+                }
+            }
+            log.info("Persisted {} ticket attachment(s) to cloud storage", uploadedAttachmentUrls.size());
+        }
+
+        // 2. Derive ticket priority
+        TicketPriority assignedPriority = (request.getCategory() == SupportIssueCategory.BILLING_SUBSCRIPTION)
+                ? TicketPriority.HIGH
+                : TicketPriority.MEDIUM;
+
+        // 3. Build & save ticket entity
+
+        UserEntity user = userRepo.findById(userId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("User account not found"));
+        SupportTicketEntity entity = SupportTicketEntity.builder()
+                .ticketNumber(generateUniqueTicketNumber())
+                .userId(userId)
+                .userEmail(user.getEmail())
+                .category(request.getCategory())
+                .subject(request.getSubject().trim())
+                .description(request.getDescription().trim())
+                .status(TicketStatus.OPEN)
+                .priority(assignedPriority)
+                .diagnosticInfo(request.getDiagnosticInfo())
+                .attachmentUrls(uploadedAttachmentUrls)
+                .build();
+
+        SupportTicketEntity saved = ticketRepository.save(entity);
+        log.info("Ticket [{}] persisted successfully in database", saved.getTicketNumber());
+
+        // 4. Trigger asynchronous email confirmation
+        emailService.sendTicketConfirmationEmail(saved);
+
+        return toResponseDTO(saved);
+    }
+
+    @Override
+    public List<SupportTicketResponseDTO> getUserTickets() {
+        String userId = currentUserId();
+
+        log.debug("Fetching support ticket history for user ID [{}]", userId);
+        return ticketRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    public SupportTicketResponseDTO getTicketByNumber(String ticketNumber) {
+        String userId = currentUserId();
+
+        log.debug("Fetching ticket [{}] for user ID [{}]", ticketNumber, userId);
+        SupportTicketEntity ticket = ticketRepository.findByTicketNumber(ticketNumber)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
+
+        if (!ticket.getUserId().equals(userId)) {
+            log.warn("Unauthorized ticket access attempt: user ID [{}] attempted reading ticket [{}]", userId, ticketNumber);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to view this ticket");
+        }
+
+        return toResponseDTO(ticket);
+    }
+
+    @Override
+    public Page<SupportTicketResponseDTO> getAllTickets(TicketStatus status, SupportIssueCategory category, Pageable pageable) {
+        return searchTickets(status, category, null, pageable);
+    }
+
+    @Override
+    public Page<SupportTicketResponseDTO> searchTickets(
+            TicketStatus status,
+            SupportIssueCategory category,
+            String query,
+            Pageable pageable
+    ) {
+
+        String normalizedQuery = (query == null || query.isBlank()) ? "" : query.trim().toLowerCase();
+
+        log.debug("Searching support tickets with status={}, category={}, query='{}', page={}, size={}",
+                status, category, normalizedQuery, pageable.getPageNumber(), pageable.getPageSize());
+        Page<SupportTicketResponseDTO> result = ticketRepository
+                .searchForAdmin(status, category, normalizedQuery, pageable)
+                .map(this::toResponseDTO);
+
+        log.debug("Found {} support tickets (total elements: {})",
+                result.getNumberOfElements(), result.getTotalElements());
+
+        return result;
+    }
+
+    @Override
+    public SupportTicketResponseDTO getTicketForAdmin(String ticketNumber) {
+        return toResponseDTO(findTicket(ticketNumber));
+    }
+
+    @Override
+    public List<SupportTicketMessageResponseDTO> getTicketMessages(String ticketNumber) {
+        String userId = currentUserId();
+
+        SupportTicketEntity ticket = findTicket(ticketNumber);
+        if (!ticket.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to view this ticket");
+        }
+        return messageRepository.findAllByTicketTicketNumberAndInternalNoteFalseOrderByCreatedAtAsc(ticketNumber)
+                .stream()
+                .map(this::toMessageResponse)
+                .toList();
+    }
+
+    @Override
+    public List<SupportTicketMessageResponseDTO> getTicketMessagesForAdmin(String ticketNumber) {
+        findTicket(ticketNumber);
+        return messageRepository.findAllByTicketTicketNumberOrderByCreatedAtAsc(ticketNumber)
+                .stream()
+                .map(this::toMessageResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public SupportTicketMessageResponseDTO addUserMessage(
+            String userEmail,
+            String ticketNumber,
+            String message
+    ) {
+        String userId = currentUserId();
+
+        SupportTicketEntity ticket = findTicket(ticketNumber);
+        if (!ticket.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to reply to this ticket");
+        }
+        if (ticket.getStatus() == TicketStatus.CLOSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A closed ticket cannot receive replies");
+        }
+        return toMessageResponse(messageRepository.save(
+                new SupportTicketMessageEntity(ticket, userEmail, message.trim(), false)
+        ));
+    }
+
+    @Override
+    @Transactional
+    public SupportTicketMessageResponseDTO addAdminMessage(
+            String actorEmail,
+            String ticketNumber,
+            String message,
+            boolean internalNote
+    ) {
+        SupportTicketEntity ticket = findTicket(ticketNumber);
+        SupportTicketMessageEntity saved = messageRepository.save(
+                new SupportTicketMessageEntity(ticket, actorEmail, message.trim(), internalNote)
+        );
+        audit.record(
+                internalNote ? "SUPPORT_INTERNAL_NOTE_ADDED" : "SUPPORT_PUBLIC_REPLY_ADDED",
+                "SUPPORT_TICKET",
+                ticketNumber,
+                internalNote ? "Internal support note added" : "Public support reply added"
+        );
+        return toMessageResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public SupportTicketResponseDTO updateTicketStatus(String ticketNumber, UpdateTicketStatusRequestDTO request) {
+        log.info("Updating ticket status for [{}] to [{}]", ticketNumber, request.getStatus());
+
+        SupportTicketEntity ticket = ticketRepository.findByTicketNumber(ticketNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Ticket not found: " + ticketNumber));
+
+        if (request.getStatus() != null && !isValidTransition(ticket.getStatus(), request.getStatus())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Ticket status cannot transition from " + ticket.getStatus() + " to " + request.getStatus()
+            );
+        }
+        TicketStatus previousStatus = ticket.getStatus();
+
+        if (request.getStatus() != null) {
+            ticket.setStatus(request.getStatus());
+        }
+        if (request.getPriority() != null) {
+            ticket.setPriority(request.getPriority());
+        }
+        if (request.getAssignedToEmail() != null) {
+            String assignee = request.getAssignedToEmail().trim().toLowerCase(java.util.Locale.ROOT);
+            if (!assignee.isBlank()) {
+                var account = portalAccounts.findByEmailIgnoreCase(assignee)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assignee is not an active portal account"));
+                if (!account.isEnabled() || (account.getRole() != UserRole.ADMIN && account.getRole() != UserRole.DEVELOPER)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assignee is not an active portal account");
+                }
+            }
+            ticket.setAssignedToEmail(assignee.isBlank() ? null : assignee);
+        }
+        if (request.getResolutionNotes() != null) {
+            ticket.setResolutionNotes(request.getResolutionNotes());
+        }
+
+        SupportTicketEntity updated = ticketRepository.save(ticket);
+        audit.record(
+                "SUPPORT_TICKET_UPDATED",
+                "SUPPORT_TICKET",
+                ticketNumber,
+                "Status changed from " + previousStatus + " to " + updated.getStatus()
+                        + "; assignedTo=" + updated.getAssignedToEmail()
+        );
+
+        // Notify the user if the ticket is marked RESOLVED
+        if (updated.getStatus() == TicketStatus.RESOLVED) {
+            emailService.sendTicketResolutionEmail(updated);
+            userNotificationService.createForUser(ticket.getUserId(), FcmNotificationRequest.builder().title("Good News 🎉").body("Your Ticket Number " + ticketNumber + " is solved.").build());
+        }
+
+        return toResponseDTO(updated);
+    }
+
+    private SupportTicketEntity findTicket(String ticketNumber) {
+        return ticketRepository.findByTicketNumber(ticketNumber)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
+    }
+
+    private boolean isValidTransition(TicketStatus current, TicketStatus next) {
+        if (current == next) {
+            return false;
+        }
+        return switch (current) {
+            case OPEN ->
+                    next == TicketStatus.IN_PROGRESS || next == TicketStatus.RESOLVED || next == TicketStatus.CLOSED;
+            case IN_PROGRESS -> next == TicketStatus.RESOLVED || next == TicketStatus.CLOSED;
+            case RESOLVED -> next == TicketStatus.IN_PROGRESS || next == TicketStatus.CLOSED;
+            case CLOSED -> false;
+        };
+    }
+
+    private SupportTicketMessageResponseDTO toMessageResponse(SupportTicketMessageEntity entity) {
+        return new SupportTicketMessageResponseDTO(
+                entity.getId(),
+                entity.getActorEmail(),
+                entity.getMessage(),
+                entity.isInternalNote(),
+                entity.getCreatedAt()
+        );
+    }
+
+
+    private String generateUniqueTicketNumber() {
+        String datePart = LocalDate.now()
+                .format(DateTimeFormatter.BASIC_ISO_DATE);
+
+        String uniquePart = UUID.randomUUID()
+                .toString()
+                .substring(0, 8)
+                .toUpperCase(Locale.ROOT);
+
+        return "TCK-" + datePart + "-" + uniquePart;
+    }
+
+
+    private String currentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
+            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+        return authentication.getName();
+    }
+
+    private SupportTicketResponseDTO toResponseDTO(SupportTicketEntity entity) {
+        return SupportTicketResponseDTO.builder()
+                .ticketNumber(entity.getTicketNumber())
+                .userId(entity.getUserId())
+                .userEmail(entity.getUserEmail())
+                .category(entity.getCategory())
+                .subject(entity.getSubject())
+                .description(entity.getDescription())
+                .status(entity.getStatus())
+                .priority(entity.getPriority())
+                .diagnosticInfo(entity.getDiagnosticInfo())
+                .attachmentUrls(entity.getAttachmentUrls())
+                .resolutionNotes(entity.getResolutionNotes())
+                .assignedToEmail(entity.getAssignedToEmail())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+}

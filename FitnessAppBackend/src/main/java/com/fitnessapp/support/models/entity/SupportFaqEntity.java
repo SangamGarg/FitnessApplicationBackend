@@ -24,7 +24,7 @@ public class SupportFaqEntity {
     private SupportFaqCategoryEntity category;
     @Column(nullable = false, length = 240)
     private String question;
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, length = 500, columnDefinition = "TEXT")
     private String answer;
     @Column(nullable = false)
     @Builder.Default

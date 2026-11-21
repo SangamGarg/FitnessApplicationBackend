@@ -1,240 +1,380 @@
 package com.fitnessapp.portal.portalEmailSend.service;
 
-import com.fitnessapp.portal.portalEmailSend.model.request.EmailToAllUsersRequestDto;
-import com.fitnessapp.portal.portalEmailSend.model.request.EmailToMoreThanOneUserRequestDto;
-import com.fitnessapp.portal.portalEmailSend.model.request.EmailToOneUserRequestDto;
-import com.fitnessapp.portal.portalEmailSend.model.response.EmailToAllUsersResponseDto;
-import com.fitnessapp.portal.portalEmailSend.model.response.EmailToMoreThanOneUserResponseDto;
-import com.fitnessapp.portal.portalEmailSend.model.response.EmailToOneUserResponseDto;
+import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
+import com.fitnessapp.appAuth.repo.UserRepo;
+import com.fitnessapp.portal.portalEmailSend.model.EmailRecipientType;
+import com.fitnessapp.portal.portalEmailSend.model.request.EmailRequestDto;
+import com.fitnessapp.portal.portalEmailSend.model.response.PortalEmailResponseDto;
 import com.fitnessapp.utils.appUtil.AppResponseStatus;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Year;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
-/**
- * Service implementation for handling outbound and contact-form email communications.
- */
 @Slf4j
 @Service
 public class PortalEmailServiceImpl implements PortalEmailService {
 
     private static final String DEFAULT_RECIPIENT_NAME = "Fitness Enthusiast";
+    private static final int MAX_BCC_RECIPIENTS = 50;
+    private static final int MAX_RECIPIENTS_PER_REQUEST = 5_000;
     private static final int CURRENT_YEAR = Year.now().getValue();
+
     private final JavaMailSender mailSender;
+    private final UserRepo userRepo;
+    private final String senderEmail;
 
-    public PortalEmailServiceImpl(JavaMailSender mailSender) {
+    public PortalEmailServiceImpl(
+            JavaMailSender mailSender,
+            UserRepo userRepo,
+            @Value("${spring.mail.username}") String senderEmail
+    ) {
         this.mailSender = mailSender;
+        this.userRepo = userRepo;
+        this.senderEmail = senderEmail;
     }
 
     @Override
-    public ResponseEntity<EmailToOneUserResponseDto> sendEmailToOneUser(EmailToOneUserRequestDto requestDto) {
-        log.info("Initiating single-user outbound email to: [{}] with subject: [{}]", requestDto.getEmail(), requestDto.getSubject());
+    public ResponseEntity<PortalEmailResponseDto> sendEmail(EmailRequestDto requestDto) {
 
-        try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
+        validateRequest(requestDto);
+        EmailRecipientType recipientType = requestDto.getRecipientType();
 
-            helper.setTo(requestDto.getEmail());
-            helper.setSubject(requestDto.getSubject());
-            helper.setText(buildEmailTemplate(requestDto.getName(), requestDto.getHtmlBody()), true);
+        if (recipientType == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "recipientType is required (SINGLE, SELECTED, or ALL)"
+            );
+        }
+        validateRecipientFields(requestDto, recipientType);
 
-            mailSender.send(mimeMessage);
-            log.info("Successfully sent email to single user: [{}]", requestDto.getEmail());
+        int recipientCount;
+        List<String> responseEmails = null;
+        String responseEmail = null;
+        String responseName = null;
 
-            return ResponseEntity.ok(EmailToOneUserResponseDto.builder()
-                    .status(AppResponseStatus.SUCCESS.name())
-                    .statusCode(200)
-                    .message("Email Sent Successfully")
-                    .email(requestDto.getEmail())
-                    .name(requestDto.getName())
-                    .subject(requestDto.getSubject())
-                    .body(requestDto.getBody())
-                    .build());
+        switch (recipientType) {
+            case SINGLE -> {
+                responseEmail = requestDto.getEmail().trim();
+                responseName = normalizeName(requestDto.getName());
+                dispatchBatch(
+                        List.of(responseEmail),
+                        requestDto.getSubject().trim(),
+                        responseName,
+                        requestDto.getBody(),
+                        requestDto.getHtmlBody(),
+                        true
+                );
+                recipientCount = 1;
+            }
+            case SELECTED -> {
+                responseEmails = normalizeRecipients(requestDto.getEmails());
+                dispatchInBatches(
+                        responseEmails,
+                        requestDto.getSubject().trim(),
+                        requestDto.getBody(),
+                        requestDto.getHtmlBody()
+                );
+                recipientCount = responseEmails.size();
+            }
+            case ALL -> recipientCount = dispatchToAllActiveUsers(requestDto);
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported recipient type");
+        }
 
-        } catch (MessagingException e) {
-            log.error("Failed to construct or deliver email to [{}]: {}", requestDto.getEmail(), e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
-        } catch (Exception e) {
-            log.error("Unexpected error occurred while dispatching email to [{}]: {}", requestDto.getEmail(), e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
+        log.info("Portal email send completed. recipientType={}, recipientCount={}",
+                recipientType, recipientCount);
+        return ResponseEntity.ok(PortalEmailResponseDto.builder()
+                .status(AppResponseStatus.SUCCESS.name())
+                .statusCode(HttpStatus.OK.value())
+                .message("Email sent successfully to " + recipientCount + " recipient(s)")
+                .recipientType(recipientType)
+                .recipientCount(recipientCount)
+                .name(responseName)
+                .email(responseEmail)
+                .emails(responseEmails)
+                .subject(requestDto.getSubject().trim())
+                .body(requestDto.getBody())
+                .build());
+    }
+
+
+    private void validateRecipientFields(EmailRequestDto requestDto, EmailRecipientType type) {
+        boolean hasEmail = StringUtils.hasText(requestDto.getEmail());
+        boolean hasEmails = requestDto.getEmails() != null && !requestDto.getEmails().isEmpty();
+        switch (type) {
+            case SINGLE -> {
+                if (!hasEmail) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "email is required for SINGLE recipient type");
+                }
+                if (hasEmails) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "emails must not be provided for SINGLE recipient type");
+                }
+                if (requestDto.getEmail().length() > 320) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "email must be 320 characters or fewer");
+                }
+            }
+            case SELECTED -> {
+                if (hasEmail) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Use emails, not email, for SELECTED recipient type");
+                }
+                if (!hasEmails) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "emails are required for SELECTED recipient type");
+                }
+                if (requestDto.getEmails().size() > MAX_RECIPIENTS_PER_REQUEST) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "No more than " + MAX_RECIPIENTS_PER_REQUEST + " recipients can be included"
+                    );
+                }
+            }
+            case ALL -> {
+                if (hasEmail || hasEmails) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Do not provide email or emails for ALL recipient type; recipients are loaded from active app users"
+                    );
+                }
+            }
         }
     }
 
-    /**
-     * Broadcasts an announcement or alert to all registered user email addresses.
-     * Uses BCC recipients to preserve user privacy.
-     */
-    @Override
-    public ResponseEntity<EmailToAllUsersResponseDto> sendEmailToAllUsers(EmailToAllUsersRequestDto requestDto) {
-        List<String> emails = requestDto.getEmails();
-        int recipientCount = emails != null ? emails.size() : 0;
-        log.info("Initiating broadcast email to all users. Total recipients: {}, subject: [{}]", recipientCount, requestDto.getSubject());
+    private int dispatchToAllActiveUsers(EmailRequestDto requestDto) {
+        int pageNumber = 0;
+        int batchNumber = 0;
+        int recipientCount = 0;
+        Set<String> seenAddresses = new HashSet<>();
+
+        while (true) {
+            List<String> addresses = userRepo.findEmailsByAccountStatus(
+                    MobileAccountStatus.ACTIVE,
+                    PageRequest.of(pageNumber++, MAX_BCC_RECIPIENTS)
+            );
+            if (addresses.isEmpty()) {
+                break;
+            }
+
+            List<String> batch = uniqueStoredAddresses(addresses, seenAddresses);
+            if (!batch.isEmpty()) {
+                batchNumber++;
+                try {
+                    dispatchBatch(
+                            batch,
+                            requestDto.getSubject().trim(),
+                            DEFAULT_RECIPIENT_NAME,
+                            requestDto.getBody(),
+                            requestDto.getHtmlBody(),
+                            false
+                    );
+                } catch (ResponseStatusException exception) {
+                    String message = batchNumber == 1
+                            ? "Email delivery failed in batch 1"
+                            : "Email delivery failed in batch " + batchNumber
+                            + "; earlier batches may already have been delivered";
+                    throw new ResponseStatusException(exception.getStatusCode(), message);
+                }
+                recipientCount = Math.addExact(recipientCount, batch.size());
+            }
+
+            if (addresses.size() < MAX_BCC_RECIPIENTS) {
+                break;
+            }
+        }
 
         if (recipientCount == 0) {
-            log.warn("Broadcast aborted: Recipient email list is null or empty");
-            return ResponseEntity.badRequest().body(EmailToAllUsersResponseDto.builder()
-                    .status(AppResponseStatus.FAILED.name())
-                    .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .message("Recipient email list cannot be empty")
-                    .emails(requestDto.getEmails())
-                    .subject(requestDto.getSubject())
-                    .body(requestDto.getBody())
-                    .build());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No active users with email addresses were found");
         }
+        return recipientCount;
+    }
 
-        try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
+    private List<String> uniqueStoredAddresses(List<String> addresses, Set<String> seenAddresses) {
+        List<String> unique = new ArrayList<>(addresses.size());
+        for (String address : addresses) {
+            if (!StringUtils.hasText(address)) {
+                continue;
+            }
+            String trimmed = address.trim();
+            String normalized = trimmed.toLowerCase(Locale.ROOT);
+            if (seenAddresses.add(normalized)) {
+                try {
+                    new InternetAddress(trimmed, true).validate();
+                } catch (jakarta.mail.internet.AddressException exception) {
+                    log.error("An active account contains an invalid email address; refusing ALL-user send");
+                    throw new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            "An active user has an invalid email address"
+                    );
+                }
+                unique.add(trimmed);
+            }
+        }
+        return unique;
+    }
 
-            // Use setBcc to prevent exposing all customer emails in public headers
-            helper.setBcc(emails.toArray(new String[0]));
-            helper.setSubject(requestDto.getSubject());
-            helper.setText(buildEmailTemplate(DEFAULT_RECIPIENT_NAME, requestDto.getHtmlBody()), true);
+    private List<String> normalizeRecipients(List<String> emails) {
+        Map<String, String> uniqueEmails = new LinkedHashMap<>();
+        for (String email : emails) {
+            if (!StringUtils.hasText(email)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipient emails cannot be blank");
+            }
+            String trimmed = email.trim();
+            if (trimmed.length() > 320) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipient emails must be 320 characters or fewer");
+            }
+            String normalized = trimmed.toLowerCase(Locale.ROOT);
+            uniqueEmails.putIfAbsent(normalized, trimmed);
+        }
+        if (uniqueEmails.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one recipient email is required");
+        }
+        return new ArrayList<>(uniqueEmails.values());
+    }
 
-            mailSender.send(mimeMessage);
-            log.info("Successfully dispatched broadcast email to {} recipients", recipientCount);
-
-            return ResponseEntity.ok(EmailToAllUsersResponseDto.builder()
-                    .status(AppResponseStatus.SUCCESS.name())
-                    .statusCode(200)
-                    .message("Email Sent Successfully")
-                    .emails(requestDto.getEmails())
-                    .subject(requestDto.getSubject())
-                    .body(requestDto.getBody())
-                    .build());
-
-        } catch (MessagingException e) {
-            log.error("Failed to construct or deliver broadcast email to {} recipients: {}", recipientCount, e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
-        } catch (Exception e) {
-            log.error("Unexpected error occurred during mass email broadcast: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
+    private void dispatchInBatches(
+            List<String> recipients,
+            String subject,
+            String plainText,
+            String htmlBody
+    ) {
+        int batchCount = (recipients.size() + MAX_BCC_RECIPIENTS - 1) / MAX_BCC_RECIPIENTS;
+        for (int batchIndex = 0; batchIndex < batchCount; batchIndex++) {
+            int fromIndex = batchIndex * MAX_BCC_RECIPIENTS;
+            int toIndex = Math.min(fromIndex + MAX_BCC_RECIPIENTS, recipients.size());
+            try {
+                dispatchBatch(
+                        recipients.subList(fromIndex, toIndex),
+                        subject,
+                        DEFAULT_RECIPIENT_NAME,
+                        plainText,
+                        htmlBody,
+                        false
+                );
+            } catch (ResponseStatusException exception) {
+                String message = batchIndex == 0
+                        ? "Email delivery failed in batch 1 of " + batchCount
+                        : "Email delivery failed in batch " + (batchIndex + 1) + " of " + batchCount
+                        + "; earlier batches may already have been delivered";
+                throw new ResponseStatusException(exception.getStatusCode(), message);
+            }
         }
     }
 
-    /**
-     * Sends an email to a targeted subset of multiple users.
-     * Uses BCC recipients to safeguard recipient privacy.
-     */
-    @Override
-    public ResponseEntity<EmailToMoreThanOneUserResponseDto> sendEmailToMoreThanOneUser(EmailToMoreThanOneUserRequestDto requestDto) {
-        List<String> emails = requestDto.getEmails();
-        int recipientCount = emails != null ? emails.size() : 0;
-        log.info("Initiating multi-user email to {} recipients with subject: [{}]", recipientCount, requestDto.getSubject());
-
-        if (recipientCount == 0) {
-            log.warn("Multi-user email dispatch aborted: Recipient list is empty");
-            return ResponseEntity.badRequest().body(EmailToMoreThanOneUserResponseDto.builder()
-                    .status(AppResponseStatus.FAILED.name())
-                    .statusCode(HttpStatus.BAD_REQUEST.value())
-                    .message("Recipient email list cannot be empty")
-                    .emails(requestDto.getEmails())
-                    .subject(requestDto.getSubject())
-                    .body(requestDto.getBody())
-                    .build());
-        }
-
+    private void dispatchBatch(
+            List<String> recipients,
+            String subject,
+            String recipientName,
+            String plainText,
+            String htmlBody,
+            boolean directRecipient
+    ) {
         try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
-
-            helper.setBcc(emails.toArray(new String[0]));
-            helper.setSubject(requestDto.getSubject());
-            helper.setText(buildEmailTemplate(DEFAULT_RECIPIENT_NAME, requestDto.getHtmlBody()), true);
-
-            mailSender.send(mimeMessage);
-            log.info("Successfully delivered targeted email to {} users", recipientCount);
-
-            return ResponseEntity.ok(EmailToMoreThanOneUserResponseDto.builder()
-                    .status(AppResponseStatus.SUCCESS.name())
-                    .statusCode(200)
-                    .message("Email Sent Successfully")
-                    .emails(requestDto.getEmails())
-                    .subject(requestDto.getSubject())
-                    .body(requestDto.getBody())
-                    .build());
-
-        } catch (MessagingException e) {
-            log.error("Failed to construct or deliver multi-user email to {} recipients: {}", recipientCount, e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
-        } catch (Exception e) {
-            log.error("Unexpected error during multi-user email dispatch: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message,
+                    true,
+                    StandardCharsets.UTF_8.name()
+            );
+            helper.setFrom(senderEmail);
+            helper.setSubject(subject);
+            helper.setText(buildPlainTextBody(plainText), buildHtmlTemplate(recipientName, htmlBody));
+            if (directRecipient) {
+                helper.setTo(recipients.getFirst());
+            } else {
+                helper.setBcc(recipients.toArray(String[]::new));
+            }
+            mailSender.send(message);
+        } catch (MessagingException | MailException exception) {
+            log.error("Failed to send portal email batch for {} recipients", recipients.size(), exception);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Email provider rejected or failed to deliver the message"
+            );
         }
     }
 
+    private void validateRequest(EmailRequestDto requestDto) {
+        if (requestDto == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email request is required");
+        }
+        String subject = requestDto.getSubject();
+        String body = requestDto.getBody();
+        String htmlBody = requestDto.getHtmlBody();
 
-    private String buildEmailTemplate(String recipientName, String htmlBody) {
-        String safeName = (recipientName != null && !recipientName.isBlank()) ? recipientName : DEFAULT_RECIPIENT_NAME;
-        String safeContent = (htmlBody != null) ? htmlBody : "";
+        if (!StringUtils.hasText(subject) || subject.length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Subject is required and must be 100 characters or fewer");
+        }
+        if (subject.indexOf('\r') >= 0 || subject.indexOf('\n') >= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Subject cannot contain line breaks");
+        }
+        if (!StringUtils.hasText(body) || body.length() > 1000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Body is required and must be 1000 characters or fewer");
+        }
+        if (!StringUtils.hasText(htmlBody) || htmlBody.length() > 50_000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "HTML body is required and must be 50000 characters or fewer");
+        }
+        if (requestDto.getName() != null && requestDto.getName().length() > 50) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name must be 50 characters or fewer");
+        }
+    }
+
+    private String normalizeName(String name) {
+        return StringUtils.hasText(name) ? name.trim() : DEFAULT_RECIPIENT_NAME;
+    }
+
+    private String buildPlainTextBody(String body) {
+        return body + "\n\nRegards,\nFitness App Team\n\nCopyright (c) "
+                + CURRENT_YEAR + " Fitness App. All rights reserved.";
+    }
+
+    private String buildHtmlTemplate(String recipientName, String htmlBody) {
+        String safeName = escapeHtml(StringUtils.hasText(recipientName)
+                ? recipientName.trim()
+                : DEFAULT_RECIPIENT_NAME);
 
         return """
                 <!DOCTYPE html>
                 <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        body {
-                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                            background-color: #f8fafc;
-                            padding: 24px;
-                            color: #1e293b;
-                            line-height: 1.6;
-                        }
-                        .email-container {
-                            background-color: #ffffff;
-                            padding: 32px;
-                            border-radius: 8px;
-                            border: 1px solid #e2e8f0;
-                            max-width: 600px;
-                            margin: 0 auto;
-                        }
-                        h2 {
-                            color: #0f172a;
-                            margin-top: 0;
-                            font-size: 20px;
-                        }
-                        .content {
-                            margin-top: 16px;
-                            font-size: 15px;
-                        }
-                        .sign-off {
-                            margin-top: 36px;
-                            border-top: 1px solid #f1f5f9;
-                            padding-top: 18px;
-                        }
-                        .footer {
-                            margin-top: 24px;
-                            font-size: 12px;
-                            color: #94a3b8;
-                            text-align: center;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="email-container">
-                        <h2>Hello %s,</h2>
-                        <div class="content">
-                            %s
-                        </div>
-                        <div class="sign-off">
-                            <p>Regards,<br/><strong>Fitness App Team</strong></p>
-                        </div>
+                <head><meta charset="UTF-8"></head>
+                <body style="margin:0;padding:24px;background-color:#f8fafc;color:#1e293b;font-family:Arial,Helvetica,sans-serif;line-height:1.6">
+                  <div style="max-width:600px;margin:0 auto;padding:32px;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px">
+                    <h2 style="margin-top:0;color:#0f172a">Hello %s,</h2>
+                    <div style="margin-top:16px;font-size:15px">%s</div>
+                    <div style="margin-top:36px;padding-top:18px;border-top:1px solid #f1f5f9">
+                      Regards,<br><strong>Fitness App Team</strong>
                     </div>
-                    <div class="footer">
-                        &copy; %d Fitness App. All rights reserved.
-                    </div>
+                  </div>
+                  <div style="max-width:600px;margin:24px auto 0;color:#64748b;font-size:12px;text-align:center">
+                    &copy; %d Fitness App. All rights reserved.
+                  </div>
                 </body>
                 </html>
-                """.formatted(safeName, safeContent, CURRENT_YEAR);
+                """.formatted(safeName, htmlBody, CURRENT_YEAR);
+    }
+
+    private String escapeHtml(String value) {
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 }

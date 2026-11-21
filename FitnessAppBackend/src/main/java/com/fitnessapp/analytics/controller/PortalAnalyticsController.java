@@ -12,12 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_CALCULATOR_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_CALCULATOR_ENDPOINT;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(PORTAL_CALCULATOR_ENDPOINT)
+@RequestMapping(PORTAL_DEV_CALCULATOR_ENDPOINT)
 public class PortalAnalyticsController {
     private final CalculatorCatalogRepository catalogRepository;
 

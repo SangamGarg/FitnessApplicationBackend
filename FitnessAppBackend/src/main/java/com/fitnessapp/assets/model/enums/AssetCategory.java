@@ -14,6 +14,7 @@ public enum AssetCategory {
     FITNESS_CALCULATORS,   // BMI, BMR, Body Fat, TDEE calculator header graphics
     DIET_AND_RECIPES,      // Meal plan headers, veg/non-veg badges, cuisine cards
     CHALLENGES_AND_REWARDS,// Walk challenge banners, trophy badges, streak milestones
+
     PROGRESS_REPORTS,      // Weekly/monthly progress summary badges, weight scale visuals
 
     // Communication & User Engagement

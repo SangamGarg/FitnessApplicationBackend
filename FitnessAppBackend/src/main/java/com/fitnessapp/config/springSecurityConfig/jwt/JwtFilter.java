@@ -1,6 +1,7 @@
 
 package com.fitnessapp.config.springSecurityConfig.jwt;
 
+import com.fitnessapp.config.exceptionConfig.ApiErrorResponseDto;
 import com.fitnessapp.config.springSecurityConfig.jwt.jwtService.JwtTokenService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -20,6 +21,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.http.MediaType;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
@@ -34,6 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtTokenService jwtTokenService;
     private final UserDetailsService userDetailsService;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -59,15 +63,13 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        //TODO HAVE TO REMOVE
-        System.out.println(authHeader);
         String token = authHeader.substring(7).trim();
 
         try {
             String id = jwtTokenService.extractId(token);
 
             if (id == null || id.isBlank()) {
-                sendUnauthorized(response, "Invalid JWT");
+                sendUnauthorized(request, response, "Invalid JWT");
                 return;
             }
 
@@ -77,7 +79,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         userDetailsService.loadUserByUsername(id);
 
                 if (!jwtTokenService.validToken(token, userDetails)) {
-                    sendUnauthorized(response, "Invalid JWT");
+                    sendUnauthorized(request, response, "Invalid JWT");
                     return;
                 }
 
@@ -101,22 +103,22 @@ public class JwtFilter extends OncePerRequestFilter {
 
         } catch (ExpiredJwtException ex) {
             log.debug("JWT expired: {}", ex.getMessage());
-            sendUnauthorized(response, "Token expired");
+            sendUnauthorized(request, response, "Token expired");
             return;
 
         } catch (JwtException ex) {
             log.debug("Invalid JWT: {}", ex.getMessage());
-            sendUnauthorized(response, "Invalid JWT");
+            sendUnauthorized(request, response, "Invalid JWT");
             return;
 
         } catch (UsernameNotFoundException ex) {
             SecurityContextHolder.clearContext();
-            sendUnauthorized(response, "User not found");
+            sendUnauthorized(request, response, "User not found");
             return;
 
         } catch (AuthenticationException ex) {
             SecurityContextHolder.clearContext();
-            sendUnauthorized(response, "Authentication failed");
+            sendUnauthorized(request, response, "Authentication failed");
             return;
         }
 
@@ -126,14 +128,20 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private void sendUnauthorized(
+            HttpServletRequest request,
             HttpServletResponse response,
             String message
     ) throws IOException {
 
         SecurityContextHolder.clearContext();
-        response.sendError(
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getOutputStream(), ApiErrorResponseDto.of(
                 HttpServletResponse.SC_UNAUTHORIZED,
-                message
-        );
+                "Unauthorized",
+                message,
+                request.getRequestURI()
+        ));
     }
 }

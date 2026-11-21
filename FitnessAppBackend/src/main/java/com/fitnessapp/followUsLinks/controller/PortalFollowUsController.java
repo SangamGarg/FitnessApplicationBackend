@@ -2,6 +2,8 @@ package com.fitnessapp.followUsLinks.controller;
 
 import com.fitnessapp.followUsLinks.model.FollowUsLinksPatchRequestDto;
 import com.fitnessapp.followUsLinks.model.FollowUsLinksRequestDto;
+import com.fitnessapp.followUsLinks.model.FollowUsLinksResponseDto;
+import com.fitnessapp.followUsLinks.model.PortalFollowUsLinksResponseDto;
 import com.fitnessapp.followUsLinks.service.FollowUsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -16,16 +18,22 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_FOLLOW_US_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_FOLLOW_US_ENDPOINT;
 
 @Slf4j
 @RestController
 @Validated
-@RequestMapping(PORTAL_FOLLOW_US_ENDPOINT)
+@RequestMapping(PORTAL_DEV_FOLLOW_US_ENDPOINT)
 @RequiredArgsConstructor
 public class PortalFollowUsController {
 
     private final FollowUsService followUsService;
+
+    @GetMapping("/get-links")
+    public ResponseEntity<List<PortalFollowUsLinksResponseDto>> getAppLinksForPortal() {
+        log.debug("REST request to fetch App Links For Portal");
+        return ResponseEntity.ok(followUsService.getAppLinksForPortal());
+    }
 
     @PostMapping("/upload/links")
     public ResponseEntity<Map<String, String>> uploadAppLinksUrl(

@@ -10,10 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_GAMIFICATION_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_GAMIFICATION_ENDPOINT;
 
 @RestController
-@RequestMapping(PORTAL_GAMIFICATION_ENDPOINT)
+@RequestMapping(PORTAL_DEV_GAMIFICATION_ENDPOINT)
 @RequiredArgsConstructor
 public class PortalGamificationController {
     private final GamificationService service;

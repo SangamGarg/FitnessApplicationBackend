@@ -3,7 +3,7 @@ package com.fitnessapp.support.controller;
 import com.fitnessapp.support.models.dtos.*;
 import com.fitnessapp.support.models.dtos.response.SupportHomeResponseDto;
 import com.fitnessapp.support.models.dtos.response.AppInfoContentResponseDto;
-import com.fitnessapp.support.service.SupportHelpService;
+import com.fitnessapp.support.service.supportHelp.SupportHelpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

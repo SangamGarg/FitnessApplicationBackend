@@ -1,6 +1,5 @@
 package com.fitnessapp.portal.portalAuth.controller;
 
-import com.fitnessapp.utils.portalUtil.PortalUtil;
 import com.fitnessapp.portal.portalAuth.model.dto.request.LoginRequestDto;
 import com.fitnessapp.portal.portalAuth.model.dto.request.SetupRequestDto;
 import com.fitnessapp.portal.portalAuth.service.PortalAuthService;
@@ -18,20 +17,18 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_AUTH_ENDPOINT;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(PortalUtil.PORTAL_AUTH_ENDPOINT)
+@RequestMapping(PORTAL_AUTH_ENDPOINT)
 @Tag(name = "Portal Authentication", description = "Admin and developer portal login, onboarding and session refresh")
 public class PortalAuthController {
 

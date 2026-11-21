@@ -11,13 +11,27 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UserRepo extends JpaRepository<UserEntity, String> {
 
     boolean existsByEmailIgnoreCase(String email);
+
+    @Query("""
+            select u.email
+            from UserEntity u
+            where u.accountStatus = :status
+              and u.email is not null
+            order by u.id asc
+            """)
+    List<String> findEmailsByAccountStatus(
+            @Param("status") MobileAccountStatus status,
+            Pageable pageable
+    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from UserEntity u where u.id = :id")

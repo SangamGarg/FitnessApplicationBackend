@@ -15,10 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_CHALLENGE_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_CHALLENGE_ENDPOINT;
 
 @RestController
-@RequestMapping(PORTAL_CHALLENGE_ENDPOINT)
+@RequestMapping(PORTAL_DEV_CHALLENGE_ENDPOINT)
 @RequiredArgsConstructor
 public class PortalChallengeController {
     private final ChallengeRepository repository;

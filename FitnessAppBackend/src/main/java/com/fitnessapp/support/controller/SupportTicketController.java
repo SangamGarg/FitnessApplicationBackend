@@ -5,7 +5,7 @@ import com.fitnessapp.support.models.dtos.request.SupportTicketMessageRequestDTO
 import com.fitnessapp.support.models.dtos.response.SupportTicketHomeResponseDto;
 import com.fitnessapp.support.models.dtos.response.SupportTicketMessageResponseDTO;
 import com.fitnessapp.support.models.dtos.response.SupportTicketResponseDTO;
-import com.fitnessapp.support.service.SupportTicketService;
+import com.fitnessapp.support.service.supportTicket.SupportTicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,14 +21,14 @@ import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_SUPPORT_ENDPOINT;
 
 @Slf4j
 @RestController
-@RequestMapping(APP_SUPPORT_ENDPOINT)
+@RequestMapping(APP_SUPPORT_ENDPOINT + "/tickets")
 @RequiredArgsConstructor
 public class SupportTicketController {
 
     private final SupportTicketService supportTicketService;
 
 
-    @GetMapping("/tickets/home")
+    @GetMapping("/home")
     public ResponseEntity<SupportTicketHomeResponseDto> getTicketsHome(
     ) {
         log.info("REST request to fetch ticket home");
@@ -36,7 +36,7 @@ public class SupportTicketController {
     }
 
 
-    @PostMapping(value = "/tickets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SupportTicketResponseDTO> createTicket(
             @Valid @RequestPart("ticket") CreateSupportTicketRequestDTO request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
@@ -47,27 +47,27 @@ public class SupportTicketController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/tickets")
+    @GetMapping()
     public ResponseEntity<List<SupportTicketResponseDTO>> getUserTickets(
     ) {
         log.info("REST request to fetch ticket history for user");
         return ResponseEntity.ok(supportTicketService.getUserTickets());
     }
 
-    @GetMapping("/tickets/{ticketNumber}")
+    @GetMapping("/{ticketNumber}")
     public ResponseEntity<SupportTicketResponseDTO> getTicketDetails(
             @PathVariable String ticketNumber) {
         log.info("REST request for ticket [{}] by user", ticketNumber);
         return ResponseEntity.ok(supportTicketService.getTicketByNumber(ticketNumber));
     }
 
-    @GetMapping("/tickets/{ticketNumber}/messages")
+    @GetMapping("/{ticketNumber}/messages")
     public ResponseEntity<List<SupportTicketMessageResponseDTO>> getTicketMessages(
             @PathVariable String ticketNumber) {
         return ResponseEntity.ok(supportTicketService.getTicketMessages(ticketNumber));
     }
 
-    @PostMapping("/tickets/{ticketNumber}/messages")
+    @PostMapping("/{ticketNumber}/messages")
     public ResponseEntity<SupportTicketMessageResponseDTO> addTicketMessage(
             @RequestAttribute("userEmail") String userEmail,
             @PathVariable String ticketNumber,

@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_NUTRITION_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_NUTRITION_ENDPOINT;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(PORTAL_NUTRITION_ENDPOINT)
+@RequestMapping(PORTAL_DEV_NUTRITION_ENDPOINT)
 @Slf4j
 public class PortalNutritionController {
 

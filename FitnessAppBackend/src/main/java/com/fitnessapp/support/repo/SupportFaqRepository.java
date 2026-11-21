@@ -11,6 +11,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SupportFaqRepository extends JpaRepository<SupportFaqEntity, Long> {
+    @Query("""
+            select faq
+            from SupportFaqEntity faq
+            join fetch faq.category category
+            order by category.sortOrder asc, category.name asc, faq.sortOrder asc, faq.id asc
+            """)
+    List<SupportFaqEntity> findAllWithCategoryForPortal();
+
     List<SupportFaqEntity> findByActiveTrueAndPopularTrueOrderBySortOrderAscUpdatedAtDesc(Pageable pageable);
 
     Page<SupportFaqEntity> findByActiveTrue(Pageable pageable);

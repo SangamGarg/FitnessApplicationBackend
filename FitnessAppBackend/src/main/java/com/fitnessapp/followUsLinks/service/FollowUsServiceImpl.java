@@ -2,10 +2,7 @@ package com.fitnessapp.followUsLinks.service;
 
 
 import com.fitnessapp.followUsLinks.FollowUsUrlUtils;
-import com.fitnessapp.followUsLinks.model.FollowUsLinksEntity;
-import com.fitnessapp.followUsLinks.model.FollowUsLinksPatchRequestDto;
-import com.fitnessapp.followUsLinks.model.FollowUsLinksRequestDto;
-import com.fitnessapp.followUsLinks.model.FollowUsLinksResponseDto;
+import com.fitnessapp.followUsLinks.model.*;
 import com.fitnessapp.followUsLinks.repo.FollowUsRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +25,17 @@ public class FollowUsServiceImpl implements FollowUsService {
     private static final int MAX_LINKS_PER_REQUEST = 50;
 
     private final FollowUsRepo followUsRepo;
+
+
+    @Override
+    public List<PortalFollowUsLinksResponseDto> getAppLinksForPortal() {
+        log.debug("Fetching Follow Us links for portal");
+        return followUsRepo.findAllByOrderByIdAsc()
+                .stream()
+                .map(PortalFollowUsLinksResponseDto::from)
+                .toList();
+    }
+
 
     @Override
     public List<FollowUsLinksResponseDto> getAppLinks() {
@@ -156,7 +164,6 @@ public class FollowUsServiceImpl implements FollowUsService {
         if (dto.getTitle() != null) {
 
             String title = validateTitle(dto.getTitle());
-            String subTitle = validateSubTitle(dto.getSubtitle());
             String titleKey = FollowUsUrlUtils.normalizeTitle(title);
 
             if (!titleKey.equals(entity.getTitleKey())
@@ -169,8 +176,13 @@ public class FollowUsServiceImpl implements FollowUsService {
             }
 
             entity.setTitle(title);
-            entity.setSubTitle(subTitle);
             entity.setTitleKey(titleKey);
+            updated = true;
+        }
+
+        if (dto.getSubtitle() != null) {
+            String subTitle = validateSubTitle(dto.getSubtitle());
+            entity.setSubTitle(subTitle);
             updated = true;
         }
 

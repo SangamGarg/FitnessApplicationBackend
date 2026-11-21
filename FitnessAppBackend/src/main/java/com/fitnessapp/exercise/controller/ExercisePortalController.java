@@ -20,10 +20,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_EXERCISE_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_EXERCISE_ENDPOINT;
 
 @RestController
-@RequestMapping(PORTAL_EXERCISE_ENDPOINT)
+@RequestMapping(PORTAL_DEV_EXERCISE_ENDPOINT)
 @RequiredArgsConstructor
 @Tag(name = "Developer - Exercise Catalog", description = "Draft, edit, publish, and search structured exercise content")
 public class ExercisePortalController {
