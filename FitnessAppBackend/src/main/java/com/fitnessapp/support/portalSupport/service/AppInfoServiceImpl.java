@@ -5,6 +5,7 @@ import com.fitnessapp.support.models.dtos.SupportFaqCategoryDto;
 import com.fitnessapp.support.models.entity.SupportFaqCategoryEntity;
 import com.fitnessapp.support.models.entity.SupportFaqEntity;
 import com.fitnessapp.support.portalSupport.models.dto.request.*;
+import com.fitnessapp.support.portalSupport.models.dto.response.PortalAppInfoResponseDto;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoAboutUs;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoPrivacyPolicy;
 import com.fitnessapp.support.portalSupport.models.entity.AppInfoTermsAndCondition;
@@ -40,6 +41,12 @@ public class AppInfoServiceImpl implements AppInfoService {
     private final AppInfoTermsAndConditionRepository termsAndConditionRepository;
     private final SupportFaqCategoryRepository supportFaqCategoryRepository;
     private final SupportFaqRepository supportFaqRepository;
+
+
+    @Override
+    public PortalAppInfoResponseDto getInfoForPortal() {
+        return null;
+    }
 
     // ---------------------------------------------------------
     // ABOUT US
@@ -190,6 +197,7 @@ public class AppInfoServiceImpl implements AppInfoService {
                 .sortOrder(savedEntity.getSortOrder())
                 .build();
     }
+
 
     @Override
     @Transactional

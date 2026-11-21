@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface BadgeRepository extends JpaRepository<BadgeEntity, Long> {
     List<BadgeEntity> findByActiveTrueOrderByIdAsc();
     Optional<BadgeEntity> findByIdAndActiveTrue(Long id);
+    boolean existsByNameIgnoreCase(String name);
 }

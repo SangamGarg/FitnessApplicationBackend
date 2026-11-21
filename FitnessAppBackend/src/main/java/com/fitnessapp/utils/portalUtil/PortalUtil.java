@@ -11,10 +11,15 @@ public final class PortalUtil {
     }
 
     public static final String PORTAL_BASE_ENDPOINT = "/api/v1/portal";
-    public static final String PORTAL_ADMIN_BASE_ENDPOINT = PORTAL_BASE_ENDPOINT + "/admin";
-    public static final String PORTAL_DEV_BASE_ENDPOINT = PORTAL_BASE_ENDPOINT + "/dev";
-    /*********************************************************/
     public static final String PORTAL_AUTH_ENDPOINT = PORTAL_BASE_ENDPOINT + "/auth";
+
+    /*********************************************************/
+    public static final String PORTAL_ADMIN_BASE_ENDPOINT = PORTAL_BASE_ENDPOINT + "/admin";
+    public static final String PORTAL_ADMIN_DEV_ENDPOINT = PORTAL_ADMIN_BASE_ENDPOINT + "/developers";
+    public static final String PORTAL_ADMIN_WALLET_ENDPOINT = PORTAL_ADMIN_BASE_ENDPOINT + "/wallets";
+
+    /*********************************************************/
+    public static final String PORTAL_DEV_BASE_ENDPOINT = PORTAL_BASE_ENDPOINT + "/dev";
     public static final String PORTAL_SUPPORT_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/support";
     public static final String PORTAL_FEEDBACK_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/feedback";
     public static final String PORTAL_FOLLOW_US_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/follow-us";
@@ -25,8 +30,7 @@ public final class PortalUtil {
     public static final String PORTAL_NUTRITION_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/nutrition";
     public static final String PORTAL_CHALLENGE_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/challenge";
     public static final String PORTAL_GAMIFICATION_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/gamification";
-    public static final String PORTAL_ADMIN_DEV_ENDPOINT = PORTAL_ADMIN_BASE_ENDPOINT + "/developers";
-    public static final String PORTAL_ADMIN_WALLET_ENDPOINT = PORTAL_ADMIN_BASE_ENDPOINT + "/wallets";
+    public static final String PORTAL_APP_PROFILE_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/app-profile";
 
 
     public static final String BEARER_PREFIX = "Bearer ";

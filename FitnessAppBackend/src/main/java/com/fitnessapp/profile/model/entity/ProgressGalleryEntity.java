@@ -10,9 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.Instant;
 
 @Entity
-@Table(name = "app_profile_user_progress_gallery", indexes = {
-        @Index(name = "idx_profile_gallery_user_uploaded", columnList = "user_id,uploaded_at")
-})
+@Table(name = "app_profile_user_progress_gallery")
 @Getter
 @Setter
 @NoArgsConstructor

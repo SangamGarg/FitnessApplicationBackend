@@ -1,7 +1,9 @@
 package com.fitnessapp.support.portalSupport.service;
 
 import com.fitnessapp.support.models.dtos.SupportFaqCategoryDto;
+import com.fitnessapp.support.models.dtos.response.AppInfoContentResponseDto;
 import com.fitnessapp.support.portalSupport.models.dto.request.*;
+import com.fitnessapp.support.portalSupport.models.dto.response.PortalAppInfoResponseDto;
 
 import java.util.List;
 import java.util.Map;
@@ -27,4 +29,6 @@ public interface AppInfoService {
     SupportFaqCategoryDto createCategory(
             SupportFaqCategoryRequestDto requestDto
     );
+
+    PortalAppInfoResponseDto getInfoForPortal();
 }

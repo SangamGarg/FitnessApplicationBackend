@@ -1,15 +1,21 @@
 package com.fitnessapp.profile.service;
 
+import com.fitnessapp.profile.model.dto.request.BadgeAddRequestDto;
+import com.fitnessapp.profile.model.dto.response.BadgeAddResponseDto;
 import com.fitnessapp.profile.model.dto.response.BadgeResponseDto;
 import com.fitnessapp.profile.model.dto.response.ProfileHomeResponseDto;
 import com.fitnessapp.profile.model.dto.response.ProgressGalleryResponseDto;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface ProfileService {
+
     ProfileHomeResponseDto getProfileHome();
 
     List<BadgeResponseDto> getAllBadges();
@@ -29,4 +35,6 @@ public interface ProfileService {
     ProgressGalleryResponseDto getProgressImage(Long imageId);
 
     void deleteProgressImage(Long imageId);
+
+    BadgeAddResponseDto addBadges(BadgeAddRequestDto request);
 }

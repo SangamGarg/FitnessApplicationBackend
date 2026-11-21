@@ -9,6 +9,8 @@ import com.fitnessapp.gamify.gamification.model.entity.UserStreakEntity;
 import com.fitnessapp.gamify.gamification.model.entity.UserXpAccountEntity;
 import com.fitnessapp.gamify.gamification.repository.UserStreakRepository;
 import com.fitnessapp.gamify.gamification.repository.UserXpAccountRepository;
+import com.fitnessapp.profile.model.dto.request.BadgeAddRequestDto;
+import com.fitnessapp.profile.model.dto.response.BadgeAddResponseDto;
 import com.fitnessapp.profile.model.dto.response.BadgeResponseDto;
 import com.fitnessapp.profile.model.dto.response.ProfileHomeResponseDto;
 import com.fitnessapp.profile.model.dto.response.ProgressGalleryResponseDto;
@@ -34,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.*;
 
@@ -219,17 +222,23 @@ public class ProfileServiceImpl implements ProfileService {
         return BadgeResponseDto.from(badge, ownership.getUnlockedAt());
     }
 
+
     @Override
     @Transactional
-    public ProgressGalleryResponseDto uploadProgressImage(MultipartFile file, String caption) {
+    public ProgressGalleryResponseDto uploadProgressImage(
+            MultipartFile file,
+            String caption
+    ) {
         log.info("Starting progress image upload");
 
         validateProgressImage(file);
 
         if (caption != null && caption.length() > 500) {
             log.warn("Progress image upload rejected: caption exceeds 500 characters");
+
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Caption must be 500 characters or fewer");
+                    HttpStatus.BAD_REQUEST,
+                    "Caption must be 500 characters or fewer");
         }
 
         String userId = currentUserId();
@@ -237,20 +246,61 @@ public class ProfileServiceImpl implements ProfileService {
         UserEntity user = userRepo.findById(userId)
                 .orElseThrow(() -> {
                     log.warn("Progress image upload failed: user account not found");
+
                     return new ResponseStatusException(
-                            HttpStatus.NOT_FOUND, "User account not found");
+                            HttpStatus.NOT_FOUND,
+                            "User account not found");
                 });
 
-        String imageUrl = fileStorageService.uploadFile(file, "progress-gallery/" + userId);
-
-        ProgressGalleryEntity saved = progressGalleryRepository.save(
-                new ProgressGalleryEntity(user, imageUrl, caption == null ? null : caption.trim())
+        // Step 1: Upload image to external storage.
+        String imageUrl = fileStorageService.uploadFile(
+                file,
+                "progress-gallery/" + userId
         );
 
-        log.info("Progress image uploaded successfully. Image ID: {}, File size: {} bytes",
-                saved.getId(), file.getSize());
+        try {
+            // Step 2: Persist gallery record.
+            // saveAndFlush() forces the SQL insert before returning.
+            ProgressGalleryEntity saved = progressGalleryRepository.saveAndFlush(
+                    new ProgressGalleryEntity(
+                            user,
+                            imageUrl,
+                            caption == null ? null : caption.trim()
+                    )
+            );
 
-        return ProgressGalleryResponseDto.from(saved);
+            log.info(
+                    "Progress image uploaded successfully. Image ID: {}, File size: {} bytes",
+                    saved.getId(),
+                    file.getSize()
+            );
+
+            return ProgressGalleryResponseDto.from(saved);
+
+        } catch (RuntimeException databaseException) {
+
+            log.error(
+                    "Database persistence failed after image upload. Attempting external file cleanup"
+            );
+
+            // Step 3: Roll back the external storage operation.
+            try {
+                fileStorageService.deleteFileByUrl(imageUrl);
+
+                log.info("Orphaned progress image cleaned up successfully");
+
+            } catch (RuntimeException cleanupException) {
+
+                // Never hide the original database exception.
+                log.error(
+                        "Failed to clean up orphaned progress image. Manual cleanup may be required",
+                        cleanupException
+                );
+            }
+
+            // Step 4: Preserve the original exception.
+            throw databaseException;
+        }
     }
 
     @Override
@@ -310,6 +360,64 @@ public class ProfileServiceImpl implements ProfileService {
         log.info("Progress image deleted successfully. Image ID: {}", imageId);
     }
 
+    @Override
+    @Transactional
+    public BadgeAddResponseDto addBadges(BadgeAddRequestDto request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge data is required");
+        }
+
+        String name = request.getName() == null ? null : request.getName().trim();
+        String description = request.getDescription() == null ? null : request.getDescription().trim();
+
+        if (name == null || name.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge name is required");
+        }
+        if (name.length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge name must be 100 characters or fewer");
+        }
+        if (description == null || description.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge description is required");
+        }
+        if (description.length() > 1000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge description must be 1000 characters or fewer");
+        }
+        if (request.getImageUrl() != null && request.getImageUrl().length() > 2048) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge image URL must be 2048 characters or fewer");
+        }
+        if (request.getCategory() != null && request.getCategory().length() > 50) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge category must be 50 characters or fewer");
+        }
+        if (request.getCriteriaMetadata() != null && request.getCriteriaMetadata().length() > 4000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge criteria metadata must be 4000 characters or fewer");
+        }
+        if (badgeRepository.existsByNameIgnoreCase(name)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A badge with this name already exists");
+        }
+
+        BadgeEntity badge = new BadgeEntity(
+                name,
+                description,
+                normalizeOptional(request.getImageUrl()),
+                normalizeOptional(request.getCategory())
+        );
+        badge.setCriteriaMetadata(normalizeOptional(request.getCriteriaMetadata()));
+        badge.setActive(request.isActive());
+
+        BadgeEntity saved = badgeRepository.saveAndFlush(badge);
+        BadgeResponseDto response = BadgeResponseDto.from(saved, null);
+        log.info("Badge created successfully. Badge ID: {}, name: {}", saved.getId(), saved.getName());
+        return new BadgeAddResponseDto(response, "Badge added successfully");
+    }
+
+    private String normalizeOptional(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
     private Map<Long, Instant> unlockedByBadgeId(String userId) {
         log.debug("Building unlocked badge lookup");
 
@@ -324,6 +432,7 @@ public class ProfileServiceImpl implements ProfileService {
         return result;
     }
 
+
     private void validateProgressImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             log.warn("Progress image validation failed: empty or missing file");
@@ -334,56 +443,86 @@ public class ProfileServiceImpl implements ProfileService {
         if (file.getSize() > MAX_PROGRESS_IMAGE_SIZE) {
             log.warn("Progress image validation failed: file exceeds maximum size. Size: {} bytes",
                     file.getSize());
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Image must be 5 MB or smaller");
         }
 
-        if (file.getContentType() == null ||
-                !ALLOWED_IMAGE_TYPES.contains(file.getContentType().toLowerCase(Locale.ROOT))) {
+        String contentType = file.getContentType();
+
+        if (contentType == null ||
+                !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
+
             log.warn("Progress image validation failed: unsupported content type");
+
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Only JPEG, PNG and WEBP images are allowed");
+                    HttpStatus.BAD_REQUEST,
+                    "Only JPEG, PNG and WEBP images are allowed");
         }
 
-        byte[] bytes;
+        try (InputStream inputStream = file.getInputStream()) {
 
-        try {
-            bytes = file.getBytes();
+            // Read only the first 12 bytes required for signature validation.
+            byte[] header = inputStream.readNBytes(12);
+
+            boolean jpeg = header.length >= 3
+                    && (header[0] & 0xFF) == 0xFF
+                    && (header[1] & 0xFF) == 0xD8
+                    && (header[2] & 0xFF) == 0xFF;
+
+            boolean png = header.length >= 8
+                    && (header[0] & 0xFF) == 0x89
+                    && header[1] == 0x50
+                    && header[2] == 0x4E
+                    && header[3] == 0x47
+                    && header[4] == 0x0D
+                    && header[5] == 0x0A
+                    && header[6] == 0x1A
+                    && header[7] == 0x0A;
+
+            boolean webp = header.length >= 12
+                    && header[0] == 'R'
+                    && header[1] == 'I'
+                    && header[2] == 'F'
+                    && header[3] == 'F'
+                    && header[8] == 'W'
+                    && header[9] == 'E'
+                    && header[10] == 'B'
+                    && header[11] == 'P';
+
+            if (!jpeg && !png && !webp) {
+                log.warn("Progress image validation failed: invalid image signature");
+
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Invalid image file content");
+            }
+
+            // Ensure the declared MIME type matches the actual file signature.
+            boolean contentTypeMatches =
+                    ("image/jpeg".equalsIgnoreCase(contentType) && jpeg)
+                            || ("image/png".equalsIgnoreCase(contentType) && png)
+                            || ("image/webp".equalsIgnoreCase(contentType) && webp);
+
+            if (!contentTypeMatches) {
+                log.warn("Progress image validation failed: MIME type does not match file signature");
+
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Image content does not match the declared file type");
+            }
+
+            log.debug("Progress image validation successful");
+
         } catch (IOException e) {
             log.error("Unable to read uploaded progress image", e);
+
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Unable to read image file");
+                    HttpStatus.BAD_REQUEST,
+                    "Unable to read image file");
         }
-
-        boolean jpeg = bytes.length >= 3 &&
-                (bytes[0] & 0xff) == 0xff &&
-                (bytes[1] & 0xff) == 0xd8 &&
-                (bytes[2] & 0xff) == 0xff;
-
-        boolean png = bytes.length >= 8 &&
-                (bytes[0] & 0xff) == 0x89 &&
-                bytes[1] == 0x50 &&
-                bytes[2] == 0x4e &&
-                bytes[3] == 0x47;
-
-        boolean webp = bytes.length >= 12 &&
-                bytes[0] == 'R' &&
-                bytes[1] == 'I' &&
-                bytes[2] == 'F' &&
-                bytes[3] == 'F' &&
-                bytes[8] == 'W' &&
-                bytes[9] == 'E' &&
-                bytes[10] == 'B' &&
-                bytes[11] == 'P';
-
-        if (!jpeg && !png && !webp) {
-            log.warn("Progress image validation failed: file signature does not match an allowed image type");
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Invalid image file content");
-        }
-
-        log.debug("Progress image validation successful");
     }
+
 
     private String currentUserId() {
         Authentication authentication =

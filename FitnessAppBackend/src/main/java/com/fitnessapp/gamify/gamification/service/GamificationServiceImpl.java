@@ -85,24 +85,29 @@ public class GamificationServiceImpl implements GamificationService {
         String userId = currentUserId();
 
         var user = userRepo.findByIdForUpdate(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
         catalogueRepo.findByGameTypeAndActiveTrue(request.gameType())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game is not available"));
+
         var old = sessions.findByUserIdAndClientRequestId(userId, request.clientRequestId());
+
         if (old.isPresent()) {
             if (old.get().getGameType() != request.gameType())
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Request ID reused for another game");
             return GameSessionResponseDto.from(old.get());
         }
+
         return GameSessionResponseDto.from(sessions.save(new GameSessionEntity(user, request.gameType(), request.clientRequestId())));
     }
 
     @Transactional
     @Override
-    public GameSessionResponseDto complete(UUID id, GameCompleteRequestDto request) {
+    public GameSessionResponseDto complete(UUID sessionId, GameCompleteRequestDto request) {
         String userId = currentUserId();
 
         userRepo.findByIdForUpdate(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        var s = sessions.findByIdAndUserId(id, userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game session not found"));
+
+        var s = sessions.findByIdAndUserId(sessionId, userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game session not found"));
         if (s.getStatus() == GameSessionStatus.COMPLETED) return GameSessionResponseDto.from(s);
         if (s.getStatus() != GameSessionStatus.IN_PROGRESS)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Game session is not active");

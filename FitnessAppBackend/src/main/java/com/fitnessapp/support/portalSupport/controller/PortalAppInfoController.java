@@ -1,7 +1,9 @@
 package com.fitnessapp.support.portalSupport.controller;
 
 import com.fitnessapp.support.models.dtos.SupportFaqCategoryDto;
+import com.fitnessapp.support.models.dtos.response.AppInfoContentResponseDto;
 import com.fitnessapp.support.portalSupport.models.dto.request.*;
+import com.fitnessapp.support.portalSupport.models.dto.response.PortalAppInfoResponseDto;
 import com.fitnessapp.support.portalSupport.service.AppInfoService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -25,6 +27,12 @@ import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_SUPPORT_ENDPOINT
 public class PortalAppInfoController {
 
     private final AppInfoService appInfoService;
+
+    @GetMapping("/info-portal")
+    public ResponseEntity<PortalAppInfoResponseDto> getAboutUs() {
+        log.debug("Fetching About Us content");
+        return ResponseEntity.ok(appInfoService.getInfoForPortal());
+    }
 
     @PostMapping("/upload/about")
     public ResponseEntity<Map<String, String>> uploadAboutUs(@Valid @RequestBody AppInfoAboutUsRequestDto requestDto) {
@@ -72,9 +80,7 @@ public class PortalAppInfoController {
     }
 
     @PatchMapping("/patch/faqs/{id}")
-    public ResponseEntity<Map<String, String>> patchAppFaqs(
-            @Valid @RequestBody AppInfoFaqPatchRequestDto requestDto,
-            @PathVariable Long id
+    public ResponseEntity<Map<String, String>> patchAppFaqs(@Valid @RequestBody AppInfoFaqPatchRequestDto requestDto, @PathVariable Long id
     ) {
         log.info("REST request to patch FAQ with ID: [{}]", id);
         return ResponseEntity.ok(appInfoService.patchAppFaqs(requestDto, id));
