@@ -11,7 +11,8 @@ public record BadgeResponseDto(
         String imageUrl,
         String category,
         boolean unlocked,
-        Instant unlockedAt
+        Instant unlockedAt,
+        boolean active
 ) {
     public static BadgeResponseDto from(BadgeEntity badge, Instant unlockedAt) {
         return new BadgeResponseDto(
@@ -21,7 +22,8 @@ public record BadgeResponseDto(
                 badge.getImageUrl(),
                 badge.getCategory(),
                 unlockedAt != null,
-                unlockedAt
+                unlockedAt,
+                badge.isActive()
         );
     }
 }

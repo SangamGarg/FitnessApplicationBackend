@@ -1,5 +1,6 @@
 package com.fitnessapp.exercise.model.dto.response;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public record WorkoutPlanResponseDto(
             Integer targetRepsMax,
             Integer targetDurationSeconds,
             Integer restSeconds,
-            java.math.BigDecimal targetWeightKg,
+            BigDecimal targetWeightKg,
             String notes
     ) {
     }

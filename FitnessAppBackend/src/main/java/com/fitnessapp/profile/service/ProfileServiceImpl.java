@@ -10,7 +10,8 @@ import com.fitnessapp.gamify.gamification.model.entity.UserXpAccountEntity;
 import com.fitnessapp.gamify.gamification.repository.UserStreakRepository;
 import com.fitnessapp.gamify.gamification.repository.UserXpAccountRepository;
 import com.fitnessapp.profile.model.dto.request.BadgeAddRequestDto;
-import com.fitnessapp.profile.model.dto.response.BadgeAddResponseDto;
+import com.fitnessapp.profile.model.dto.request.BadgeStatusRequestDto;
+import com.fitnessapp.profile.model.dto.request.BadgeUpdateRequestDto;
 import com.fitnessapp.profile.model.dto.response.BadgeResponseDto;
 import com.fitnessapp.profile.model.dto.response.ProfileHomeResponseDto;
 import com.fitnessapp.profile.model.dto.response.ProgressGalleryResponseDto;
@@ -23,6 +24,8 @@ import com.fitnessapp.profile.repository.UserBadgeRepository;
 import com.fitnessapp.wallet.service.AppWalletService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +48,7 @@ import java.util.*;
 @Slf4j
 public class ProfileServiceImpl implements ProfileService {
     private static final long MAX_PROGRESS_IMAGE_SIZE = 5L * 1024 * 1024;
-    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of("image/jpeg", "image/png", "image/webp", "image/jpg");
 
     private final UserRepo userRepo;
     private final UserDetailsRepo userDetailsRepo;
@@ -362,26 +365,13 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public BadgeAddResponseDto addBadges(BadgeAddRequestDto request) {
+    public BadgeResponseDto addBadges(BadgeAddRequestDto request) {
         if (request == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge data is required");
         }
 
         String name = request.getName() == null ? null : request.getName().trim();
-        String description = request.getDescription() == null ? null : request.getDescription().trim();
-
-        if (name == null || name.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge name is required");
-        }
-        if (name.length() > 100) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge name must be 100 characters or fewer");
-        }
-        if (description == null || description.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge description is required");
-        }
-        if (description.length() > 1000) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge description must be 1000 characters or fewer");
-        }
+        String description = getString(request, name);
         if (request.getImageUrl() != null && request.getImageUrl().length() > 2048) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge image URL must be 2048 characters or fewer");
         }
@@ -407,7 +397,143 @@ public class ProfileServiceImpl implements ProfileService {
         BadgeEntity saved = badgeRepository.saveAndFlush(badge);
         BadgeResponseDto response = BadgeResponseDto.from(saved, null);
         log.info("Badge created successfully. Badge ID: {}, name: {}", saved.getId(), saved.getName());
-        return new BadgeAddResponseDto(response, "Badge added successfully");
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public BadgeResponseDto updateBadge(Long badgeId, BadgeUpdateRequestDto request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge update data is required");
+        }
+        if (request.getName() == null
+                && request.getDescription() == null
+                && request.getImageUrl() == null
+                && request.getCategory() == null
+                && request.getCriteriaMetadata() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one badge field must be provided");
+        }
+
+        BadgeEntity badge = badgeRepository.findById(badgeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Badge not found"));
+
+        if (request.getName() != null) {
+            String name = request.getName().trim();
+            if (name.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge name cannot be blank");
+            }
+            if (!badge.getName().equalsIgnoreCase(name) && badgeRepository.existsByNameIgnoreCase(name)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "A badge with this name already exists");
+            }
+            badge.setName(name);
+        }
+        if (request.getDescription() != null) {
+            String description = request.getDescription().trim();
+            if (description.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge description cannot be blank");
+            }
+            badge.setDescription(description);
+        }
+        if (request.getImageUrl() != null) {
+            badge.setImageUrl(normalizeOptional(request.getImageUrl()));
+        }
+        if (request.getCategory() != null) {
+            badge.setCategory(normalizeOptional(request.getCategory()));
+        }
+        if (request.getCriteriaMetadata() != null) {
+            badge.setCriteriaMetadata(normalizeOptional(request.getCriteriaMetadata()));
+        }
+
+        try {
+            BadgeEntity saved = badgeRepository.saveAndFlush(badge);
+            return BadgeResponseDto.from(saved, null);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A badge with this name already exists");
+        }
+    }
+
+    @Override
+    @Transactional
+    public BadgeResponseDto updateBadgeStatus(Long badgeId, BadgeStatusRequestDto request) {
+        if (request == null || request.getActive() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge active status is required");
+        }
+
+        BadgeEntity badge = badgeRepository.findById(badgeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Badge not found"));
+        badge.setActive(request.getActive());
+        BadgeEntity saved = badgeRepository.saveAndFlush(badge);
+        log.info("Badge status updated. Badge ID: {}, active: {}", badgeId, saved.isActive());
+        return BadgeResponseDto.from(saved, null);
+    }
+
+    @Override
+    @Transactional
+    public void deleteBadge(Long badgeId) {
+        BadgeEntity badge = badgeRepository.findById(badgeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Badge not found"));
+        if (userBadgeRepository.existsByBadgeId(badgeId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Badge cannot be deleted because it has been assigned to users"
+            );
+        }
+        try {
+            badgeRepository.delete(badge);
+            badgeRepository.flush();
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Badge cannot be deleted because it is referenced by user badge records"
+            );
+        }
+        log.info("Badge deleted. Badge ID: {}", badgeId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BadgeResponseDto> getAllBadgesForPortal() {
+        log.debug("Fetching all badges for portal");
+
+        List<BadgeResponseDto> badges = badgeRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
+                .map(badge -> BadgeResponseDto.from(badge, null))
+                .toList();
+
+        log.debug("Successfully fetched {} badges for portal", badges.size());
+        return badges;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BadgeResponseDto getBadgeDetailsForPortal(Long badgeId) {
+        log.debug("Fetching badge details for portal. Badge ID: {}", badgeId);
+
+        BadgeEntity badge = badgeRepository.findById(badgeId)
+                .orElseThrow(() -> {
+                    log.warn("Badge not found for portal. Badge ID: {}", badgeId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Badge not found");
+                });
+
+        log.debug("Successfully fetched badge details for portal. Badge ID: {}", badgeId);
+        return BadgeResponseDto.from(badge, null);
+    }
+
+    private static @NonNull String getString(BadgeAddRequestDto request, String name) {
+        String description = request.getDescription() == null ? null : request.getDescription().trim();
+
+        if (name == null || name.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge name is required");
+        }
+        if (name.length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge name must be 100 characters or fewer");
+        }
+        if (description == null || description.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge description is required");
+        }
+        if (description.length() > 1000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Badge description must be 1000 characters or fewer");
+        }
+        return description;
     }
 
     private String normalizeOptional(String value) {

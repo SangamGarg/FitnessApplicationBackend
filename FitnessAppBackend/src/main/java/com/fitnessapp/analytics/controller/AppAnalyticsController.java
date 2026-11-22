@@ -34,6 +34,12 @@ public class AppAnalyticsController {
         return ResponseEntity.ok(analyticsService.getAnalyticsHome());
     }
 
+    @GetMapping("/calculator/home")
+    public ResponseEntity<CalculatorHomeResponseDto> getCalculatorHome() {
+        log.info("Fetching calculator home screen configuration");
+        return ResponseEntity.ok(analyticsService.getCalculatorHome());
+    }
+
     @GetMapping("/catalog")
     public ResponseEntity<?> getCatalog() {
         log.info("Fetching smart calculator catalog");
@@ -42,12 +48,6 @@ public class AppAnalyticsController {
         return ResponseEntity.ok(catalog);
     }
 
-
-    @GetMapping("/calculator/home")
-    public ResponseEntity<CalculatorHomeResponseDto> getCalculatorHome() {
-        log.info("Fetching calculator home screen configuration");
-        return ResponseEntity.ok(analyticsService.getCalculatorHome());
-    }
 
     @PostMapping("/{calculatorKey}")
     public ResponseEntity<Map<String, Object>> calculate(

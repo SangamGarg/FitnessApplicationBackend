@@ -24,7 +24,7 @@ import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_PROFILE_ENDPOINT;
 @Slf4j
 @RestController
 @RequestMapping(APP_PROFILE_ENDPOINT)
-public class ProfileController {
+public class AppProfileController {
 
     private final ProfileService profileService;
 

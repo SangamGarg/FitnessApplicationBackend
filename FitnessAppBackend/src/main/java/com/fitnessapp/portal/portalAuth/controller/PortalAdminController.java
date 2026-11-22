@@ -3,22 +3,12 @@ package com.fitnessapp.portal.portalAuth.controller;
 import com.fitnessapp.portal.portalAuth.model.dto.request.CreateDeveloperRequestDto;
 import com.fitnessapp.portal.portalAuth.model.dto.request.EnabledRequestDto;
 import com.fitnessapp.portal.portalAuth.service.DeveloperAdminService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -29,14 +19,11 @@ import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_ADMIN_DEV_ENDPOI
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(PORTAL_ADMIN_DEV_ENDPOINT)
-@Tag(name = "Admin - Developers", description = "Admin-only developer account lifecycle management")
-@SecurityRequirement(name = "bearerAuth") // Swagger UI
 public class PortalAdminController {
 
     private final DeveloperAdminService developers;
 
     @GetMapping
-    @Operation(summary = "List developer accounts")
     public ResponseEntity<List<Map<String, Object>>> list() {
         log.debug("REST request to list all developer accounts");
         List<Map<String, Object>> result = developers.listDevelopers();
@@ -45,7 +32,6 @@ public class PortalAdminController {
     }
 
     @PostMapping
-    @Operation(summary = "Create developer and email password setup link")
     public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody CreateDeveloperRequestDto request) {
         log.info("REST request to create developer account with email: [{}]", request.email());
         Map<String, Object> created = developers.createDeveloper(request);
@@ -53,9 +39,7 @@ public class PortalAdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PostMapping("/{id}/reset-password")
-    @Operation(summary = "Send a new one-time password setup link")
-    public ResponseEntity<Map<String, String>> resetPassword(@PathVariable Long id) {
+    @PostMapping("/{id}/reset-password") public ResponseEntity<Map<String, String>> resetPassword(@PathVariable Long id) {
         log.info("REST request to regenerate setup/reset link for developer ID: [{}]", id);
         developers.regenerateSetupLink(id);
         log.info("Password setup link successfully dispatched for developer ID: [{}]", id);
@@ -63,7 +47,6 @@ public class PortalAdminController {
     }
 
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Enable or disable developer account")
     public ResponseEntity<Map<String, String>> setStatus(
             @PathVariable Long id,
             @Valid @RequestBody EnabledRequestDto request
@@ -75,7 +58,6 @@ public class PortalAdminController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete developer portal account")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         log.warn("REST request to delete developer account ID: [{}]", id);
         developers.deleteDeveloper(id);

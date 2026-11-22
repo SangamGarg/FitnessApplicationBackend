@@ -1,16 +1,13 @@
 package com.fitnessapp.portal.portalAuth.controller;
 
-import com.fitnessapp.portal.audit.PortalAuditService;
 import com.fitnessapp.portal.audit.PortalAuditEventEntity;
-import com.fitnessapp.portal.portalAuth.model.enums.UserRole;
+import com.fitnessapp.portal.audit.PortalAuditService;
 import com.fitnessapp.portal.portalAuth.model.dto.request.EnabledRequestDto;
+import com.fitnessapp.portal.portalAuth.model.dto.request.UpdatePortalAccountRequestDto;
 import com.fitnessapp.portal.portalAuth.model.dto.response.PortalAccountResponseDto;
 import com.fitnessapp.portal.portalAuth.model.dto.response.PortalAuditEventResponseDto;
-import com.fitnessapp.portal.portalAuth.model.dto.request.UpdatePortalAccountRequestDto;
+import com.fitnessapp.portal.portalAuth.model.enums.UserRole;
 import com.fitnessapp.portal.portalAuth.service.PortalAccountAdminService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,25 +15,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Locale;
 import java.util.Set;
 
 import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_ADMIN_BASE_ENDPOINT;
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_ENDPOINT;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(PORTAL_ADMIN_BASE_ENDPOINT)
-@Tag(name = "Admin - Portal Accounts", description = "Search and manage portal accounts and review administrative audit events")
-@SecurityRequirement(name = "bearerAuth")
 public class PortalAccountAdminController {
 
     private static final Set<String> SORT_FIELDS = Set.of("createdAt", "updatedAt", "email", "fullName");
@@ -45,7 +33,6 @@ public class PortalAccountAdminController {
     private final PortalAuditService auditService;
 
     @GetMapping("/accounts")
-    @Operation(summary = "Search portal accounts with filters and pagination")
     public ResponseEntity<Page<PortalAccountResponseDto>> listAccounts(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) UserRole role,
@@ -60,13 +47,11 @@ public class PortalAccountAdminController {
     }
 
     @GetMapping("/accounts/{id}")
-    @Operation(summary = "Get a portal account without exposing credentials")
     public ResponseEntity<PortalAccountResponseDto> getAccount(@PathVariable Long id) {
         return ResponseEntity.ok(accountService.get(id));
     }
 
     @PatchMapping("/developers/{id}")
-    @Operation(summary = "Update developer profile fields")
     public ResponseEntity<PortalAccountResponseDto> updateDeveloper(
             @PathVariable Long id,
             @Valid @RequestBody UpdatePortalAccountRequestDto request
@@ -77,7 +62,6 @@ public class PortalAccountAdminController {
 
     //TODO Change the mapping
     @PatchMapping("/developers/fake/{id}/status")
-    @Operation(summary = "Activate or suspend a developer account")
     public ResponseEntity<PortalAccountResponseDto> setDeveloperStatus(
             @PathVariable Long id,
             @Valid @RequestBody EnabledRequestDto request
@@ -86,7 +70,6 @@ public class PortalAccountAdminController {
     }
 
     @GetMapping("/audit-events")
-    @Operation(summary = "List administrative audit events")
     public ResponseEntity<Page<PortalAuditEventResponseDto>> listAuditEvents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size

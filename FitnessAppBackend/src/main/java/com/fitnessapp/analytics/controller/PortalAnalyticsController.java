@@ -4,6 +4,7 @@ import com.fitnessapp.analytics.model.dtos.requestDto.CalculatorCatalogRequestDt
 import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorCatalogResponseDto;
 import com.fitnessapp.analytics.model.entity.CalculatorCatalogEntity;
 import com.fitnessapp.analytics.repository.CalculatorCatalogRepository;
+import com.fitnessapp.analytics.service.AnalyticsService;
 import com.fitnessapp.utils.appUtil.AppResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,64 +13,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_CALCULATOR_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_ANALYTICS_ENDPOINT;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(PORTAL_DEV_CALCULATOR_ENDPOINT)
+@RequestMapping(PORTAL_DEV_ANALYTICS_ENDPOINT)
 public class PortalAnalyticsController {
-    private final CalculatorCatalogRepository catalogRepository;
+    private final AnalyticsService analyticsService;
 
     @PostMapping("/catalog")
     public ResponseEntity<CalculatorCatalogResponseDto> addCatalog(@RequestBody CalculatorCatalogRequestDto request) {
         log.info("Request to add calculator catalog item: {}", request.getKey());
 
-        if (catalogRepository.existsById(request.getKey())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Calculator with key " + request.getKey() + " already exists");
-        }
-
-        CalculatorCatalogEntity entity = CalculatorCatalogEntity.builder()
-                .key(request.getKey())
-                .name(request.getName())
-                .category(request.getCategory())
-                .description(request.getDescription())
-                .requiredInputs(request.getRequiredInputs())
-                .unit(request.getUnit())
-                .requiresSavedData(request.getRequiresSavedData() != null && request.getRequiresSavedData())
-                .build();
-
-        catalogRepository.save(entity);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(CalculatorCatalogResponseDto.builder()
-                .status(AppResponseStatus.SUCCESS.name())
-                .statusCode(201)
-                .message("Calculator added successfully")
-                .build());
+        return ResponseEntity.status(HttpStatus.CREATED).body(analyticsService.addCatalog(request));
     }
 
     @PatchMapping("/{key}")
     public ResponseEntity<CalculatorCatalogResponseDto> patchCatalog(@PathVariable String key, @RequestBody CalculatorCatalogRequestDto request) {
         log.info("Request to patch calculator catalog item: {}", key);
-
-        CalculatorCatalogEntity entity = catalogRepository.findById(key)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Calculator not found: " + key));
-
-        if (request.getName() != null) entity.setName(request.getName());
-        if (request.getCategory() != null) entity.setCategory(request.getCategory());
-        if (request.getDescription() != null) entity.setDescription(request.getDescription());
-        if (request.getRequiredInputs() != null) entity.setRequiredInputs(request.getRequiredInputs());
-        if (request.getUnit() != null) entity.setUnit(request.getUnit());
-        if (request.getRequiresSavedData() != null) entity.setRequiresSavedData(request.getRequiresSavedData());
-
-        catalogRepository.save(entity);
-
-        return ResponseEntity.ok(CalculatorCatalogResponseDto.builder()
-                .status(AppResponseStatus.SUCCESS.name())
-                .statusCode(200)
-                .message("Calculator updated successfully")
-                .build());
+        return ResponseEntity.status(HttpStatus.OK).body(analyticsService.patchCatalog(key, request));
     }
-
-
 }

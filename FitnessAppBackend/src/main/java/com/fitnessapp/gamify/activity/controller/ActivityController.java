@@ -7,7 +7,6 @@ import com.fitnessapp.gamify.activity.models.dtos.responseDto.ActivityRecordResp
 import com.fitnessapp.gamify.activity.models.dtos.responseDto.ActivitySummaryResponseDto;
 import com.fitnessapp.gamify.activity.models.dtos.responseDto.HealthActivitySyncResponseDto;
 import com.fitnessapp.gamify.activity.service.ActivityInterface;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

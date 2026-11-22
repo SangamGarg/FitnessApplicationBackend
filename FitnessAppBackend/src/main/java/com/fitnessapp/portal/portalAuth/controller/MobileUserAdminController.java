@@ -4,9 +4,6 @@ import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.portal.portalAuth.model.dto.request.MobileUserStatusRequestDto;
 import com.fitnessapp.portal.portalAuth.model.dto.response.MobileUserAdminResponseDto;
 import com.fitnessapp.portal.portalAuth.service.MobileUserAdminService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,14 +19,12 @@ import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_ADMIN_MOBILE_USE
 
 @RestController
 @RequestMapping(PORTAL_ADMIN_MOBILE_USERS_ENDPOINT)
-@Tag(name = "Admin - Mobile Users", description = "Search mobile users and manage account access")
 @RequiredArgsConstructor
 public class MobileUserAdminController {
 
     private final MobileUserAdminService service;
 
     @GetMapping
-    @Operation(summary = "Search mobile users with pagination and status filtering")
     public ResponseEntity<Page<MobileUserAdminResponseDto>> list(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) MobileAccountStatus status,
@@ -47,13 +42,11 @@ public class MobileUserAdminController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get a mobile user profile and account status")
     public ResponseEntity<MobileUserAdminResponseDto> get(@PathVariable String id) {
         return ResponseEntity.ok(service.get(id));
     }
 
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Suspend, reactivate, or deactivate a mobile user account")
     public ResponseEntity<MobileUserAdminResponseDto> setStatus(
             @PathVariable String id,
             @Valid @RequestBody MobileUserStatusRequestDto request

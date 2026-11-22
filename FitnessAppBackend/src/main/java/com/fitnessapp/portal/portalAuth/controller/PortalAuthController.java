@@ -3,8 +3,6 @@ package com.fitnessapp.portal.portalAuth.controller;
 import com.fitnessapp.portal.portalAuth.model.dto.request.LoginRequestDto;
 import com.fitnessapp.portal.portalAuth.model.dto.request.SetupRequestDto;
 import com.fitnessapp.portal.portalAuth.service.PortalAuthService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,7 +27,6 @@ import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_AUTH_ENDPOINT;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(PORTAL_AUTH_ENDPOINT)
-@Tag(name = "Portal Authentication", description = "Admin and developer portal login, onboarding and session refresh")
 public class PortalAuthController {
 
     private static final String REFRESH_COOKIE = "portalRefreshToken";
@@ -38,7 +35,6 @@ public class PortalAuthController {
     private final PortalAuthService auth;
 
     @PostMapping("/login")
-    @Operation(summary = "Log in to the portal", description = "Returns a short-lived access JWT and stores the refresh token in an HttpOnly cookie.")
     public ResponseEntity<Map<String, Object>> login(
             @Valid @RequestBody LoginRequestDto request,
             HttpServletRequest servletRequest,
@@ -51,7 +47,6 @@ public class PortalAuthController {
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Refresh portal access token", description = "Rotates the HttpOnly refresh token and issues a new 30-minute access JWT.")
     public ResponseEntity<Map<String, Object>> refresh(
             HttpServletRequest request,
             HttpServletResponse response
@@ -64,7 +59,6 @@ public class PortalAuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Log out of the portal", description = "Revokes the current refresh token and clears its cookie.")
     public ResponseEntity<Map<String, String>> logout(
             HttpServletRequest request,
             HttpServletResponse response
@@ -79,7 +73,6 @@ public class PortalAuthController {
     }
 
     @PostMapping("/setup")
-    @Operation(summary = "Set portal password", description = "Consumes a one-time, expiring email token to set the account password.")
     public ResponseEntity<Map<String, String>> setup(@Valid @RequestBody SetupRequestDto request) {
         log.info("REST request to set portal password using setup token");
         auth.completeSetup(request.token(), request.password());
@@ -88,7 +81,6 @@ public class PortalAuthController {
     }
 
     @GetMapping("/me")
-    @Operation(summary = "Get current portal identity")
     public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             log.warn("Unauthenticated request to /me endpoint");

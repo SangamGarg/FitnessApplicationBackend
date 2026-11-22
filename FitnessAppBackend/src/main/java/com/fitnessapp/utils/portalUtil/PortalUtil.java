@@ -27,11 +27,11 @@ public final class PortalUtil {
     public static final String PORTAL_DEV_EMAIL_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/email";
     public static final String PORTAL_DEV_ASSET_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/assets";
     public static final String PORTAL_DEV_APP_PROFILE_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/app-profile";
-    public static final String PORTAL_DEV_CALCULATOR_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/calculator";
     public static final String PORTAL_DEV_EXERCISE_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/exercise";
     public static final String PORTAL_DEV_NUTRITION_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/nutrition";
     public static final String PORTAL_DEV_CHALLENGE_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/challenge";
     public static final String PORTAL_DEV_GAMIFICATION_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/gamification";
+    public static final String PORTAL_DEV_ANALYTICS_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/analytics";
 
 
     public static final String BEARER_PREFIX = "Bearer ";
