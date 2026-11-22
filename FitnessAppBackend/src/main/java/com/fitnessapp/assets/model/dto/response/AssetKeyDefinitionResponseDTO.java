@@ -13,4 +13,6 @@ public class AssetKeyDefinitionResponseDTO {
     private String altText;
     private String description;
     private boolean uploaded;
+    private String imageUrl;
+    private boolean enabled;
 }

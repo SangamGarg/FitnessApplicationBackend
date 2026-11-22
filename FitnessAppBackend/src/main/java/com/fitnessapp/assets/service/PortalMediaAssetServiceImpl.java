@@ -1,108 +1,125 @@
 package com.fitnessapp.assets.service;
 
+import com.fitnessapp.assets.model.dto.request.AssetKeyDefinitionRequestDTO;
 import com.fitnessapp.assets.model.dto.request.AssetMetadataUpdateRequestDTO;
 import com.fitnessapp.assets.model.dto.request.AssetUploadRequestDTO;
 import com.fitnessapp.assets.model.dto.response.AppMediaAssetResponseDTO;
+import com.fitnessapp.assets.model.dto.response.AssetKeyDefinitionResponseDTO;
 import com.fitnessapp.assets.model.entity.AppMediaAssetEntity;
-import com.fitnessapp.assets.model.entity.AssetKeyDefinitionEntity;
+import com.fitnessapp.assets.model.enums.AssetCategory;
+import com.fitnessapp.assets.model.enums.AssetStatus;
 import com.fitnessapp.assets.repo.AppMediaAssetRepository;
-import com.fitnessapp.assets.repo.AssetKeyDefinitionRepository;
+import com.fitnessapp.assets.util.AssetMapper;
+import com.fitnessapp.assets.util.ImageFileValidator;
+import com.fitnessapp.assets.util.ImageFileValidator.ValidatedImage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Locale;
+import java.util.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PortalMediaAssetServiceImpl implements PortalMediaAssetService {
-
     private final AppMediaAssetRepository repository;
-    private final AssetKeyDefinitionRepository definitionRepository;
     private final FileStorageService storageService;
+    private final ImageFileValidator imageFileValidator;
+    private final PlatformTransactionManager transactionManager;
+    private static final int MAX_BATCH_SIZE = 100;
+    private static final String KEY_REGEX = "[A-Z0-9]+(?:_[A-Z0-9]+)*";
+
 
     @Override
-    @Transactional
     public AppMediaAssetResponseDTO uploadNewAsset(AssetUploadRequestDTO requestDTO, MultipartFile file) {
-        String assetKey = requestDTO.getAssetKey().trim().toUpperCase(Locale.ROOT);
-        log.info("Starting asset upload process for registered assetKey: [{}]", assetKey);
+        String key = normalizeAssetKey(requestDTO == null ? null : requestDTO.getAssetKey());
+        AppMediaAssetEntity initial = findAsset(key);
+        ensureUploadable(initial);
+        ensureCategoryMatches(requestDTO.getCategory(), initial);
 
-        if (repository.existsByAssetKey(assetKey)) {
-            throw new IllegalArgumentException("Asset key '" + assetKey + "' already has an uploaded asset. Use the image replacement endpoint to replace it.");
+        ValidatedImage image = imageFileValidator.validate(file);
+        String uploadedUrl = storageService.uploadFile(file, initial.getCategory().name().toLowerCase(java.util.Locale.ROOT));
+        String oldUrl;
+        AppMediaAssetEntity persisted;
+        try {
+            PersistedAsset result = transactionTemplate().execute(status -> {
+                AppMediaAssetEntity current = findAsset(key);
+                ensureUploadable(current);
+                ensureCategoryMatches(requestDTO.getCategory(), current);
+                applyOptionalMetadata(current, requestDTO);
+                current.setImageUrl(uploadedUrl);
+                current.setAssetExtension(image.extension());
+                current.setFileSizeBytes(image.sizeBytes());
+                current.setStatus(AssetStatus.ACTIVE);
+                current.setUpdatedByEmail(getCurrentUserPortal());
+                return new PersistedAsset(repository.saveAndFlush(current), null);
+            });
+            persisted = result.entity();
+            oldUrl = result.oldUrl();
+        } catch (RuntimeException exception) {
+            deleteBestEffort(uploadedUrl);
+            throw exception;
         }
-
-        AssetKeyDefinitionEntity definition = definitionRepository.findByAssetKeyIgnoreCase(assetKey)
-                .filter(d -> Boolean.TRUE.equals(d.getEnabled()))
-                .orElseThrow(() -> new IllegalArgumentException("Asset key is not registered or disabled: " + assetKey));
-
-        if (requestDTO.getCategory() != null && requestDTO.getCategory() != definition.getCategory()) {
-            throw new IllegalArgumentException("Selected category does not match the registered category for asset key " + assetKey);
-        }
-
-        String folder = definition.getCategory().name().toLowerCase(Locale.ROOT);
-        String uploadedUrl = storageService.uploadFile(file, folder);
-
-        AppMediaAssetEntity entity = AppMediaAssetEntity.builder()
-                .assetKey(assetKey)
-                .title(requestDTO.getTitle() == null || requestDTO.getTitle().isBlank()
-                        ? definition.getTitle() : requestDTO.getTitle().trim())
-                .category(definition.getCategory())
-                .imageUrl(uploadedUrl)
-                .altText(requestDTO.getAltText() != null ? requestDTO.getAltText() : definition.getAltText())
-                .description(requestDTO.getDescription() != null ? requestDTO.getDescription() : definition.getDescription())
-                .isActive(true)
-                .updatedByEmail(getCurrentUserPortal())
-                .assetExtension(getFileExtension(file))
-                .fileSizeBytes(file.getSize())
-                .build();
-
-        AppMediaAssetEntity saved = repository.save(entity);
-        log.info("Asset entity persisted successfully with ID: {}", saved.getId());
-        return mapToResponse(saved);
+        deleteBestEffort(oldUrl);
+        return AssetMapper.toAssetResponse(persisted);
     }
 
     @Override
-    @Transactional
     public AppMediaAssetResponseDTO patchAssetImage(String assetKey, MultipartFile file) {
-        log.info("Initiating image replacement patch for assetKey: [{}]", assetKey);
+        String key = normalizeAssetKey(assetKey);
+        AppMediaAssetEntity initial = findAsset(key);
+        ensureImageExists(initial);
 
-        AppMediaAssetEntity entity = repository.findByAssetKey(assetKey)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found for key: " + assetKey));
-
-        String folder = entity.getCategory().name().toLowerCase();
-        String newUploadedUrl = storageService.uploadFile(file, folder);
-        log.info("New image binary uploaded for key [{}]. Old URL: {}, New URL: {}", assetKey, entity.getImageUrl(), newUploadedUrl);
-
-        String oldUrl = entity.getImageUrl();
-        entity.setImageUrl(newUploadedUrl);
-        entity.setAssetExtension(getFileExtension(file));
-        entity.setFileSizeBytes(file.getSize());
-        entity.setUpdatedByEmail(getCurrentUserPortal());
-        AppMediaAssetEntity updated = repository.save(entity);
-        // Delete only after the new URL has been persisted. Storage/database transactions are not atomic;
-        // a production storage adapter should ideally schedule this cleanup after transaction commit.
-        if (oldUrl != null && !oldUrl.equals(newUploadedUrl)) {
-            storageService.deleteFileByUrl(oldUrl);
+        ValidatedImage image = imageFileValidator.validate(file);
+        String uploadedUrl = storageService.uploadFile(file, initial.getCategory().name().toLowerCase(java.util.Locale.ROOT));
+        AppMediaAssetEntity persisted;
+        String oldUrl;
+        try {
+            PersistedAsset result = transactionTemplate().execute(status -> {
+                AppMediaAssetEntity current = findAsset(key);
+                ensureImageExists(current);
+                String previousUrl = current.getImageUrl();
+                current.setImageUrl(uploadedUrl);
+                current.setAssetExtension(image.extension());
+                current.setFileSizeBytes(image.sizeBytes());
+                current.setUpdatedByEmail(getCurrentUserPortal());
+                return new PersistedAsset(repository.saveAndFlush(current), previousUrl);
+            });
+            persisted = result.entity();
+            oldUrl = result.oldUrl();
+        } catch (RuntimeException exception) {
+            deleteBestEffort(uploadedUrl);
+            throw exception;
         }
-
-        return mapToResponse(updated);
+        if (!uploadedUrl.equals(oldUrl)) {
+            deleteBestEffort(oldUrl);
+        }
+        return AssetMapper.toAssetResponse(persisted);
     }
 
     @Override
     @Transactional
     public AppMediaAssetResponseDTO updateAssetMetadata(String assetKey, AssetMetadataUpdateRequestDTO requestDTO) {
-        log.info("Updating metadata fields for assetKey: [{}]", assetKey);
-
-        AppMediaAssetEntity entity = repository.findByAssetKey(assetKey)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found for key: " + assetKey));
+        String key = normalizeAssetKey(assetKey);
+        AppMediaAssetEntity entity = findAsset(key);
+        if (requestDTO.getCategory() != null && requestDTO.getCategory() != entity.getCategory()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Asset category is fixed by its registered asset key and cannot be changed here"
+            );
+        }
 
         if (requestDTO.getTitle() != null && !requestDTO.getTitle().isBlank()) {
-            entity.setTitle(requestDTO.getTitle());
+            entity.setTitle(requestDTO.getTitle().trim());
         }
         if (requestDTO.getAltText() != null) {
             entity.setAltText(requestDTO.getAltText());
@@ -110,77 +127,262 @@ public class PortalMediaAssetServiceImpl implements PortalMediaAssetService {
         if (requestDTO.getDescription() != null) {
             entity.setDescription(requestDTO.getDescription());
         }
-        if (requestDTO.getCategory() != null && requestDTO.getCategory() != entity.getCategory()) {
-            throw new IllegalArgumentException("Asset category is fixed by its registered asset key and cannot be changed here.");
-        }
-
         entity.setUpdatedByEmail(getCurrentUserPortal());
-        AppMediaAssetEntity updated = repository.save(entity);
-        log.info("Asset metadata updated successfully for ID: [{}]", updated.getId());
-
-        return mapToResponse(updated);
+        return AssetMapper.toAssetResponse(repository.save(entity));
     }
 
     @Override
     @Transactional
     public AppMediaAssetResponseDTO toggleAssetStatus(String assetKey, boolean isActive) {
-        log.info("Setting active status of asset [{}] to: {}", assetKey, isActive);
+        String key = normalizeAssetKey(assetKey);
+        AppMediaAssetEntity entity = findAsset(key);
+        if (isActive && entity.getImageUrl() == null) {
+            throw conflict("An asset must have an uploaded image before it can be enabled");
+        }
 
-        AppMediaAssetEntity entity = repository.findByAssetKey(assetKey)
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found for key: " + assetKey));
-
-        entity.setIsActive(isActive);
+        entity.setStatus(isActive ? AssetStatus.ACTIVE : AssetStatus.DISABLED);
         entity.setUpdatedByEmail(getCurrentUserPortal());
-        AppMediaAssetEntity saved = repository.save(entity);
-        log.info("Asset [{}] status successfully updated to active={}", assetKey, isActive);
-
-        return mapToResponse(saved);
+        return AssetMapper.toAssetResponse(repository.save(entity));
     }
 
-    private AppMediaAssetResponseDTO mapToResponse(AppMediaAssetEntity entity) {
-        return AppMediaAssetResponseDTO.builder()
-                .assetKey(entity.getAssetKey())
-                .title(entity.getTitle())
-                .imageUrl(entity.getImageUrl())
-                .altText(entity.getAltText())
-                .category(entity.getCategory())
-                .description(entity.getDescription())
+    @Override
+    public AppMediaAssetResponseDTO deleteAssetImage(String assetKey) {
+        String key = normalizeAssetKey(assetKey);
+        PersistedAsset result = transactionTemplate().execute(status -> {
+            AppMediaAssetEntity entity = findAsset(key);
+            ensureImageExists(entity);
+            String oldUrl = entity.getImageUrl();
+            entity.setImageUrl(null);
+            entity.setFileSizeBytes(null);
+            entity.setAssetExtension(null);
+            entity.setStatus(AssetStatus.PENDING_UPLOAD);
+            entity.setUpdatedByEmail(getCurrentUserPortal());
+            return new PersistedAsset(repository.saveAndFlush(entity), oldUrl);
+        });
+        deleteBestEffort(result.oldUrl());
+        return AssetMapper.toAssetResponse(result.entity());
+    }
+
+
+
+    /*
+     * Catalog
+     * */
+
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<AssetCategory> getCategories() {
+        return Arrays.asList(AssetCategory.values());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssetKeyDefinitionResponseDTO> getKeys(AssetCategory category) {
+        List<AppMediaAssetEntity> rows = category == null
+                ? repository.findAllByStatusNotOrderByCategoryAscTitleAsc(AssetStatus.DISABLED)
+                : repository.findByCategoryAndStatusNotOrderByTitleAsc(category, AssetStatus.DISABLED);
+        return rows.stream().map(AssetMapper::toKeyResponse).toList();
+    }
+
+    @Override
+    @Transactional
+    public AssetKeyDefinitionResponseDTO registerKey(AssetKeyDefinitionRequestDTO request) {
+        if (request == null) {
+            log.warn("registerKey called with null request");
+            throw badRequest("Asset key definition is required");
+        }
+
+        String rawKey = request.getAssetKey();
+        String key = normalizeAssetKey(rawKey);
+        log.info("Attempting to register asset key. rawKey='{}', normalizedKey='{}'", rawKey, key);
+
+        var existingAsset = repository.findByAssetKey(key);
+        if (existingAsset.isPresent()) {
+            log.warn("Conflict detected at pre-check: asset key '{}' already exists in DB with ID={}",
+                    key, existingAsset.get().getId()); // Adjust getter if ID field is named differently
+            throw conflict("Asset key is already registered: " + key);
+        }
+
+        AppMediaAssetEntity entity = newDefinition(request, key);
+        try {
+            AppMediaAssetEntity savedEntity = repository.saveAndFlush(entity);
+            log.info("Successfully registered asset key '{}' with ID={}", key, savedEntity.getId());
+            return AssetMapper.toKeyResponse(savedEntity);
+        } catch (DataIntegrityViolationException exception) {
+            exception.getMostSpecificCause();
+            String rootCauseMsg = exception.getMostSpecificCause().getMessage();
+            log.error("DataIntegrityViolationException while saving asset key '{}'. Root cause: {}",
+                    key, rootCauseMsg, exception);
+            throw conflict("Asset key is already registered: " + key);
+        }
+    }
+
+    @Override
+    @Transactional
+    public List<AssetKeyDefinitionResponseDTO> registerKeysBatch(List<AssetKeyDefinitionRequestDTO> requests) {
+        if (requests == null || requests.isEmpty() || requests.size() > MAX_BATCH_SIZE) {
+            throw badRequest("Batch must contain between 1 and 100 asset keys");
+        }
+
+        List<AppMediaAssetEntity> entities = new ArrayList<>(requests.size());
+        Set<String> normalizedKeys = new HashSet<>();
+        for (AssetKeyDefinitionRequestDTO request : requests) {
+            if (request == null) {
+                throw badRequest("Batch asset key definitions cannot contain null items");
+            }
+            String key = normalizeAssetKey(request.getAssetKey());
+            if (!normalizedKeys.add(key)) {
+                throw conflict("Duplicate key present in batch request: " + key);
+            }
+            entities.add(newDefinition(request, key));
+        }
+
+        Set<String> existingKeys = repository.findAllByAssetKeyIn(normalizedKeys).stream()
+                .map(AppMediaAssetEntity::getAssetKey)
+                .collect(java.util.stream.Collectors.toSet());
+        if (!existingKeys.isEmpty()) {
+            throw conflict("Asset key is already registered: " + existingKeys.iterator().next());
+        }
+
+        try {
+            return repository.saveAllAndFlush(entities).stream()
+                    .map(AssetMapper::toKeyResponse)
+                    .toList();
+        } catch (DataIntegrityViolationException exception) {
+            throw conflict("One or more asset keys are already registered");
+        }
+    }
+
+    @Override
+    @Transactional
+    public AssetKeyDefinitionResponseDTO toggleKeyStatus(String assetKey, boolean enabled) {
+        String key = normalizeAssetKey(assetKey);
+        AppMediaAssetEntity entity = repository.findByAssetKey(key)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset key not found"));
+
+        entity.setStatus(!enabled
+                ? AssetStatus.DISABLED
+                : entity.getImageUrl() == null ? AssetStatus.PENDING_UPLOAD : AssetStatus.ACTIVE);
+        return AssetMapper.toKeyResponse(repository.save(entity));
+    }
+
+    @Override
+    @Transactional
+    public void deleteKey(String assetKey) {
+        String key = normalizeAssetKey(assetKey);
+        AppMediaAssetEntity entity = repository.findByAssetKey(key)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset key not found"));
+        if (entity.getImageUrl() != null) {
+            throw conflict("Remove the uploaded image first or disable the key");
+        }
+        repository.delete(entity);
+    }
+
+    private AppMediaAssetEntity newDefinition(AssetKeyDefinitionRequestDTO request, String key) {
+        return AppMediaAssetEntity.builder()
+                .assetKey(key)
+                .title(request.getTitle().trim())
+                .category(request.getCategory())
+                .altText(request.getAltText())
+                .description(request.getDescription())
+                .status(AssetStatus.PENDING_UPLOAD)
                 .build();
     }
 
-    private String getFileExtension(MultipartFile file) {
-        String originalFilename = file.getOriginalFilename();
-
-        if (originalFilename == null || originalFilename.isBlank()) {
-            return null;
-        }
-
-        int lastDotIndex = originalFilename.lastIndexOf('.');
-
-        if (lastDotIndex < 0 || lastDotIndex == originalFilename.length() - 1) {
-            return null;
-        }
-
-        return originalFilename.substring(lastDotIndex + 1)
-                .toLowerCase(java.util.Locale.ROOT);
+    private ResponseStatusException badRequest(String message) {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
     }
 
+    private TransactionTemplate transactionTemplate() {
+        return new TransactionTemplate(transactionManager);
+    }
 
-    public String getCurrentUserPortal() {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+    private AppMediaAssetEntity findAsset(String key) {
+        return repository.findByAssetKey(key)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Asset key not found"));
+    }
 
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || authentication.getName() == null
-                || authentication.getName().isBlank()
-                || "anonymousUser".equals(authentication.getName())) {
-
-            throw new IllegalStateException(
-                    "No authenticated user found"
+    private void ensureUploadable(AppMediaAssetEntity entity) {
+        if (entity.getStatus() == AssetStatus.DISABLED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Asset key is disabled");
+        }
+        if (entity.getImageUrl() != null) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Asset already has an uploaded image; use the image replacement endpoint"
             );
         }
+    }
 
+    private void ensureImageExists(AppMediaAssetEntity entity) {
+        if (entity.getImageUrl() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Asset has no image; use the upload endpoint");
+        }
+    }
+
+    private void ensureCategoryMatches(AssetCategory requestedCategory,
+                                       AppMediaAssetEntity entity) {
+        if (requestedCategory != null && requestedCategory != entity.getCategory()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Selected category does not match the registered category for this asset key"
+            );
+        }
+    }
+
+    private void applyOptionalMetadata(AppMediaAssetEntity entity, AssetUploadRequestDTO request) {
+        if (request.getTitle() != null && !request.getTitle().isBlank()) {
+            entity.setTitle(request.getTitle().trim());
+        }
+        if (request.getAltText() != null) {
+            entity.setAltText(request.getAltText());
+        }
+        if (request.getDescription() != null) {
+            entity.setDescription(request.getDescription());
+        }
+    }
+
+    private void deleteBestEffort(String url) {
+        if (url == null) {
+            return;
+        }
+        try {
+            storageService.deleteFileByUrl(url);
+        } catch (RuntimeException exception) {
+            log.warn("Storage cleanup failed after an asset update");
+        }
+    }
+
+    private String getCurrentUserPortal() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getName() == null || authentication.getName().isBlank()
+                || "anonymousUser".equals(authentication.getName())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
         return authentication.getName();
+    }
+
+    private ResponseStatusException conflict(String message) {
+        return new ResponseStatusException(HttpStatus.CONFLICT, message);
+    }
+
+    private record PersistedAsset(AppMediaAssetEntity entity, String oldUrl) {
+    }
+
+    private String normalizeAssetKey(String raw) {
+        if (raw == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Asset key is required");
+        }
+
+        String normalized = raw.trim().toUpperCase(Locale.ROOT);
+        if (normalized.isEmpty() || normalized.length() > 100 || !normalized.matches(KEY_REGEX)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Asset key must be 1-100 characters using letters, numbers, and single underscores"
+            );
+        }
+        return normalized;
     }
 }

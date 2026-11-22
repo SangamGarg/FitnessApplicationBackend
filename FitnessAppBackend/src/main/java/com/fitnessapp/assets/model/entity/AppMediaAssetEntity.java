@@ -1,6 +1,7 @@
 package com.fitnessapp.assets.model.entity;
 
 import com.fitnessapp.assets.model.enums.AssetCategory;
+import com.fitnessapp.assets.model.enums.AssetStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -10,8 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "app_media_assets", indexes = {
-        @Index(name = "idx_asset_key", columnList = "asset_key", unique = true),
-        @Index(name = "idx_category", columnList = "category")
+        @Index(name = "idx_asset_category_status", columnList = "category,status")
 })
 @Getter
 @Setter
@@ -33,21 +33,20 @@ public class AppMediaAssetEntity {
     private String title;
 
     // Direct CDN / Supabase Storage / S3 URL where the asset is hosted
-    @Column(name = "asset_url", nullable = false, length = 500)
+    @Column(name = "asset_url", length = 500)
     private String imageUrl;
 
     @Column(name = "asset_size_bytes")
     private Long fileSizeBytes;
 
-
     @Column(name = "updated_by_email", length = 254)
     private String updatedByEmail;
 
-    @Column(name = "asset_extension")
+    @Column(name = "asset_extension", length = 10)
     private String assetExtension;
 
     // Accessibility alt text to render in mobile ImageView / web <img>
-    @Column(name = "alt_text")
+    @Column(name = "alt_text", length = 255)
     private String altText;
 
     // Logical grouping to fetch all images for a specific screen at once
@@ -59,11 +58,10 @@ public class AppMediaAssetEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // Soft-disable switch so you can swap out images without deleting database rows
-    @Column(name = "is_active", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     @Builder.Default
-    private Boolean isActive = true;
-
+    private AssetStatus status = AssetStatus.PENDING_UPLOAD;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
