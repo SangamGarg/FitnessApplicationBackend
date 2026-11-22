@@ -24,6 +24,17 @@ public interface RecipeRepository extends JpaRepository<RecipeEntity, UUID> {
     Page<RecipeEntity> search(@Param("query") String query,
                               @Param("diet") DietaryPreference diet, @Param("userId") String userId, Pageable pageable);
 
+    @Query("""
+            select distinct r from RecipeEntity r
+            where (:query is null or lower(cast(r.title as String)) like lower(concat('%', cast(:query as String), '%')))
+              and (:diet is null or :diet = com.fitnessapp.nutrition.model.enums.DietaryPreference.ALL
+                   or r.dietType = :diet or r.dietType = com.fitnessapp.nutrition.model.enums.DietaryPreference.ALL)
+            order by r.aiGenerated asc, r.title asc
+            """)
+    Page<RecipeEntity> searchForPortal(@Param("query") String query,
+                                       @Param("diet") DietaryPreference diet,
+                                       Pageable pageable);
+
     Optional<RecipeEntity> findByIdAndActiveTrue(UUID id);
 
     @Query("select r from RecipeEntity r where r.id = :id and r.active = true and (r.owner is null or r.owner.id = :userId)")

@@ -26,6 +26,14 @@ public interface FoodItemRepository extends JpaRepository<FoodItemEntity, UUID> 
 
     @Query("""
         select f from FoodItemEntity f
+        where (:query is null or lower(f.name) like lower(concat('%', :query, '%'))
+               or lower(coalesce(f.brand, '')) like lower(concat('%', :query, '%')))
+        order by f.verified desc, f.name asc
+        """)
+    Page<FoodItemEntity> searchForPortal(@Param("query") String query, Pageable pageable);
+
+    @Query("""
+        select f from FoodItemEntity f
         where f.id = :foodId and f.active = true
           and (f.owner is null or f.owner.id = :userId)
         """)

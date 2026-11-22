@@ -2,16 +2,20 @@ package com.fitnessapp.nutrition.service;
 
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserRepo;
+import com.fitnessapp.nutrition.model.dto.request.AiRecipeRequest;
 import com.fitnessapp.nutrition.model.dto.request.CreateCustomFoodRequest;
 import com.fitnessapp.nutrition.model.dto.request.RecipeUpsertRequest;
 import com.fitnessapp.nutrition.model.dto.response.FoodItemResponse;
 import com.fitnessapp.nutrition.model.dto.response.RecipeResponse;
 import com.fitnessapp.nutrition.model.entity.FoodItemEntity;
 import com.fitnessapp.nutrition.model.entity.RecipeEntity;
+import com.fitnessapp.nutrition.model.enums.DietaryPreference;
 import com.fitnessapp.nutrition.repository.FoodItemRepository;
 import com.fitnessapp.nutrition.repository.RecipeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -33,6 +38,42 @@ public class PortalNutritionServiceImpl implements PortalNutritionService {
     private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
     private final FoodItemRepository foodRepository;
     private final UserRepo userRepository;
+    private final NutritionService nutritionService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FoodItemResponse> searchFoods(String query, int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        String normalizedQuery = StringUtils.hasText(query) ? query.trim() : null;
+        return foodRepository.searchForPortal(normalizedQuery, PageRequest.of(safePage, safeSize))
+                .map(this::toFoodResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RecipeResponse> searchRecipes(
+            String query, DietaryPreference dietaryPreference, int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        String normalizedQuery = StringUtils.hasText(query) ? query.trim() : null;
+        return recipeRepo.searchForPortal(normalizedQuery, dietaryPreference,
+                        PageRequest.of(safePage, safeSize))
+                .map(this::toRecipe);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RecipeResponse getRecipe(UUID recipeId) {
+        RecipeEntity recipe = recipeRepo.findById(recipeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found"));
+        return toRecipe(recipe);
+    }
+
+    @Override
+    public List<RecipeResponse> generateRecipes(AiRecipeRequest request) {
+        return nutritionService.generateRecipes(request);
+    }
 
     @Override
     @Transactional

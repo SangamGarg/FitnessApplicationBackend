@@ -356,8 +356,9 @@ public class NutritionServiceImpl implements NutritionService {
         String diet = request.dietaryPreference() == null
                 ? (prefs == null ? DietaryPreference.ALL.name() : prefs.getDietaryPreference().name())
                 : request.dietaryPreference().name();
-        String goal = StringUtils.hasText(request.fitnessGoal().name()) ? request.fitnessGoal().name()
-                : (prefs == null ? "MAINTENANCE" : prefs.getFitnessGoal().name());
+        String goal = request.fitnessGoal() == null
+                ? (prefs == null ? "MAINTENANCE" : prefs.getFitnessGoal().name())
+                : request.fitnessGoal().name();
         int count = request.recipeCount() == null ? 3 : request.recipeCount();
         String prompt = "Create " + count + " practical recipes using these available ingredients: " + ingredients + ". " +
                 "Diet preference=" + diet + "; fitness goal=" + goal + "; allergies=" + safePrompt(allergies) +
