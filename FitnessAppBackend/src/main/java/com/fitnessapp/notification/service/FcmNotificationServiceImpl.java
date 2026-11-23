@@ -13,9 +13,11 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -35,6 +37,22 @@ public class FcmNotificationServiceImpl implements FcmNotificationService {
     public List<AppUserForNotificationResponseDto> getAppUserForNotification() {
         List<UserEntity> list = userRepo.findAll();
         return list.stream().map(AppUserForNotificationResponseDto::from).toList();
+    }
+
+    @Override
+    public FcmDeliveryResult sendNotificationToUserFromPortal(String email, FcmNotificationRequest request) {
+        UserEntity user = userRepo.findByEmailIgnoreCase(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "App user not found"));
+        return sendToUser(user.getId(), request);
+    }
+
+    @Override
+    public FcmDeliveryResult sendNotificationToUsersFromPortal(Collection<String> email, FcmNotificationRequest request) {
+        Collection<String> userId = new ArrayList<>();
+        for (String email1 : email) {
+            UserEntity user = userRepo.findByEmailIgnoreCase(email1).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "App user not found"));
+            userId.add(user.getId());
+        }
+        return sendToUsers(userId, request);
     }
 
     @Override

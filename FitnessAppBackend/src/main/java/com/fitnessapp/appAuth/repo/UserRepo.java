@@ -21,6 +21,8 @@ public interface UserRepo extends JpaRepository<UserEntity, String> {
 
     boolean existsByEmailIgnoreCase(String email);
 
+    Optional<UserEntity> findByEmailIgnoreCase(String email);
+
     @Query("""
             select u.email
             from UserEntity u

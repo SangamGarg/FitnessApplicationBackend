@@ -41,14 +41,14 @@ public class PortalNotificationController {
     /**
      * Send a notification to a specific user.
      */
-    @PostMapping("/users/{userId}")
+    @PostMapping("/user/send")
     // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FcmDeliveryResult> sendToUser(
-            @PathVariable @NotBlank String userId,
+            @RequestParam() String userEmail,
             @Valid @RequestBody FcmNotificationRequest request
     ) {
         FcmDeliveryResult result =
-                fcmNotificationService.sendToUser(userId, request);
+                fcmNotificationService.sendNotificationToUserFromPortal(userEmail, request);
 
         return ResponseEntity.ok(result);
     }
@@ -62,8 +62,8 @@ public class PortalNotificationController {
             @Valid @RequestBody BulkFcmNotificationRequest request
     ) {
         FcmDeliveryResult result =
-                fcmNotificationService.sendToUsers(
-                        request.userIds(),
+                fcmNotificationService.sendNotificationToUsersFromPortal(
+                        request.email(),
                         request.notification()
                 );
 
@@ -72,7 +72,7 @@ public class PortalNotificationController {
 
     public record BulkFcmNotificationRequest(
             @NotEmpty
-            Collection<@NotBlank String> userIds,
+            Collection<@NotBlank String> email,
 
             @Valid
             FcmNotificationRequest notification
