@@ -12,6 +12,7 @@ public final class PortalUtil {
 
     public static final String PORTAL_BASE_ENDPOINT = "/api/v1/portal";
     public static final String PORTAL_AUTH_ENDPOINT = PORTAL_BASE_ENDPOINT + "/auth";
+    public static final String PORTAL_OVERVIEW_ENDPOINT = PORTAL_BASE_ENDPOINT + "/overview";
 
     /*********************************************************/
     public static final String PORTAL_ADMIN_BASE_ENDPOINT = PORTAL_BASE_ENDPOINT + "/admin";
@@ -42,7 +43,8 @@ public final class PortalUtil {
             PORTAL_AUTH_ENDPOINT + "/login",
             PORTAL_AUTH_ENDPOINT + "/refresh",
             PORTAL_AUTH_ENDPOINT + "/logout",
-            PORTAL_AUTH_ENDPOINT + "/setup"
+            PORTAL_AUTH_ENDPOINT + "/setup",
+            PORTAL_OVERVIEW_ENDPOINT + "/**"
     );
 
     public static final String CLAIM_TOKEN_TYPE = "token_type";

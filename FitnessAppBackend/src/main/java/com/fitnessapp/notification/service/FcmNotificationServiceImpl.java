@@ -7,6 +7,10 @@ import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.notification.dto.FcmDeliveryResult;
 import com.fitnessapp.notification.dto.FcmNotificationRequest;
 import com.fitnessapp.notification.dto.response.AppUserForNotificationResponseDto;
+import com.fitnessapp.notification.dto.response.PortalNotificationAnalyticsDto;
+import com.fitnessapp.notification.dto.response.PortalNotificationHistoryDto;
+import com.fitnessapp.notification.model.enums.NotificationOutboxStatus;
+import com.fitnessapp.notification.repo.UserNotificationOutboxRepository;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.*;
 import jakarta.validation.ConstraintViolation;
@@ -14,6 +18,8 @@ import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -31,12 +37,29 @@ public class FcmNotificationServiceImpl implements FcmNotificationService {
     private final UserDeviceRepo userDeviceRepo;
     private final FirebaseApp firebaseApp;
     private final Validator validator;
+    private final UserNotificationOutboxRepository outboxRepository;
 
     @Override
     @Transactional(readOnly = true)
     public List<AppUserForNotificationResponseDto> getAppUserForNotification() {
         List<UserEntity> list = userRepo.findAll();
         return list.stream().map(AppUserForNotificationResponseDto::from).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PortalNotificationHistoryDto> getNotificationHistory(NotificationOutboxStatus status, Pageable pageable) {
+        return outboxRepository.findHistory(status, pageable).map(PortalNotificationHistoryDto::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PortalNotificationAnalyticsDto getDeliveryAnalytics() {
+        Map<NotificationOutboxStatus, Long> counts = new EnumMap<>(NotificationOutboxStatus.class);
+        for (Object[] row : outboxRepository.countByStatus()) {
+            counts.put((NotificationOutboxStatus) row[0], (Long) row[1]);
+        }
+        return PortalNotificationAnalyticsDto.from(counts);
     }
 
     @Override

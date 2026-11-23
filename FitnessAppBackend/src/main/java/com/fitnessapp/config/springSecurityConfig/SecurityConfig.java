@@ -26,10 +26,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+
 import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_AUTH_ENDPOINT;
 import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_OTP_ENDPOINT;
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_AUTH_ENDPOINT;
-import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_BASE_ENDPOINT;
+import static com.fitnessapp.utils.portalUtil.PortalUtil.*;
 
 @Configuration
 @EnableWebSecurity
@@ -57,13 +57,13 @@ public class SecurityConfig {
     ) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PORTAL_AUTH_ENDPOINT + "/login", PORTAL_AUTH_ENDPOINT + "/refresh", PORTAL_AUTH_ENDPOINT + "/logout", PORTAL_AUTH_ENDPOINT + "/setup").permitAll()
+                        .requestMatchers(PORTAL_AUTH_ENDPOINT + "/login", PORTAL_AUTH_ENDPOINT + "/refresh", PORTAL_AUTH_ENDPOINT + "/logout", PORTAL_AUTH_ENDPOINT + "/setup", PORTAL_OVERVIEW_ENDPOINT + "/**").permitAll()
                         .requestMatchers(PORTAL_BASE_ENDPOINT + "/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/dev/support/**").hasRole("ADMIN")
                         .requestMatchers(PORTAL_BASE_ENDPOINT + "/**").hasAnyRole("ADMIN", "DEVELOPER")
 
                         .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
-                        .requestMatchers(APP_AUTH_ENDPOINT + "/loginRegister", APP_AUTH_ENDPOINT + "/refresh-token", APP_OTP_ENDPOINT + "/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api/health").permitAll()
+                        .requestMatchers(APP_AUTH_ENDPOINT + "/loginRegister", APP_AUTH_ENDPOINT + "/refresh-token", APP_OTP_ENDPOINT + "/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(APP_AUTH_ENDPOINT + "/logout").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
