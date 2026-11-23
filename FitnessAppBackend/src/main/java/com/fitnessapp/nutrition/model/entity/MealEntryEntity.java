@@ -64,6 +64,8 @@ public class MealEntryEntity {
     private String notes;
     @Column(name = "photo_url", length = 2048)
     private String photoUrl;
+    @Column(name = "image_url", length = 2048)
+    private String imageUrl;
     @Enumerated(EnumType.STRING)
     @Column(name = "sync_status", nullable = false, length = 20)
     private MealSyncStatus syncStatus = MealSyncStatus.SYNCED;

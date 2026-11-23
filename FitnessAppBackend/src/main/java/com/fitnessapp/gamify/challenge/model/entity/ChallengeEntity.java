@@ -60,4 +60,61 @@ public class ChallengeEntity {
     public boolean isJoinable(Instant now) {
         return active && !now.isBefore(startsAt) && now.isBefore(endsAt);
     }
+
+    public void update(String title, String description, ChallengeMetric metric, long targetValue,
+                       String activityType, Instant startsAt, Instant endsAt, long rewardXp, long rewardCoins) {
+        this.title = title;
+        this.description = description;
+        this.metric = metric;
+        this.targetValue = targetValue;
+        this.activityType = activityType;
+        this.startsAt = startsAt;
+        this.endsAt = endsAt;
+        this.rewardXp = rewardXp;
+        this.rewardCoins = rewardCoins;
+    }
+
+    public void deactivate() {
+        this.active = false;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setMetric(ChallengeMetric metric) {
+        this.metric = metric;
+    }
+
+    public void setTargetValue(long targetValue) {
+        this.targetValue = targetValue;
+    }
+
+    public void setActivityType(String activityType) {
+        this.activityType = activityType;
+    }
+
+    public void setStartsAt(Instant startsAt) {
+        this.startsAt = startsAt;
+    }
+
+    public void setEndsAt(Instant endsAt) {
+        this.endsAt = endsAt;
+    }
+
+    public void setRewardXp(long rewardXp) {
+        this.rewardXp = rewardXp;
+    }
+
+    public void setRewardCoins(long rewardCoins) {
+        this.rewardCoins = rewardCoins;
+    }
 }

@@ -1,6 +1,6 @@
 package com.fitnessapp.dashboard.service;
 
-import com.fitnessapp.exercise.service.ExerciseAppService;
+import com.fitnessapp.exercise.service.ExerciseService;
 import com.fitnessapp.gamify.activity.models.dtos.responseDto.ActivitySummaryResponseDto;
 import com.fitnessapp.gamify.activity.service.ActivityInterface;
 import com.fitnessapp.appAuth.model.entity.UserDetailsEntity;
@@ -49,7 +49,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final UserRepo userRepo;
     private final UserDetailsRepo userDetailsRepo;
     private final UserNotificationService userNotificationService;
-    private final ExerciseAppService exerciseAppService;
+    private final ExerciseService exerciseService;
     private final ActivityInterface activityService;
     private final NutritionService nutritionService;
     private final WorkoutAnalyticsService workoutAnalyticsService;
@@ -188,7 +188,7 @@ public class DashboardServiceImpl implements DashboardService {
             return null;
         }
 
-        var plans = exerciseAppService.getPublishedWorkoutPlansList(
+        var plans = exerciseService.getPublishedWorkoutPlansList(
                 null,
                 details.getGoal().name(),
                 null,

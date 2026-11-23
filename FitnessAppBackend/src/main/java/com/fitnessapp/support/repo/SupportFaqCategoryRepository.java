@@ -2,10 +2,12 @@ package com.fitnessapp.support.repo;
 
 import com.fitnessapp.support.models.entity.SupportFaqCategoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface SupportFaqCategoryRepository extends JpaRepository<SupportFaqCategoryEntity, Long> {
     List<SupportFaqCategoryEntity> findByActiveTrueOrderBySortOrderAscNameAsc();
 

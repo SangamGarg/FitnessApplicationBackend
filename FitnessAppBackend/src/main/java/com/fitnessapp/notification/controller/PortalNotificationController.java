@@ -2,33 +2,47 @@ package com.fitnessapp.notification.controller;
 
 import com.fitnessapp.notification.dto.FcmDeliveryResult;
 import com.fitnessapp.notification.dto.FcmNotificationRequest;
+import com.fitnessapp.notification.dto.response.AppUserForNotificationResponseDto;
 import com.fitnessapp.notification.service.FcmNotificationService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
+import java.util.List;
+
+import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_DEV_NOTIFICATION_ENDPOINT;
 
 //************************* RESTRICTED *************************//
 
 @RestController
-@RequestMapping("/api/v1/portal/notifications")
+@RequestMapping(PORTAL_DEV_NOTIFICATION_ENDPOINT)
 @RequiredArgsConstructor
 @Validated
-public class FcmNotificationController {
+@Slf4j
+public class PortalNotificationController {
 
     private final FcmNotificationService fcmNotificationService;
 
+
+    @GetMapping("/users")
+    public ResponseEntity<List<AppUserForNotificationResponseDto>> getAppUserForNotification() {
+        log.info("Fetching app user for notification portal");
+        return ResponseEntity.ok(fcmNotificationService.getAppUserForNotification());
+    }
+
+
     /**
-     * Send notification to a specific user.
+     * Send a notification to a specific user.
      */
     @PostMapping("/users/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FcmDeliveryResult> sendToUser(
             @PathVariable @NotBlank String userId,
             @Valid @RequestBody FcmNotificationRequest request
@@ -43,7 +57,7 @@ public class FcmNotificationController {
      * Send notification to multiple users.
      */
     @PostMapping("/users/bulk")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FcmDeliveryResult> sendToUsers(
             @Valid @RequestBody BulkFcmNotificationRequest request
     ) {

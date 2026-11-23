@@ -258,7 +258,7 @@ public class ProfileServiceImpl implements ProfileService {
         // Step 1: Upload image to external storage.
         String imageUrl = fileStorageService.uploadFile(
                 file,
-                "progress-gallery/" + userId
+                "progress-gallery-" + userId
         );
 
         try {

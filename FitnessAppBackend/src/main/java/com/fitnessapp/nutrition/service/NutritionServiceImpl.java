@@ -44,13 +44,11 @@ public class NutritionServiceImpl implements NutritionService {
     @Override
     @Transactional(readOnly = true)
     public Page<FoodItemResponse> searchFoods(String query, int page, int size) {
-        String userId = currentUserId();
-
 
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
-        String normalizedQuery = StringUtils.hasText(query) ? query.trim() : null;
-        return foodRepository.search(userId, normalizedQuery,
+        String normalizedQuery = StringUtils.hasText(query) ? query.trim() : "";
+        return foodRepository.search(normalizedQuery,
                 PageRequest.of(safePage, safeSize)).map(this::toFoodResponse);
     }
 
@@ -87,7 +85,7 @@ public class NutritionServiceImpl implements NutritionService {
                 return toMealResponse(existing.get());
             }
         }
-        FoodItemEntity food = foodRepository.findAccessibleFood(request.foodId(), userId)
+        FoodItemEntity food = foodRepository.findAccessibleFood(request.foodId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Food item not found"));
 
         BigDecimal factor = request.quantityGrams()
@@ -110,6 +108,7 @@ public class NutritionServiceImpl implements NutritionService {
         meal.setNotes(clean(request.notes()));
         meal.setClientMealId(request.clientMealId());
         meal.setPhotoUrl(clean(request.photoUrl()));
+        meal.setImageUrl(food.getImageUrl());
         meal.setSyncStatus(MealSyncStatus.SYNCED);
         return toMealResponse(mealRepository.save(meal));
     }
@@ -139,6 +138,7 @@ public class NutritionServiceImpl implements NutritionService {
         meal.setSugar(scale(sugar));
         meal.setNotes(clean(notes));
         meal.setPhotoUrl(clean(photoUrl));
+        meal.setImageUrl(clean(photoUrl));
         meal.setSyncStatus(com.fitnessapp.nutrition.model.enums.MealSyncStatus.SYNCED);
         return toMealResponse(mealRepository.save(meal));
     }
@@ -160,7 +160,7 @@ public class NutritionServiceImpl implements NutritionService {
 
         MealEntryEntity meal = mealRepository.findByIdAndUser_Id(mealId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meal entry not found"));
-        FoodItemEntity food = foodRepository.findAccessibleFood(request.foodId(), userId)
+        FoodItemEntity food = foodRepository.findAccessibleFood(request.foodId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Food item not found"));
         BigDecimal factor = request.quantityGrams().divide(food.getServingSizeGrams(), 8, RoundingMode.HALF_UP);
         meal.setFoodItem(food);
@@ -177,6 +177,7 @@ public class NutritionServiceImpl implements NutritionService {
         meal.setSugar(scale(nvl(food.getSugar()).multiply(factor)));
         meal.setNotes(clean(request.notes()));
         meal.setPhotoUrl(clean(request.photoUrl()));
+        meal.setImageUrl(food.getImageUrl());
         return toMealResponse(mealRepository.save(meal));
     }
 
@@ -291,10 +292,8 @@ public class NutritionServiceImpl implements NutritionService {
     @Override
     @Transactional(readOnly = true)
     public Page<RecipeResponse> searchRecipes(String query, DietaryPreference diet, int page, int size) {
-        String userId = currentUserId();
 
-        return recipeRepo.search(StringUtils.hasText(query) ? query.trim() : null, diet,
-                        userId, PageRequest.of(Math.max(0, page), Math.min(Math.max(size, 1), 100)))
+        return recipeRepo.search(StringUtils.hasText(query) ? query.trim() : "", diet, PageRequest.of(Math.max(0, page), Math.min(Math.max(size, 1), 100)))
                 .map(this::toRecipe);
     }
 
@@ -311,9 +310,8 @@ public class NutritionServiceImpl implements NutritionService {
     @Override
     @Transactional
     public MealEntryResponse logRecipe(UUID recipeId, MealType mealType, LocalDate date) {
-        String userId = currentUserId();
 
-        RecipeEntity recipe = recipeRepo.findAccessibleRecipe(recipeId, userId).orElseThrow(
+        RecipeEntity recipe = recipeRepo.findAccessibleRecipe(recipeId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found"));
         return logMealSnapshot(recipe.getTitle(), BigDecimal.valueOf(1),
                 recipe.getCalories(), recipe.getProtein(), recipe.getCarbohydrates(), recipe.getFat(),
@@ -441,8 +439,8 @@ public class NutritionServiceImpl implements NutritionService {
             double estimatedKcal = e.getProtein().doubleValue() * 4 + e.getCarbohydrates().doubleValue() * 4 + e.getFat().doubleValue() * 9;
             if (e.getCalories().doubleValue() <= 0 || estimatedKcal <= 0 || Math.abs(estimatedKcal - e.getCalories().doubleValue()) > Math.max(250, e.getCalories().doubleValue() * 0.45))
                 throw new IllegalArgumentException("Nutrition estimate failed calorie/macro consistency check");
-            UserEntity owner = userRepo.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User account not found"));
-            e.setOwner(owner);
+
+            e.setOwner(userId);
             e.setAiGenerated(true);
             e.setActive(true);
             return e;
@@ -520,7 +518,8 @@ public class NutritionServiceImpl implements NutritionService {
     private FoodItemResponse toFoodResponse(FoodItemEntity f) {
         return new FoodItemResponse(f.getId(), f.getName(), f.getBrand(), f.getServingLabel(),
                 f.getServingSizeGrams(), f.getCalories(), f.getProtein(), f.getCarbohydrates(),
-                f.getFat(), nvl(f.getFiber()), nvl(f.getSugar()), f.isVerified(), f.getOwner() != null);
+                f.getFat(), nvl(f.getFiber()), nvl(f.getSugar()), f.getImageUrl(),
+                f.isVerified(), f.getOwner() != null);
     }
 
     private MealEntryResponse toMealResponse(MealEntryEntity m) {
@@ -530,7 +529,7 @@ public class NutritionServiceImpl implements NutritionService {
                 m.getQuantityUnit() == null ? "GRAMS" : m.getQuantityUnit(),
                 m.getCalories(), m.getProtein(), m.getCarbohydrates(), m.getFat(),
                 nvl(m.getFiber()), nvl(m.getSugar()), m.getNotes(), m.getCreatedAt(),
-                m.getClientMealId(), m.getPhotoUrl(), m.getSyncStatus());
+                m.getClientMealId(), m.getPhotoUrl(), m.getImageUrl(), m.getSyncStatus());
     }
 
     private NutritionGoalResponse toGoalResponse(NutritionGoalEntity g) {

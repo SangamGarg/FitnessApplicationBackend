@@ -5,15 +5,20 @@ import com.fitnessapp.exercise.model.enums.WorkoutStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Repository
 public interface UserWorkoutRepository extends JpaRepository<UserWorkout, Long> {
     Optional<UserWorkout> findByIdAndUserId(Long id, String userId);
+
     Optional<UserWorkout> findByUserIdAndClientRequestId(String userId, UUID clientRequestId);
+
     Page<UserWorkout> findAllByUserIdOrderByStartedAtDesc(String userId, Pageable pageable);
 
     Optional<UserWorkout> findFirstByUserIdAndStatusInOrderByStartedAtDesc(String userId, Collection<WorkoutStatus> statuses);

@@ -1,7 +1,6 @@
 package com.fitnessapp.nutrition.service;
 
-import com.fitnessapp.appAuth.model.entity.UserEntity;
-import com.fitnessapp.appAuth.repo.UserRepo;
+import com.fitnessapp.assets.service.FileStorageService;
 import com.fitnessapp.nutrition.model.dto.request.AiRecipeRequest;
 import com.fitnessapp.nutrition.model.dto.request.CreateCustomFoodRequest;
 import com.fitnessapp.nutrition.model.dto.request.RecipeUpsertRequest;
@@ -21,7 +20,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -37,15 +39,15 @@ public class PortalNutritionServiceImpl implements PortalNutritionService {
     private final RecipeRepository recipeRepo;
     private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
     private final FoodItemRepository foodRepository;
-    private final UserRepo userRepository;
     private final NutritionService nutritionService;
+    private final FileStorageService fileStorageService;
 
     @Override
     @Transactional(readOnly = true)
     public Page<FoodItemResponse> searchFoods(String query, int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
-        String normalizedQuery = StringUtils.hasText(query) ? query.trim() : null;
+        String normalizedQuery = StringUtils.hasText(query) ? query.trim() : "";
         return foodRepository.searchForPortal(normalizedQuery, PageRequest.of(safePage, safeSize))
                 .map(this::toFoodResponse);
     }
@@ -56,7 +58,7 @@ public class PortalNutritionServiceImpl implements PortalNutritionService {
             String query, DietaryPreference dietaryPreference, int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
-        String normalizedQuery = StringUtils.hasText(query) ? query.trim() : null;
+        String normalizedQuery = StringUtils.hasText(query) ? query.trim() : "";
         return recipeRepo.searchForPortal(normalizedQuery, dietaryPreference,
                         PageRequest.of(safePage, safeSize))
                 .map(this::toRecipe);
@@ -75,17 +77,17 @@ public class PortalNutritionServiceImpl implements PortalNutritionService {
         return nutritionService.generateRecipes(request);
     }
 
+
     @Override
     @Transactional
-    public FoodItemResponse createCustomFood(CreateCustomFoodRequest request) {
+    public FoodItemResponse createCustomFood(CreateCustomFoodRequest request, MultipartFile image) {
         String userId = currentUserId();
 
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User account not found"));
         FoodItemEntity food = new FoodItemEntity();
-        food.setOwner(user);
+        food.setOwner(userId);
         food.setName(request.name().trim());
         food.setBrand(clean(request.brand()));
+        food.setImageUrl(uploadImage(image, "nutrition_foods"));
         food.setServingLabel(request.servingLabel().trim());
         food.setServingSizeGrams(request.servingSizeGrams());
         food.setCalories(request.calories());
@@ -99,20 +101,107 @@ public class PortalNutritionServiceImpl implements PortalNutritionService {
         return toFoodResponse(foodRepository.save(food));
     }
 
-    // Portal/admin authorization is applied by the controller, not by trusting a client-supplied owner.
     @Override
     @Transactional
-    public RecipeResponse createRecipe(RecipeUpsertRequest r) {
-        RecipeEntity e = new RecipeEntity();
-        applyRecipe(e, r);
-        e.setAiGenerated(false);
-        return toRecipe(recipeRepo.save(e));
+    public FoodItemResponse updateCustomFood(
+            UUID foodId, CreateCustomFoodRequest request, MultipartFile image) {
+        FoodItemEntity food = foodRepository.findById(foodId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Food not found"));
+        if (!food.isActive()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Food not found");
+        }
+
+        food.setName(request.name().trim());
+        food.setBrand(clean(request.brand()));
+        food.setServingLabel(request.servingLabel().trim());
+        food.setServingSizeGrams(request.servingSizeGrams());
+        food.setCalories(request.calories());
+        food.setProtein(request.protein());
+        food.setCarbohydrates(request.carbohydrates());
+        food.setFat(request.fat());
+        food.setFiber(nvl(request.fiber()));
+        food.setSugar(nvl(request.sugar()));
+        if (image != null && !image.isEmpty()) {
+            food.setImageUrl(uploadImage(image, "nutrition_foods"));
+        }
+        return toFoodResponse(foodRepository.save(food));
+    }
+
+    @Override
+    @Transactional
+    public void deleteCustomFood(UUID foodId) {
+        FoodItemEntity food = foodRepository.findById(foodId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Food not found"));
+        if (!food.isActive()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Food not found");
+        }
+        food.setActive(false);
+        foodRepository.save(food);
+    }
+
+    @Override
+    @Transactional
+    public RecipeResponse createRecipe(RecipeUpsertRequest request, MultipartFile image) {
+        if (image != null && !image.isEmpty() && StringUtils.hasText(request.imageUrl())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Provide either an image upload or imageUrl, not both"
+            );
+        }
+        RecipeEntity recipe = new RecipeEntity();
+        applyRecipe(recipe, request);
+        if (image != null && !image.isEmpty()) {
+            recipe.setImageUrl(uploadImage(image, "nutrition_recipes"));
+        }
+        String userId = currentUserId();
+        recipe.setOwner(userId);
+        recipe.setAiGenerated(false);
+        return toRecipe(recipeRepo.save(recipe));
+    }
+
+    @Override
+    @Transactional
+    public RecipeResponse updateRecipe(UUID recipeId, RecipeUpsertRequest request, MultipartFile image) {
+        if (image != null && !image.isEmpty() && StringUtils.hasText(request.imageUrl())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Provide either an image upload or imageUrl, not both"
+            );
+        }
+
+        RecipeEntity recipe = recipeRepo.findById(recipeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found"));
+        if (!recipe.isActive()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found");
+        }
+
+        String existingImageUrl = recipe.getImageUrl();
+        applyRecipe(recipe, request);
+        if (image != null && !image.isEmpty()) {
+            recipe.setImageUrl(uploadImage(image, "nutrition_recipes"));
+        } else if (request.imageUrl() == null) {
+            recipe.setImageUrl(existingImageUrl);
+        }
+        return toRecipe(recipeRepo.save(recipe));
+    }
+
+    @Override
+    @Transactional
+    public void deleteRecipe(UUID recipeId) {
+        RecipeEntity recipe = recipeRepo.findById(recipeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found"));
+        if (!recipe.isActive()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipe not found");
+        }
+        recipe.setActive(false);
+        recipeRepo.save(recipe);
     }
 
     private FoodItemResponse toFoodResponse(FoodItemEntity f) {
         return new FoodItemResponse(f.getId(), f.getName(), f.getBrand(), f.getServingLabel(),
                 f.getServingSizeGrams(), f.getCalories(), f.getProtein(), f.getCarbohydrates(),
-                f.getFat(), nvl(f.getFiber()), nvl(f.getSugar()), f.isVerified(), f.getOwner() != null);
+                f.getFat(), nvl(f.getFiber()), nvl(f.getSugar()), f.getImageUrl(),
+                f.isVerified(), f.getOwner() != null);
     }
 
     private RecipeResponse toRecipe(RecipeEntity r) {
@@ -150,6 +239,30 @@ public class PortalNutritionServiceImpl implements PortalNutritionService {
 
     private String clean(String s) {
         return StringUtils.hasText(s) ? s.trim() : null;
+    }
+
+    private String uploadImage(MultipartFile image, String folder) {
+        if (image == null || image.isEmpty()) {
+            return null;
+        }
+        String imageUrl = fileStorageService.uploadFile(image, folder);
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            try {
+                fileStorageService.deleteFileByUrl(imageUrl);
+            } catch (RuntimeException cleanupException) {
+                log.warn("Failed to clean up nutrition image after transaction setup failure", cleanupException);
+            }
+            throw new IllegalStateException("Nutrition image upload requires an active transaction");
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == STATUS_ROLLED_BACK) {
+                    fileStorageService.deleteFileByUrl(imageUrl);
+                }
+            }
+        });
+        return imageUrl;
     }
 
     private String currentUserId() {

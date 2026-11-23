@@ -48,6 +48,18 @@ public class Exercise {
     @Column(nullable = false, length = 20)
     private ExerciseDifficulty difficulty;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "level_id")
+    private ExerciseLevel level;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private ExerciseCategory category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_category_id")
+    private ExerciseSubCategory subCategory;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "exercise_type", nullable = false, length = 30)
     private ExerciseType exerciseType;
@@ -76,6 +88,9 @@ public class Exercise {
 
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExerciseMuscle> exerciseMuscles = new ArrayList<>();
+
+    @OneToOne(mappedBy = "exercise", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ExerciseDetail detail;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

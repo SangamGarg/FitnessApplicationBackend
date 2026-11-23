@@ -5,7 +5,7 @@ import com.fitnessapp.exercise.model.dto.response.ExerciseResponseDto;
 import com.fitnessapp.exercise.model.dto.response.WorkoutPlanResponseDto;
 import com.fitnessapp.exercise.model.enums.ExerciseDifficulty;
 import com.fitnessapp.exercise.model.enums.ExerciseType;
-import com.fitnessapp.exercise.service.ExerciseAppService;
+import com.fitnessapp.exercise.service.ExerciseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,11 +24,11 @@ import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_EXERCISE_ENDPOINT
 @RequiredArgsConstructor
 public class ExerciseAppController {
 
-    private final ExerciseAppService exerciseAppService;
+    private final ExerciseService exerciseService;
 
     @GetMapping("/home")
     public ResponseEntity<ExerciseHomeResponseDto> getExerciseHome() {
-        return exerciseAppService.getExerciseHome();
+        return exerciseService.getExerciseHome();
     }
 
     @GetMapping("/catalog")
@@ -45,7 +45,7 @@ public class ExerciseAppController {
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page must be non-negative and size must be between 1 and 100");
         }
-        return ResponseEntity.ok(exerciseAppService.getPublishedExercisesList(
+        return ResponseEntity.ok(exerciseService.getPublishedExercisesList(
                 query,
                 difficulty,
                 type,
@@ -67,7 +67,7 @@ public class ExerciseAppController {
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page must be non-negative and size must be between 1 and 100");
         }
-        return ResponseEntity.ok(exerciseAppService.searchExercisesByMuscleGroup(
+        return ResponseEntity.ok(exerciseService.searchExercisesByMuscleGroup(
                 muscle,
                 role,
                 true,
@@ -78,7 +78,7 @@ public class ExerciseAppController {
     @GetMapping("/catalog/{id}")
     //Get a published exercise
     public ResponseEntity<ExerciseResponseDto> getPublishedExercise(@PathVariable Long id) {
-        return ResponseEntity.ok(exerciseAppService.getPublishedExercise(id, true));
+        return ResponseEntity.ok(exerciseService.getPublishedExercise(id, true));
     }
 
 
@@ -98,7 +98,7 @@ public class ExerciseAppController {
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page must be non-negative and size must be between 1 and 100");
         }
-        return ResponseEntity.ok(exerciseAppService.getPublishedWorkoutPlansList(
+        return ResponseEntity.ok(exerciseService.getPublishedWorkoutPlansList(
                 query,
                 goal,
                 difficulty,
@@ -110,7 +110,7 @@ public class ExerciseAppController {
     @GetMapping("/workout-plans/{id}")
     //Get a published workout plan
     public ResponseEntity<WorkoutPlanResponseDto> getPublishedWorkoutPlan(@PathVariable Long id) {
-        return ResponseEntity.ok(exerciseAppService.getPublishedWorkoutPlan(id, true));
+        return ResponseEntity.ok(exerciseService.getPublishedWorkoutPlan(id, true));
     }
 
 }

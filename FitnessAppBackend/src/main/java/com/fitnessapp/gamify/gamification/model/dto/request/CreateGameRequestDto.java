@@ -16,7 +16,6 @@ public record CreateGameRequestDto(
         @NotBlank @Size(max = 120) String title,
         @Size(max = 200) String subTitle,
         @NotBlank @Size(max = 1000) String description,
-        @NotBlank @Size(max = 500) String imageUrl,
         @NotNull GameLevel level,
         Integer totalRepsRequired,
         @Min(1) int durationValue,
@@ -29,9 +28,6 @@ public record CreateGameRequestDto(
         Instant releasedAt,
         int displayOrder,
 
-        // Details fields
-        @Size(max = 500) String gifUrl,
-        @Size(max = 500) String videoUrl,
         List<String> rules,
         List<String> tips
 ) {

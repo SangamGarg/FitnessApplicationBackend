@@ -1,30 +1,23 @@
 package com.fitnessapp.notification.service;
 
 import com.fitnessapp.appAuth.model.entity.UserDeviceEntity;
+import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserDeviceRepo;
+import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.notification.dto.FcmDeliveryResult;
 import com.fitnessapp.notification.dto.FcmNotificationRequest;
+import com.fitnessapp.notification.dto.response.AppUserForNotificationResponseDto;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.messaging.BatchResponse;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.MessagingErrorCode;
-import com.google.firebase.messaging.MulticastMessage;
-import com.google.firebase.messaging.Notification;
-import com.google.firebase.messaging.SendResponse;
+import com.google.firebase.messaging.*;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -32,10 +25,17 @@ import java.util.Set;
 public class FcmNotificationServiceImpl implements FcmNotificationService {
 
     private static final int FCM_MULTICAST_LIMIT = 500;
-
+    private final UserRepo userRepo;
     private final UserDeviceRepo userDeviceRepo;
     private final FirebaseApp firebaseApp;
     private final Validator validator;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AppUserForNotificationResponseDto> getAppUserForNotification() {
+        List<UserEntity> list = userRepo.findAll();
+        return list.stream().map(AppUserForNotificationResponseDto::from).toList();
+    }
 
     @Override
     public FcmDeliveryResult sendToUser(String userId, FcmNotificationRequest request) {

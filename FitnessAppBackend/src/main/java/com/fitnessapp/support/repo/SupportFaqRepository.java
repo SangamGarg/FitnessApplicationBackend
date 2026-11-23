@@ -6,10 +6,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface SupportFaqRepository extends JpaRepository<SupportFaqEntity, Long> {
     @Query("""
             select faq
@@ -32,21 +34,18 @@ public interface SupportFaqRepository extends JpaRepository<SupportFaqEntity, Lo
     Optional<SupportFaqEntity> findByIdAndActiveTrue(Long id);
 
 
-
-
-
     @Query("""
-        SELECT f
-        FROM SupportFaqEntity f
-        JOIN FETCH f.category c
-        WHERE f.active = true
-          AND c.active = true
-          AND (
-                LOWER(f.question) LIKE LOWER(CONCAT('%', :term, '%'))
-                OR LOWER(f.answer) LIKE LOWER(CONCAT('%', :term, '%'))
-          )
-        ORDER BY f.popular DESC, f.sortOrder ASC, f.updatedAt DESC
-        """)
+            SELECT f
+            FROM SupportFaqEntity f
+            JOIN FETCH f.category c
+            WHERE f.active = true
+              AND c.active = true
+              AND (
+                    LOWER(f.question) LIKE LOWER(CONCAT('%', :term, '%'))
+                    OR LOWER(f.answer) LIKE LOWER(CONCAT('%', :term, '%'))
+              )
+            ORDER BY f.popular DESC, f.sortOrder ASC, f.updatedAt DESC
+            """)
     List<SupportFaqEntity> searchActiveFaqs(
             @Param("term") String term,
             Pageable pageable

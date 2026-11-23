@@ -9,6 +9,7 @@ import com.fitnessapp.gamify.challenge.model.enums.ChallengeStatus;
 import com.fitnessapp.gamify.challenge.repository.ChallengeRepository;
 import com.fitnessapp.gamify.challenge.repository.UserChallengeRepository;
 import com.fitnessapp.gamify.gamification.service.GamificationRewardService;
+import com.fitnessapp.wallet.service.AppWalletService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,19 +26,19 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class ChallengeService {
-    private final ChallengeRepository challenges;
-    private final UserChallengeRepository memberships;
+    private final ChallengeRepository challengeRepository;
+    private final UserChallengeRepository userChallengeRepository;
     private final UserRepo users;
-    private final GamificationRewardService rewards;
-    private final com.fitnessapp.wallet.service.AppWalletService walletService;
+    private final GamificationRewardService gamificationRewardService;
+    private final AppWalletService walletService;
 
     @Transactional(readOnly = true)
     public List<ChallengeResponseDto> available() {
         String userId = currentUserId();
         Instant now = Instant.now();
-        return challenges.findAllByActiveTrueAndStartsAtLessThanEqualAndEndsAtAfterOrderByEndsAtAsc(now, now).stream().map(c -> {
-            var m = memberships.findByUserIdAndChallengeId(userId, c.getId()).orElse(null);
-            return dto(c, m);
+        return challengeRepository.findAllByActiveTrueAndStartsAtLessThanEqualAndEndsAtAfterOrderByEndsAtAsc(now, now).stream().map(c -> {
+            var userChallengeEntity = userChallengeRepository.findByUserIdAndChallengeId(userId, c.getId()).orElse(null);
+            return dto(c, userChallengeEntity);
         }).toList();
     }
 
@@ -46,31 +47,31 @@ public class ChallengeService {
         String userId = currentUserId();
 
         var user = users.findByIdForUpdate(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        var c = challenges.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Challenge not found"));
+        var c = challengeRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Challenge not found"));
         if (!c.isJoinable(Instant.now()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Challenge is not currently joinable");
-        var m = memberships.findByUserIdAndChallengeId(userId, id).orElseGet(() -> memberships.save(new UserChallengeEntity(user, c)));
+        var m = userChallengeRepository.findByUserIdAndChallengeId(userId, id).orElseGet(() -> userChallengeRepository.save(new UserChallengeEntity(user, c)));
         return dto(c, m);
     }
 
     @Transactional(readOnly = true)
     public List<ChallengeResponseDto> mine() {
         String userId = currentUserId();
-        return memberships.findAllByUserIdOrderByJoinedAtDesc(userId).stream().map(m -> dto(m.getChallenge(), m)).toList();
+        return userChallengeRepository.findAllByUserIdOrderByJoinedAtDesc(userId).stream().map(m -> dto(m.getChallenge(), m)).toList();
     }
 
     /** Called only with server-persisted, canonical activity/game metrics. */
     @Transactional
     public void recordProgress(String userId, ChallengeMetric metric, long amount, String activityType, String sourceId) {
         if (amount <= 0) return;
-        for (var m : memberships.findAllByUserIdAndStatus(userId, ChallengeStatus.ACTIVE)) {
+        for (var m : userChallengeRepository.findAllByUserIdAndStatus(userId, ChallengeStatus.ACTIVE)) {
             var c = m.getChallenge();
             if (c.getMetric() != metric || !c.isJoinable(Instant.now())) continue;
             if (c.getActivityType() != null && !c.getActivityType().equalsIgnoreCase(activityType)) continue;
             boolean completed = m.addProgress(amount);
-            memberships.save(m);
+            userChallengeRepository.save(m);
             if (completed) {
-                rewards.awardExternalReward(userId, "CHALLENGE_COMPLETION:" + c.getId(), "CHALLENGE", String.valueOf(c.getId()), c.getRewardXp(), c.getRewardCoins(), "Challenge completion reward");
+                gamificationRewardService.awardExternalReward(userId, "CHALLENGE_COMPLETION:" + c.getId(), "CHALLENGE", String.valueOf(c.getId()), c.getRewardXp(), c.getRewardCoins(), "Challenge completion reward");
                 try {
                     walletService.processReferralReward(userId);
                 } catch (Exception e) {

@@ -1,6 +1,5 @@
 package com.fitnessapp.nutrition.model.entity;
 
-import com.fitnessapp.appAuth.model.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,16 +25,17 @@ public class FoodItemEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_user_id",
-            foreignKey = @ForeignKey(name = "fk_food_item_owner"))
-    private UserEntity owner;
+    @Column(name = "owner_user_id")
+    private String owner;
 
     @Column(nullable = false, length = 160)
     private String name;
 
     @Column(length = 100)
     private String brand;
+
+    @Column(name = "image_url", length = 2048)
+    private String imageUrl;
 
     @Column(name = "serving_label", nullable = false, length = 80)
     private String servingLabel = "100 g";

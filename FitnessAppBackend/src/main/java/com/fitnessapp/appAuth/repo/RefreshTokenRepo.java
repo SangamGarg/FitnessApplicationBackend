@@ -6,10 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface RefreshTokenRepo extends JpaRepository<RefreshTokenEntity, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from RefreshTokenEntity t where t.tokenHash = :hash")
@@ -26,5 +28,6 @@ public interface RefreshTokenRepo extends JpaRepository<RefreshTokenEntity, Long
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from RefreshTokenEntity t where t.userId = :userId and t.revokedAt is null")
     List<RefreshTokenEntity> findActiveByUserIdForUpdate(@Param("userId") String userId);
+
     void deleteByUserId(String userId);
 }

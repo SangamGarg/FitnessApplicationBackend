@@ -13,13 +13,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -42,11 +47,28 @@ public class PortalNutritionController {
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(service.searchFoods(query, page, size));
     }
-    @PostMapping("/foods")
-    public ResponseEntity<FoodItemResponse> createCustomFood(
-            @Valid @RequestBody CreateCustomFoodRequest request) {
+
+
+    @PostMapping(value = "/foods", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FoodItemResponse> createCustomFoodWithImage(
+            @Valid @RequestPart("request") CreateCustomFoodRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(service.createCustomFood(request));
+                .body(service.createCustomFood(request, image));
+    }
+
+    @PutMapping(value = "/foods/{foodId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FoodItemResponse> updateCustomFood(
+            @PathVariable UUID foodId,
+            @Valid @RequestPart("request") CreateCustomFoodRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.ok(service.updateCustomFood(foodId, request, image));
+    }
+
+    @DeleteMapping("/foods/{foodId}")
+    public ResponseEntity<Void> deleteCustomFood(@PathVariable UUID foodId) {
+        service.deleteCustomFood(foodId);
+        return ResponseEntity.noContent().build();
     }
 
 
@@ -70,12 +92,25 @@ public class PortalNutritionController {
         return ResponseEntity.ok(service.generateRecipes(request));
     }
 
+    @PostMapping(value = "/recipes", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<RecipeResponse> createRecipeWithImage(
+            @Valid @RequestPart("request") RecipeUpsertRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecipe(request, image));
+    }
 
+    @PutMapping(value = "/recipes/{recipeId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<RecipeResponse> updateRecipe(
+            @PathVariable UUID recipeId,
+            @Valid @RequestPart("request") RecipeUpsertRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.ok(service.updateRecipe(recipeId, request, image));
+    }
 
-    @PostMapping("/recipes")
-    //@PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<RecipeResponse> createRecipe(@Valid @RequestBody RecipeUpsertRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createRecipe(request));
+    @DeleteMapping("/recipes/{recipeId}")
+    public ResponseEntity<Void> deleteRecipe(@PathVariable UUID recipeId) {
+        service.deleteRecipe(recipeId);
+        return ResponseEntity.noContent().build();
     }
 
 }

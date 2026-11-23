@@ -9,6 +9,6 @@ public record MealEntryResponse(
     UUID id, UUID foodId, String foodName, MealType mealType, LocalDate mealDate,
     BigDecimal quantityGrams, String quantityUnit, BigDecimal calories, BigDecimal protein,
     BigDecimal carbohydrates, BigDecimal fat, BigDecimal fiber, BigDecimal sugar,
-    String notes, Instant createdAt, UUID clientMealId, String photoUrl,
+    String notes, Instant createdAt, UUID clientMealId, String photoUrl, String imageUrl,
     MealSyncStatus syncStatus
 ) {}

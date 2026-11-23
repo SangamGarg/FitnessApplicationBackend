@@ -7,6 +7,7 @@ import com.fitnessapp.nutrition.model.dto.response.FoodItemResponse;
 import com.fitnessapp.nutrition.model.dto.response.RecipeResponse;
 import com.fitnessapp.nutrition.model.enums.DietaryPreference;
 import org.springframework.data.domain.Page;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +21,16 @@ public interface PortalNutritionService {
 
     List<RecipeResponse> generateRecipes(AiRecipeRequest request);
 
-    FoodItemResponse createCustomFood(CreateCustomFoodRequest request);
 
-    RecipeResponse createRecipe(RecipeUpsertRequest r);
+    FoodItemResponse createCustomFood(CreateCustomFoodRequest request, MultipartFile image);
+
+    FoodItemResponse updateCustomFood(UUID foodId, CreateCustomFoodRequest request, MultipartFile image);
+
+    void deleteCustomFood(UUID foodId);
+
+    RecipeResponse createRecipe(RecipeUpsertRequest request, MultipartFile image);
+
+    RecipeResponse updateRecipe(UUID recipeId, RecipeUpsertRequest request, MultipartFile image);
+
+    void deleteRecipe(UUID recipeId);
 }

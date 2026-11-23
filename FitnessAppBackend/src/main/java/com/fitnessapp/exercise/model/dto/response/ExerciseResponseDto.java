@@ -23,10 +23,26 @@ public record ExerciseResponseDto(
         boolean published,
         List<MediaItem> media,
         List<ExerciseMuscleList> exerciseMuscles,
+        CategoryItem category,
+        SubCategoryItem subCategory,
+        LevelItem level,
+        ExerciseDetailItem detail,
         Instant createdAt,
         Instant updatedAt
 ) {
     public record MediaItem(Long id, MediaType type, String url, String thumbnailUrl, int sortOrder, boolean primary) {
+    }
+
+    public record CategoryItem(String categoryKey, String name) {
+    }
+
+    public record SubCategoryItem(String subCategoryKey, String name) {
+    }
+
+    public record LevelItem(String levelKey, String name, int sortOrder) {
+    }
+
+    public record ExerciseDetailItem(String setup, String benefits, String safetyNotes, String commonMistakes) {
     }
 
     public record ExerciseMuscleList(String role, MuscleGroupItem muscleGroup) {

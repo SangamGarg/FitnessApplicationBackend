@@ -1,12 +1,14 @@
 package com.fitnessapp.gamify.gamification.service;
 
 import com.fitnessapp.appAuth.repo.UserRepo;
+import com.fitnessapp.assets.service.FileStorageService;
 import com.fitnessapp.gamify.achievement.service.AchievementService;
 import com.fitnessapp.gamify.challenge.model.enums.ChallengeMetric;
 import com.fitnessapp.gamify.challenge.service.ChallengeService;
 import com.fitnessapp.gamify.gamification.model.dto.request.CreateGameRequestDto;
 import com.fitnessapp.gamify.gamification.model.dto.request.GameCompleteRequestDto;
 import com.fitnessapp.gamify.gamification.model.dto.request.GameStartRequestDto;
+import com.fitnessapp.gamify.gamification.model.dto.request.PatchGameRequestDto;
 import com.fitnessapp.gamify.gamification.model.dto.response.*;
 import com.fitnessapp.gamify.gamification.model.entity.*;
 import com.fitnessapp.gamify.gamification.model.enums.DurationUnit;
@@ -23,10 +25,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,6 +49,7 @@ public class GamificationServiceImpl implements GamificationService {
     private final GamificationRewardService rewards;
     private final ChallengeService challenges;
     private final AchievementService achievements;
+    private final FileStorageService fileStorageService;
 
 
     @Transactional(readOnly = true)
@@ -115,8 +120,8 @@ public class GamificationServiceImpl implements GamificationService {
         GameCatalogueEntity catalogue = catalogueRepo.findByGameTypeAndActiveTrue(s.getGameType())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game catalogue entry not found"));
 
-        int gameMinDuration = catalogue.getDurationUnit() == DurationUnit.MINUTE 
-                ? catalogue.getDurationValue() * 60 
+        int gameMinDuration = catalogue.getDurationUnit() == DurationUnit.MINUTE
+                ? catalogue.getDurationValue() * 60
                 : catalogue.getDurationValue();
 
         long elapsed = Duration.between(s.getStartedAt(), Instant.now()).getSeconds();
@@ -180,43 +185,170 @@ public class GamificationServiceImpl implements GamificationService {
 
     @Transactional
     @Override
-    public GameCatalogueResponseDto createGame(CreateGameRequestDto request) {
-        if (catalogueRepo.findByGameTypeAndActiveTrue(request.gameType()).isPresent()) {
+    public GameCatalogueResponseDto createGame(CreateGameRequestDto request, MultipartFile image,
+                                               MultipartFile gif, MultipartFile video) {
+        if (catalogueRepo.findByGameType(request.gameType()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Game already exists");
         }
+        if (image == null || image.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game image is required");
+        }
+        if (gif == null || gif.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game GIF is required");
+        }
+        if (video == null || video.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game video is required");
+        }
 
-        GameCatalogueEntity catalogue = GameCatalogueEntity.builder()
-                .gameType(request.gameType())
-                .title(request.title())
-                .subTitle(request.subTitle())
-                .description(request.description())
-                .imageUrl(request.imageUrl())
-                .level(request.level())
-                .totalRepsRequired(request.totalRepsRequired())
-                .durationValue(request.durationValue())
-                .durationUnit(request.durationUnit())
-                .paid(request.paid())
-                .entryFeeCoins(request.entryFeeCoins())
-                .rewardCoins(request.rewardCoins())
-                .rewardXp(request.rewardXp())
-                .maxRepsPerMinute(request.maxRepsPerMinute())
-                .releasedAt(request.releasedAt())
-                .displayOrder(request.displayOrder())
-                .build();
+        List<String> uploadedUrls = new ArrayList<>();
+        try {
+            String imageUrl = fileStorageService.uploadMedia(image, "gamification");
+            uploadedUrls.add(imageUrl);
+            String gifUrl = gif.isEmpty()
+                    ? null : fileStorageService.uploadMedia(gif, "gamification");
+            if (gifUrl != null) uploadedUrls.add(gifUrl);
+            String videoUrl = video.isEmpty()
+                    ? null : fileStorageService.uploadMedia(video, "gamification");
+            if (videoUrl != null) uploadedUrls.add(videoUrl);
 
+            GameCatalogueEntity catalogue = GameCatalogueEntity.builder()
+                    .gameType(request.gameType())
+                    .title(request.title().trim())
+                    .subTitle(request.subTitle() == null ? null : request.subTitle().trim())
+                    .description(request.description().trim())
+                    .imageUrl(imageUrl)
+                    .level(request.level())
+                    .totalRepsRequired(request.totalRepsRequired())
+                    .durationValue(request.durationValue())
+                    .durationUnit(request.durationUnit())
+                    .paid(request.paid())
+                    .entryFeeCoins(request.entryFeeCoins())
+                    .rewardCoins(request.rewardCoins())
+                    .rewardXp(request.rewardXp())
+                    .maxRepsPerMinute(request.maxRepsPerMinute())
+                    .releasedAt(request.releasedAt())
+                    .displayOrder(request.displayOrder())
+                    .build();
+
+            catalogue = catalogueRepo.save(catalogue);
+            GameDetailEntity details = new GameDetailEntity(
+                    catalogue, gifUrl, videoUrl,
+                    request.rules() == null ? List.of() : request.rules(),
+                    request.tips() == null ? List.of() : request.tips());
+            gameDetailRepo.save(details);
+            return GameCatalogueResponseDto.from(catalogue);
+        } catch (RuntimeException exception) {
+            uploadedUrls.forEach(url -> {
+                try {
+                    fileStorageService.deleteFileByUrl(url);
+                } catch (RuntimeException cleanupException) {
+                    exception.addSuppressed(cleanupException);
+                }
+            });
+            throw exception;
+        }
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<PortalGameResponseDto> getGamesForPortal() {
+        return catalogueRepo.findAllByOrderByDisplayOrderAsc().stream()
+                .map(catalogue -> PortalGameResponseDto.from(
+                        catalogue,
+                        gameDetailRepo.findByCatalogue(catalogue).orElse(null)))
+                .toList();
+    }
+
+    @Transactional
+    @Override
+    public PortalGameResponseDto patchGame(GameType gameType, PatchGameRequestDto request,
+                                           MultipartFile image, MultipartFile gif, MultipartFile video) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game patch data is required");
+        }
+        GameCatalogueEntity catalogue = catalogueRepo.findByGameType(gameType)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
+        GameDetailEntity detail = gameDetailRepo.findByCatalogue(catalogue).orElse(null);
+
+        if (request.title() != null) {
+            String title = request.title().trim();
+            if (title.isEmpty())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game title cannot be blank");
+            catalogue.setTitle(title);
+        }
+        if (request.subTitle() != null) catalogue.setSubTitle(request.subTitle().trim());
+        if (request.description() != null) {
+            String description = request.description().trim();
+            if (description.isEmpty())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game description cannot be blank");
+            catalogue.setDescription(description);
+        }
+        if (request.level() != null) catalogue.setLevel(request.level());
+        if (request.totalRepsRequired() != null) catalogue.setTotalRepsRequired(request.totalRepsRequired());
+        if (request.durationValue() != null) catalogue.setDurationValue(request.durationValue());
+        if (request.durationUnit() != null) catalogue.setDurationUnit(request.durationUnit());
+        if (request.paid() != null) catalogue.setPaid(request.paid());
+        if (request.entryFeeCoins() != null) catalogue.setEntryFeeCoins(request.entryFeeCoins());
+        if (request.rewardCoins() != null) catalogue.setRewardCoins(request.rewardCoins());
+        if (request.rewardXp() != null) catalogue.setRewardXp(request.rewardXp());
+        if (request.maxRepsPerMinute() != null) catalogue.setMaxRepsPerMinute(request.maxRepsPerMinute());
+        if (request.releasedAt() != null) catalogue.setReleasedAt(request.releasedAt());
+        if (request.displayOrder() != null) catalogue.setDisplayOrder(request.displayOrder());
+        if (request.active() != null) catalogue.setActive(request.active());
+
+        if (detail == null && (image != null || gif != null || video != null
+                || request.rules() != null || request.tips() != null)) {
+            detail = new GameDetailEntity(catalogue, null, null,
+                    request.rules() == null ? List.of() : request.rules(),
+                    request.tips() == null ? List.of() : request.tips());
+        }
+
+        try {
+            if (image != null && !image.isEmpty()) {
+                String oldUrl = catalogue.getImageUrl();
+                catalogue.setImageUrl(fileStorageService.uploadMedia(image, "gamification"));
+                if (oldUrl != null) fileStorageService.deleteFileByUrl(oldUrl);
+            }
+            if (detail != null) {
+                if (gif != null && !gif.isEmpty()) {
+                    String oldUrl = detail.getGifUrl();
+                    detail.setGifUrl(fileStorageService.uploadMedia(gif, "gamification"));
+                    if (oldUrl != null) fileStorageService.deleteFileByUrl(oldUrl);
+                }
+                if (video != null && !video.isEmpty()) {
+                    String oldUrl = detail.getVideoUrl();
+                    detail.setVideoUrl(fileStorageService.uploadMedia(video, "gamification"));
+                    if (oldUrl != null) fileStorageService.deleteFileByUrl(oldUrl);
+                }
+                if (request.rules() != null) detail.setRules(request.rules());
+                if (request.tips() != null) detail.setTips(request.tips());
+                gameDetailRepo.save(detail);
+            }
+        } catch (RuntimeException exception) {
+            throw exception;
+        }
+
+        catalogueRepo.save(catalogue);
+        return PortalGameResponseDto.from(catalogue, detail);
+    }
+
+    @Transactional
+    @Override
+    public PortalGameResponseDto updateGameStatus(GameType gameType, boolean active) {
+        GameCatalogueEntity catalogue = catalogueRepo.findByGameType(gameType)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
+        catalogue.setActive(active);
         catalogue = catalogueRepo.save(catalogue);
+        return PortalGameResponseDto.from(catalogue, gameDetailRepo.findByCatalogue(catalogue).orElse(null));
+    }
 
-        GameDetailEntity details = new GameDetailEntity(
-                catalogue,
-                request.gifUrl(),
-                request.videoUrl(),
-                request.rules() != null ? request.rules() : List.of(),
-                request.tips() != null ? request.tips() : List.of()
-        );
-
-        gameDetailRepo.save(details);
-
-        return GameCatalogueResponseDto.from(catalogue);
+    @Transactional
+    @Override
+    public void deleteGame(GameType gameType) {
+        GameCatalogueEntity catalogue = catalogueRepo.findByGameType(gameType)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found"));
+        catalogue.deactivate();
+        catalogueRepo.save(catalogue);
     }
 
     @Transactional

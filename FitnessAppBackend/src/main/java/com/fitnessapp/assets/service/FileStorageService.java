@@ -5,5 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface FileStorageService {
     String uploadFile(MultipartFile file, String folder);
 
+    String uploadMedia(MultipartFile file, String folder);
+
     void deleteFileByUrl(String fileUrl);
 }

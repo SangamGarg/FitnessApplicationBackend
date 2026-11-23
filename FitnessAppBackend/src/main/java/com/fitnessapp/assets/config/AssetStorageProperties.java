@@ -44,7 +44,8 @@ public class AssetStorageProperties {
         if (baseUrl == null || baseUrl.isBlank()) {
             return "";
         }
-        return baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
+        String normalized = baseUrl.trim().replaceFirst("(?i)^base-url\\s*:\\s*", "");
+        return normalized.endsWith("/") ? normalized : normalized + "/";
     }
 
     public String normalizedSupabaseUrl() {
@@ -56,7 +57,7 @@ public class AssetStorageProperties {
 
     public void validateForUpload() {
         validateHttpUrl(supabaseUrl, "app.storage.supabase-url");
-        validateHttpUrl(baseUrl, "app.storage.base-url");
+        validateHttpUrl(normalizedBaseUrl(), "app.storage.base-url");
         if (bucket == null || bucket.isBlank() || serviceKey == null || serviceKey.isBlank()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Asset storage is not configured");
         }

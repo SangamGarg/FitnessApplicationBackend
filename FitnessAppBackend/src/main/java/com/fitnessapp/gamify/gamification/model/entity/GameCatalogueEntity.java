@@ -112,4 +112,27 @@ public class GameCatalogueEntity {
     public void deactivate() {
         this.active = false;
     }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public void setTitle(String title) { this.title = title; }
+    public void setSubTitle(String subTitle) { this.subTitle = subTitle; }
+    public void setDescription(String description) { this.description = description; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setLevel(GameLevel level) { this.level = level; }
+    public void setTotalRepsRequired(Integer totalRepsRequired) { this.totalRepsRequired = totalRepsRequired; }
+    public void setDurationValue(int durationValue) { this.durationValue = durationValue; }
+    public void setDurationUnit(DurationUnit durationUnit) { this.durationUnit = durationUnit; }
+    public void setPaid(boolean paid) {
+        this.paid = paid;
+        if (!paid) this.entryFeeCoins = 0;
+    }
+    public void setEntryFeeCoins(long entryFeeCoins) { this.entryFeeCoins = paid ? Math.max(0, entryFeeCoins) : 0; }
+    public void setRewardCoins(long rewardCoins) { this.rewardCoins = Math.max(0, rewardCoins); }
+    public void setRewardXp(long rewardXp) { this.rewardXp = Math.max(0, rewardXp); }
+    public void setMaxRepsPerMinute(int maxRepsPerMinute) { this.maxRepsPerMinute = maxRepsPerMinute > 0 ? maxRepsPerMinute : 180; }
+    public void setReleasedAt(Instant releasedAt) { this.releasedAt = releasedAt; }
+    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
 }

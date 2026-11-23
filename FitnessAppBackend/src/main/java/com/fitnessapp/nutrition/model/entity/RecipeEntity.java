@@ -1,8 +1,8 @@
 package com.fitnessapp.nutrition.model.entity;
 
+import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.nutrition.model.enums.DietaryPreference;
 import com.fitnessapp.nutrition.model.enums.RecipeDifficulty;
-import com.fitnessapp.appAuth.model.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -84,9 +84,8 @@ public class RecipeEntity {
     @Column(name = "instruction", nullable = false, length = 1000)
     private List<String> instructions = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_user_id", foreignKey = @ForeignKey(name = "fk_recipe_owner"))
-    private UserEntity owner;
+    @Column(name = "owner_user_id")
+    private String owner;
 
     @Column(name = "is_ai_generated", nullable = false)
     private boolean aiGenerated;

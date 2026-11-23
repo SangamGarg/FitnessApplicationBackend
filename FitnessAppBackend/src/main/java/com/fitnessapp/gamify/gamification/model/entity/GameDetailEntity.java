@@ -56,4 +56,9 @@ public class GameDetailEntity {
         this.rules = new ArrayList<>(rules);
         this.tips = new ArrayList<>(tips);
     }
+
+    public void setGifUrl(String gifUrl) { this.gifUrl = gifUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+    public void setRules(List<String> rules) { this.rules = new ArrayList<>(rules); }
+    public void setTips(List<String> tips) { this.tips = new ArrayList<>(tips); }
 }

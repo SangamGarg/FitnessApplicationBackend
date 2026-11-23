@@ -38,6 +38,10 @@ public class ImageFileValidator {
         return new ValidatedImage(image.contentType(), image.extension(), header.length);
     }
 
+    public boolean isSupportedImage(byte[] data) {
+        return detect(data) != null;
+    }
+
     private void checkSize(long size) {
         if (size > properties.getMaxFileSize().toBytes()) {
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Image exceeds the maximum allowed size");
