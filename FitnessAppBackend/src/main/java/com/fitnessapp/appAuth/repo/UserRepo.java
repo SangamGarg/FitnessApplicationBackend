@@ -47,8 +47,8 @@ public interface UserRepo extends JpaRepository<UserEntity, String> {
                     )
                     from UserEntity u
                     left join u.userDetailsEntity d
-                    where (:status is null or u.accountStatus = :status)
-                      and (:query is null
+                    where (:status = '' or u.accountStatus = :status)
+                      and (:query = ''
                            or lower(u.email) like concat('%', lower(:query), '%')
                            or lower(coalesce(d.name, '')) like concat('%', lower(:query), '%'))
                     """,
@@ -56,8 +56,8 @@ public interface UserRepo extends JpaRepository<UserEntity, String> {
                     select count(u)
                     from UserEntity u
                     left join u.userDetailsEntity d
-                    where (:status is null or u.accountStatus = :status)
-                      and (:query is null
+                    where (:status ='' or u.accountStatus = :status)
+                      and (:query =''
                            or lower(u.email) like concat('%', lower(:query), '%')
                            or lower(coalesce(d.name, '')) like concat('%', lower(:query), '%'))
                     """

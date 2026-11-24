@@ -1,6 +1,6 @@
-package com.fitnessapp.portal.portalAuth.service;
+package com.fitnessapp.appAuth.service;
 
-import com.fitnessapp.portal.audit.PortalAuditService;
+import com.fitnessapp.portal.audit.service.PortalAuditService;
 import com.fitnessapp.portal.portalAuth.model.dto.response.MobileUserAdminResponseDto;
 import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.model.entity.UserEntity;
@@ -22,7 +22,7 @@ public class MobileUserAdminService {
 
     @Transactional(readOnly = true)
     public Page<MobileUserAdminResponseDto> list(String query, MobileAccountStatus status, Pageable pageable) {
-        String normalizedQuery = query == null || query.isBlank() ? null : query.trim();
+        String normalizedQuery = query == null || query.isBlank() ? "" : query.trim();
         return users.searchForAdmin(normalizedQuery, status, pageable);
     }
 

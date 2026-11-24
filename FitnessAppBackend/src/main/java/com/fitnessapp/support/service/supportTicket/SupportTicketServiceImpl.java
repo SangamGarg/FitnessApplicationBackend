@@ -4,7 +4,7 @@ import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.notification.dto.FcmNotificationRequest;
 import com.fitnessapp.notification.service.UserNotificationService;
-import com.fitnessapp.portal.audit.PortalAuditService;
+import com.fitnessapp.portal.audit.service.PortalAuditService;
 import com.fitnessapp.portal.portalAuth.model.enums.UserRole;
 import com.fitnessapp.assets.service.FileStorageService;
 import com.fitnessapp.portal.portalAuth.repository.PortalAccountRepository;

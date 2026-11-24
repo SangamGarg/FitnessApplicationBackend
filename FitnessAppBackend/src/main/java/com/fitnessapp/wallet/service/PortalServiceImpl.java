@@ -3,7 +3,7 @@ package com.fitnessapp.wallet.service;
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.repo.UserRepo;
-import com.fitnessapp.portal.audit.PortalAuditService;
+import com.fitnessapp.portal.audit.service.PortalAuditService;
 import com.fitnessapp.wallet.model.entity.WalletAccountEntity;
 import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
 import com.fitnessapp.wallet.model.entity.WalletTransactionEntity;

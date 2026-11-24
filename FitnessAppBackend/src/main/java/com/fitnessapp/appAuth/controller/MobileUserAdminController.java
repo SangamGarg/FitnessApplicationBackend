@@ -1,9 +1,9 @@
-package com.fitnessapp.portal.portalAuth.controller;
+package com.fitnessapp.appAuth.controller;
 
 import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
+import com.fitnessapp.appAuth.service.MobileUserAdminService;
 import com.fitnessapp.portal.portalAuth.model.dto.request.MobileUserStatusRequestDto;
 import com.fitnessapp.portal.portalAuth.model.dto.response.MobileUserAdminResponseDto;
-import com.fitnessapp.portal.portalAuth.service.MobileUserAdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

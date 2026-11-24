@@ -19,7 +19,7 @@ import com.fitnessapp.exercise.model.enums.ExerciseType;
 import com.fitnessapp.exercise.model.enums.MediaType;
 import com.fitnessapp.exercise.model.enums.WorkoutStatus;
 import com.fitnessapp.exercise.repo.*;
-import com.fitnessapp.portal.audit.PortalAuditService;
+import com.fitnessapp.portal.audit.service.PortalAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
