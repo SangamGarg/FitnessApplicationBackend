@@ -27,6 +27,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @Table(name = "app_user_wallet_purchases", indexes = {
         @Index(name = "idx_wallet_purchase_user", columnList = "user_id"),
+        @Index(name = "idx_wallet_purchase_status_created", columnList = "status, created_at"),
         @Index(name = "idx_wallet_purchase_transaction_id", columnList = "transaction_id", unique = true)
 })
 public class WalletPurchaseEntity {

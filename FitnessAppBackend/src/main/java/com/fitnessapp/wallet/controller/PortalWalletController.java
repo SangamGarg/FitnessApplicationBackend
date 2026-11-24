@@ -12,6 +12,8 @@ import com.fitnessapp.wallet.model.dto.request.WalletCashoutFilterRequestDto;
 import com.fitnessapp.wallet.model.dto.request.WalletCashoutStatusUpdateRequestDto;
 import com.fitnessapp.wallet.model.dto.response.PortalWalletCashoutResponseDto;
 import com.fitnessapp.wallet.model.dto.response.PortalWalletPurchaseResponseDto;
+import com.fitnessapp.wallet.model.WalletAnalyticsInterval;
+import com.fitnessapp.wallet.model.dto.response.WalletAnalyticsResponseDto;
 import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
 import com.fitnessapp.wallet.service.PortalService;
 import jakarta.validation.Valid;
@@ -37,6 +39,14 @@ import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_ADMIN_WALLET_END
 public class PortalWalletController {
 
     private final PortalService portalService;
+
+    @GetMapping("/analytics")
+    public ResponseEntity<WalletAnalyticsResponseDto> getWalletAnalytics(
+            @RequestParam(required = false) java.time.Instant from,
+            @RequestParam(required = false) java.time.Instant to,
+            @RequestParam(defaultValue = "DAILY") WalletAnalyticsInterval interval) {
+        return ResponseEntity.ok(portalService.getWalletAnalytics(from, to, interval));
+    }
 
 
     @GetMapping("/users")

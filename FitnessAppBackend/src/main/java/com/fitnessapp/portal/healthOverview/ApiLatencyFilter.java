@@ -13,7 +13,7 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class ApiLatencyFilter extends OncePerRequestFilter {
-    private static final String HEALTH_PATH = "/api/v1/portal/health";
+    private static final String HEALTH_PATH = "/api/v1/portal/overview";
     private final ApiLatencyMetrics metrics;
 
     @Override

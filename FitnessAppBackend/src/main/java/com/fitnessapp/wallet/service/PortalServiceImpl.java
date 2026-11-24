@@ -4,29 +4,15 @@ import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.portal.audit.service.PortalAuditService;
+import com.fitnessapp.wallet.model.WalletAnalyticsInterval;
 import com.fitnessapp.wallet.model.WalletTransactionType;
-import com.fitnessapp.wallet.model.WalletCashoutStatus;
-import com.fitnessapp.wallet.model.dto.request.WalletCashoutFilterRequestDto;
-import com.fitnessapp.wallet.model.dto.request.WalletCashoutStatusUpdateRequestDto;
-import com.fitnessapp.wallet.model.dto.response.PortalWalletCashoutResponseDto;
-import com.fitnessapp.wallet.model.dto.response.PortalWalletPurchaseResponseDto;
-import com.fitnessapp.wallet.model.dto.request.AppUserForWalletResponseDto;
-import com.fitnessapp.wallet.model.dto.request.WalletAdjustmentRequestDto;
-import com.fitnessapp.wallet.model.dto.request.WalletRuleRequestDto;
-import com.fitnessapp.wallet.model.dto.request.WalletPackageRequestDto;
-import com.fitnessapp.wallet.model.dto.response.WalletPackageResponseDto;
-import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
-import com.fitnessapp.wallet.model.dto.response.WalletTransactionResponseDto;
+import com.fitnessapp.wallet.model.dto.request.*;
+import com.fitnessapp.wallet.model.dto.response.*;
 import com.fitnessapp.wallet.model.entity.WalletAccountEntity;
-import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
 import com.fitnessapp.wallet.model.entity.WalletPackageEntity;
+import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
 import com.fitnessapp.wallet.model.entity.WalletTransactionEntity;
-import com.fitnessapp.wallet.repo.WalletAccountRepository;
-import com.fitnessapp.wallet.repo.WalletRulesRepository;
-import com.fitnessapp.wallet.repo.WalletPackageRepository;
-import com.fitnessapp.wallet.repo.WalletTransactionRepository;
-import com.fitnessapp.wallet.repo.WalletCashoutRepository;
-import com.fitnessapp.wallet.repo.WalletPurchaseRepository;
+import com.fitnessapp.wallet.repo.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,10 +21,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -52,9 +47,134 @@ public class PortalServiceImpl implements PortalService {
     private final WalletPackageRepository packageRepo;
     private final WalletCashoutRepository cashoutRepo;
     private final WalletPurchaseRepository purchaseRepo;
+    private final WalletAnalyticsRepository analyticsRepo;
     private final PortalAuditService audit;
 
-    @Override @Transactional(readOnly = true)
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public WalletAnalyticsResponseDto getWalletAnalytics(Instant from, Instant to, WalletAnalyticsInterval interval) {
+        Instant now = Instant.now();
+        Instant trendTo = to == null ? now : to;
+        Instant trendFrom = from == null ? (to == null ? now.minus(30, ChronoUnit.DAYS) : trendTo.minus(30, ChronoUnit.DAYS)) : from;
+        if (trendFrom.isAfter(trendTo))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "from must not be after to");
+        if (interval == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "interval is required");
+        String trunc = switch (interval) {
+            case DAILY -> "day";
+            case WEEKLY -> "week";
+            case MONTHLY -> "month";
+        };
+        log.info("Generating wallet analytics from {} to {} using {} intervals", trendFrom, trendTo, interval);
+
+        Map<String, Object> balance = analyticsRepo.balance(), tx = analyticsRepo.transactions(trendFrom, trendTo), purchases = analyticsRepo.purchases();
+        long users = userRepo.count(), positive = number(balance, "positive_wallets"), totalBalance = number(balance, "total_balance");
+        var currencies = analyticsRepo.purchaseCurrencies().stream().map(row -> new WalletAnalyticsResponseDto.CurrencyBreakdown(
+                string(row, "currency"), number(row, "purchase_count"), decimal(row, "amount_paid"))).toList();
+        var statuses = analyticsRepo.cashoutStatuses().stream().map(row -> new WalletAnalyticsResponseDto.CashoutStatusBreakdown(
+                string(row, "status"), number(row, "request_count"), number(row, "coins"), decimal(row, "rupees"))).toList();
+        var types = analyticsRepo.cashoutTypes().stream().map(row -> new WalletAnalyticsResponseDto.CashoutTypeBreakdown(
+                string(row, "type"), number(row, "request_count"), number(row, "coins"), decimal(row, "rupees"))).toList();
+        Map<String, WalletAnalyticsResponseDto.CashoutStatusBreakdown> statusMap = new HashMap<>();
+        statuses.forEach(s -> statusMap.put(s.status(), s));
+        var pending = statusMap.getOrDefault("PENDING", new WalletAnalyticsResponseDto.CashoutStatusBreakdown("PENDING", 0, 0, BigDecimal.ZERO));
+        var success = statusMap.getOrDefault("SUCCESS", new WalletAnalyticsResponseDto.CashoutStatusBreakdown("SUCCESS", 0, 0, BigDecimal.ZERO));
+        var failed = statusMap.getOrDefault("FAILED", new WalletAnalyticsResponseDto.CashoutStatusBreakdown("FAILED", 0, 0, BigDecimal.ZERO));
+        var packagePerformance = analyticsRepo.packagePerformance().stream().map(row -> new WalletAnalyticsResponseDto.PackagePerformance(
+                number(row, "package_id"), string(row, "package_name"), bool(row, "active"), number(row, "amount_coins"), number(row, "bonus_coins"),
+                decimal(row, "price").doubleValue(), string(row, "currency"), number(row, "successful_count"),
+                number(row, "base_sold") + number(row, "bonus_issued"), number(row, "bonus_issued"), decimal(row, "amount_paid"))).toList();
+
+        return new WalletAnalyticsResponseDto(Instant.now(), new WalletAnalyticsResponseDto.AnalyticsPeriod(trendFrom, trendTo, interval),
+                new WalletAnalyticsResponseDto.WalletBalanceAnalytics(totalBalance, users == 0 ? 0 : totalBalance / users, positive, Math.max(0, users - positive), users),
+                new WalletAnalyticsResponseDto.WalletTransactionAnalytics(number(tx, "total"), number(tx, "credits"), number(tx, "debits"), number(tx, "credited"), number(tx, "debited"), number(tx, "period_total"), number(tx, "period_credits"), number(tx, "period_debits"), number(tx, "period_credited"), number(tx, "period_debited")),
+                new WalletAnalyticsResponseDto.WalletPurchaseAnalytics(number(purchases, "total"), number(purchases, "successful"), number(purchases, "pending"), number(purchases, "failed"), number(purchases, "cancelled"), number(purchases, "base_coins"), number(purchases, "bonus_coins"), number(purchases, "issued"), currencies),
+                new WalletAnalyticsResponseDto.WalletCashoutAnalytics(analyticsRepo.totalCashouts(), pending.count(), success.count(), failed.count(), pending.coins(), success.coins(), failed.coins(), pending.amountRupees(), success.amountRupees(), failed.amountRupees(), statuses, types),
+                new WalletAnalyticsResponseDto.WalletPackageAnalytics(analyticsRepo.totalPackages(), analyticsRepo.activePackages(), analyticsRepo.totalPackages() - analyticsRepo.activePackages(), packagePerformance),
+                new WalletAnalyticsResponseDto.WalletRulesAnalytics(analyticsRepo.totalRules(), analyticsRepo.activeRules(), analyticsRepo.totalRules() - analyticsRepo.activeRules()),
+                new WalletAnalyticsResponseDto.WalletTrendAnalytics(transactionTrends(trendFrom, trendTo, trunc), purchaseTrends(trendFrom, trendTo, trunc), cashoutTrends(trendFrom, trendTo, trunc)));
+    }
+
+    private List<WalletAnalyticsResponseDto.TransactionTrend> transactionTrends(Instant from, Instant to, String trunc) {
+        Map<LocalDate, Map<String, Object>> rows = rowsByDate(analyticsRepo.transactionTrend(trunc, from, to));
+        List<WalletAnalyticsResponseDto.TransactionTrend> out = new ArrayList<>();
+        for (LocalDate d : trendBuckets(from, to, trunc)) {
+            Map<String, Object> r = rows.get(d);
+            out.add(new WalletAnalyticsResponseDto.TransactionTrend(d, number(r, "transaction_count"), number(r, "credit_count"), number(r, "debit_count"), number(r, "credited"), number(r, "debited")));
+        }
+        return out;
+    }
+
+    private List<WalletAnalyticsResponseDto.CashoutTrend> cashoutTrends(Instant from, Instant to, String trunc) {
+        Map<LocalDate, Map<String, Object>> rows = rowsByDate(analyticsRepo.cashoutTrend(trunc, from, to));
+        List<WalletAnalyticsResponseDto.CashoutTrend> out = new ArrayList<>();
+        for (LocalDate d : trendBuckets(from, to, trunc)) {
+            Map<String, Object> r = rows.get(d);
+            out.add(new WalletAnalyticsResponseDto.CashoutTrend(d, number(r, "cashout_count"), number(r, "pending_count"), number(r, "successful_count"), number(r, "failed_count"), number(r, "successful_coins"), decimal(r, "successful_rupees")));
+        }
+        return out;
+    }
+
+    private List<WalletAnalyticsResponseDto.PurchaseTrend> purchaseTrends(Instant from, Instant to, String trunc) {
+        Map<String, Map<String, Object>> rows = new HashMap<>();
+        for (Map<String, Object> row : analyticsRepo.purchaseTrend(trunc, from, to))
+            rows.put(date(row, "bucket") + "|" + string(row, "currency"), row);
+        List<WalletAnalyticsResponseDto.PurchaseTrend> out = new ArrayList<>();
+        List<String> currencies = analyticsRepo.purchaseTrendCurrencies(from, to);
+        for (LocalDate bucket : trendBuckets(from, to, trunc))
+            for (String currency : currencies) {
+                Map<String, Object> row = rows.get(bucket + "|" + currency);
+                out.add(new WalletAnalyticsResponseDto.PurchaseTrend(bucket, currency, number(row, "purchase_count"), decimal(row, "amount_paid"), number(row, "base_coins"), number(row, "bonus_coins")));
+            }
+        return out;
+    }
+
+    private Map<LocalDate, Map<String, Object>> rowsByDate(List<Map<String, Object>> rows) {
+        Map<LocalDate, Map<String, Object>> map = new HashMap<>();
+        rows.forEach(r -> map.put(date(r, "bucket"), r));
+        return map;
+    }
+
+    private List<LocalDate> trendBuckets(Instant from, Instant to, String trunc) {
+        LocalDate start = LocalDate.ofInstant(from, ZoneOffset.UTC), end = LocalDate.ofInstant(to, ZoneOffset.UTC);
+        ChronoUnit step = ChronoUnit.DAYS;
+        if ("week".equals(trunc)) {
+            start = start.with(java.time.DayOfWeek.MONDAY);
+            step = ChronoUnit.WEEKS;
+        } else if ("month".equals(trunc)) {
+            start = start.withDayOfMonth(1);
+            step = ChronoUnit.MONTHS;
+        }
+        List<LocalDate> result = new ArrayList<>();
+        while (!start.isAfter(end)) {
+            result.add(start);
+            start = start.plus(1, step);
+        }
+        return result;
+    }
+
+    private long number(Map<String, Object> row, String key) {
+        return row == null ? 0 : ((Number) row.get(key)).longValue();
+    }
+
+    private String string(Map<String, Object> row, String key) {
+        return row == null || row.get(key) == null ? null : row.get(key).toString();
+    }
+
+    private BigDecimal decimal(Map<String, Object> row, String key) {
+        return row == null || row.get(key) == null ? BigDecimal.ZERO : new BigDecimal(row.get(key).toString());
+    }
+
+    private boolean bool(Map<String, Object> row, String key) {
+        return row != null && Boolean.parseBoolean(row.get(key).toString());
+    }
+
+    private LocalDate date(Map<String, Object> row, String key) {
+        Object v = row.get(key);
+        return v instanceof java.sql.Date d ? d.toLocalDate() : LocalDate.parse(v.toString());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<PortalWalletCashoutResponseDto> getCashouts(WalletCashoutFilterRequestDto filters, Pageable pageable) {
         if (filters.getCreatedFrom() != null && filters.getCreatedTo() != null
                 && filters.getCreatedFrom().isAfter(filters.getCreatedTo())) {
@@ -69,32 +189,44 @@ public class PortalServiceImpl implements PortalService {
                 filters.getCreatedFrom(), filters.getCreatedTo(), pageable).map(PortalWalletCashoutResponseDto::from);
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public PortalWalletCashoutResponseDto updateCashoutStatus(Long id, WalletCashoutStatusUpdateRequestDto request) {
         var cashout = cashoutRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet cashout not found"));
         cashout.setStatus(request.status());
-        if (request.transactionId() != null) cashout.setTransactionId(request.transactionId().isBlank() ? null : request.transactionId().trim());
-        if (request.remarks() != null) cashout.setRemarks(request.remarks().isBlank() ? null : request.remarks().trim());
+        if (request.transactionId() != null)
+            cashout.setTransactionId(request.transactionId().isBlank() ? null : request.transactionId().trim());
+        if (request.remarks() != null)
+            cashout.setRemarks(request.remarks().isBlank() ? null : request.remarks().trim());
         cashout = cashoutRepo.save(cashout);
         audit.record("WALLET_CASHOUT_STATUS", "WALLET", cashout.getUser().getId(), "Changed cashout status: " + id + " to " + request.status());
         return PortalWalletCashoutResponseDto.from(cashout);
     }
 
-    @Override @Transactional(readOnly = true)
+    @Override
+    @Transactional(readOnly = true)
     public Page<PortalWalletPurchaseResponseDto> getUserPurchases(String emailId, Pageable pageable) {
         String userId = getUserIdFromEmail(emailId);
-        if (userId == null || userId.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+        if (userId == null || userId.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
         return purchaseRepo.findAllByUserIdOrderByCreatedAtDesc(userId.trim(), pageable).map(PortalWalletPurchaseResponseDto::from);
     }
 
-    @Override @Transactional(readOnly = true)
-    public List<WalletPackageResponseDto> getWalletPackages() { return packageRepo.findAll().stream().map(WalletPackageResponseDto::from).toList(); }
+    @Override
+    @Transactional(readOnly = true)
+    public List<WalletPackageResponseDto> getWalletPackages() {
+        return packageRepo.findAll().stream().map(WalletPackageResponseDto::from).toList();
+    }
 
-    @Override @Transactional(readOnly = true)
-    public WalletPackageResponseDto getWalletPackage(Long id) { return WalletPackageResponseDto.from(findWalletPackage(id)); }
+    @Override
+    @Transactional(readOnly = true)
+    public WalletPackageResponseDto getWalletPackage(Long id) {
+        return WalletPackageResponseDto.from(findWalletPackage(id));
+    }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public WalletPackageResponseDto createWalletPackage(WalletPackageRequestDto request) {
         validatePackage(request, true);
         WalletPackageEntity entity = new WalletPackageEntity();
@@ -104,7 +236,8 @@ public class PortalServiceImpl implements PortalService {
         return WalletPackageResponseDto.from(entity);
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public WalletPackageResponseDto updateWalletPackage(Long id, WalletPackageRequestDto request) {
         validatePackage(request, true);
         WalletPackageEntity entity = findWalletPackage(id);
@@ -114,7 +247,8 @@ public class PortalServiceImpl implements PortalService {
         return WalletPackageResponseDto.from(entity);
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public WalletPackageResponseDto patchWalletPackage(Long id, WalletPackageRequestDto request) {
         validatePackage(request, false);
         WalletPackageEntity entity = findWalletPackage(id);
@@ -124,7 +258,8 @@ public class PortalServiceImpl implements PortalService {
         return WalletPackageResponseDto.from(entity);
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public WalletPackageResponseDto updateWalletPackageStatus(Long id, boolean active) {
         WalletPackageEntity entity = findWalletPackage(id);
         entity.setActive(active);
@@ -133,7 +268,8 @@ public class PortalServiceImpl implements PortalService {
         return WalletPackageResponseDto.from(entity);
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public void deleteWalletPackage(Long id) {
         WalletPackageEntity entity = findWalletPackage(id);
         packageRepo.delete(entity);

@@ -13,7 +13,9 @@ import java.time.Instant;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "app_user_wallet_cashouts")
+@Table(name = "app_user_wallet_cashouts", indexes = {
+        @Index(name = "idx_wallet_cashout_created", columnList = "created_at")
+})
 public class WalletCashoutEntity {
 
     @Id

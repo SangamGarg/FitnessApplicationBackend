@@ -15,6 +15,7 @@ import java.util.Optional;
 
 @Repository
 public interface WalletCashoutRepository extends JpaRepository<WalletCashoutEntity, Long> {
+
     List<WalletCashoutEntity> findByUserIdOrderByCreatedAtDesc(String userId);
 
     Optional<WalletCashoutEntity> findByTransactionId(String transactionId);
@@ -28,13 +29,15 @@ public interface WalletCashoutRepository extends JpaRepository<WalletCashoutEnti
 
     boolean existsByUserIdAndStatus(String userId, WalletCashoutStatus status);
 
-    @Query("SELECT c FROM WalletCashoutEntity c WHERE " +
-            "(:userId ='' OR c.user.id = :userId) AND " +
-            "(:status IS NULL OR c.status = :status) AND " +
-            "(:type IS NULL OR c.type = :type) AND " +
-            "(:transactionId ='' OR LOWER(c.transactionId) LIKE LOWER(CONCAT('%', :transactionId, '%'))) AND " +
-            "(:createdFrom IS NULL OR c.createdAt >= :createdFrom) AND " +
-            "(:createdTo IS NULL OR c.createdAt <= :createdTo)")
+    @Query("""
+            SELECT c FROM WalletCashoutEntity c WHERE
+            (:userId = '' OR c.user.id = :userId) AND
+            (:status IS NULL OR c.status = :status) AND
+            (:type IS NULL OR c.type = :type) AND
+            (:transactionId = '' OR LOWER(c.transactionId) LIKE LOWER(CONCAT('%', :transactionId, '%'))) AND
+            (CAST(:createdFrom AS timestamp) IS NULL OR c.createdAt >= :createdFrom) AND
+            (CAST(:createdTo AS timestamp) IS NULL OR c.createdAt <= :createdTo)
+            """)
     Page<WalletCashoutEntity> searchCashouts(
             @Param("userId") String userId,
             @Param("status") WalletCashoutStatus status,

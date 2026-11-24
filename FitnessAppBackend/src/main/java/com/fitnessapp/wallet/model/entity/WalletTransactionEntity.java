@@ -30,7 +30,8 @@ import java.time.Instant;
                 columnNames = {"wallet_id", "idempotency_key"}
         ),
         indexes = {
-                @Index(name = "idx_wallet_transaction_wallet_created", columnList = "wallet_id, created_at")
+                @Index(name = "idx_wallet_transaction_wallet_created", columnList = "wallet_id, created_at"),
+                @Index(name = "idx_wallet_transaction_created", columnList = "created_at")
         })
 public class WalletTransactionEntity {
 
