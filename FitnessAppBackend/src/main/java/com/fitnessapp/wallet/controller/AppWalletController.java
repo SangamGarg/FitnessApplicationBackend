@@ -57,7 +57,7 @@ public class AppWalletController {
     }
 
     @PostMapping("/buy/callback/{transactionId}")
-    public ResponseEntity<Void> paymentCallback(
+    public ResponseEntity<Void> completePurchase(
             @PathVariable String transactionId,
             @RequestParam boolean success) {
         service.completePurchase(transactionId, success);

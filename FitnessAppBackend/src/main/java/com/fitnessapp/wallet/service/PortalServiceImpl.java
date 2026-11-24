@@ -8,13 +8,17 @@ import com.fitnessapp.wallet.model.WalletTransactionType;
 import com.fitnessapp.wallet.model.dto.request.AppUserForWalletResponseDto;
 import com.fitnessapp.wallet.model.dto.request.WalletAdjustmentRequestDto;
 import com.fitnessapp.wallet.model.dto.request.WalletRuleRequestDto;
+import com.fitnessapp.wallet.model.dto.request.WalletPackageRequestDto;
+import com.fitnessapp.wallet.model.dto.response.WalletPackageResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletTransactionResponseDto;
 import com.fitnessapp.wallet.model.entity.WalletAccountEntity;
 import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
+import com.fitnessapp.wallet.model.entity.WalletPackageEntity;
 import com.fitnessapp.wallet.model.entity.WalletTransactionEntity;
 import com.fitnessapp.wallet.repo.WalletAccountRepository;
 import com.fitnessapp.wallet.repo.WalletRulesRepository;
+import com.fitnessapp.wallet.repo.WalletPackageRepository;
 import com.fitnessapp.wallet.repo.WalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +42,88 @@ public class PortalServiceImpl implements PortalService {
     private final WalletAccountRepository wallets;
     private final WalletTransactionRepository transactions;
     private final WalletRulesRepository rulesRepo;
+    private final WalletPackageRepository packageRepo;
     private final PortalAuditService audit;
+
+    @Override @Transactional(readOnly = true)
+    public List<WalletPackageResponseDto> getWalletPackages() { return packageRepo.findAll().stream().map(WalletPackageResponseDto::from).toList(); }
+
+    @Override @Transactional(readOnly = true)
+    public WalletPackageResponseDto getWalletPackage(Long id) { return WalletPackageResponseDto.from(findWalletPackage(id)); }
+
+    @Override @Transactional
+    public WalletPackageResponseDto createWalletPackage(WalletPackageRequestDto request) {
+        validatePackage(request, true);
+        WalletPackageEntity entity = new WalletPackageEntity();
+        applyPackage(entity, request, false);
+        entity = packageRepo.save(entity);
+        audit.record("WALLET_PACKAGE_CREATE", "WALLET", "SYSTEM", "Created package: " + entity.getName());
+        return WalletPackageResponseDto.from(entity);
+    }
+
+    @Override @Transactional
+    public WalletPackageResponseDto updateWalletPackage(Long id, WalletPackageRequestDto request) {
+        validatePackage(request, true);
+        WalletPackageEntity entity = findWalletPackage(id);
+        applyPackage(entity, request, false);
+        entity = packageRepo.save(entity);
+        audit.record("WALLET_PACKAGE_UPDATE", "WALLET", "SYSTEM", "Updated package: " + id);
+        return WalletPackageResponseDto.from(entity);
+    }
+
+    @Override @Transactional
+    public WalletPackageResponseDto patchWalletPackage(Long id, WalletPackageRequestDto request) {
+        validatePackage(request, false);
+        WalletPackageEntity entity = findWalletPackage(id);
+        applyPackage(entity, request, true);
+        entity = packageRepo.save(entity);
+        audit.record("WALLET_PACKAGE_UPDATE", "WALLET", "SYSTEM", "Patched package: " + id);
+        return WalletPackageResponseDto.from(entity);
+    }
+
+    @Override @Transactional
+    public WalletPackageResponseDto updateWalletPackageStatus(Long id, boolean active) {
+        WalletPackageEntity entity = findWalletPackage(id);
+        entity.setActive(active);
+        entity = packageRepo.save(entity);
+        audit.record("WALLET_PACKAGE_STATUS", "WALLET", "SYSTEM", "Changed package status: " + id);
+        return WalletPackageResponseDto.from(entity);
+    }
+
+    @Override @Transactional
+    public void deleteWalletPackage(Long id) {
+        WalletPackageEntity entity = findWalletPackage(id);
+        packageRepo.delete(entity);
+        audit.record("WALLET_PACKAGE_DELETE", "WALLET", "SYSTEM", "Deleted package: " + id);
+    }
+
+    private WalletPackageEntity findWalletPackage(Long id) {
+        return packageRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet package not found"));
+    }
+
+    private void validatePackage(WalletPackageRequestDto request, boolean complete) {
+        if ((complete && (request.getName() == null || request.getName().isBlank() || request.getAmountCoins() == null
+                || request.getBonusCoins() == null || request.getPrice() == null || request.getCurrency() == null || request.getCurrency().isBlank()))
+                || request.getName() != null && request.getName().isBlank()
+                || request.getAmountCoins() != null && request.getAmountCoins() < 0
+                || request.getBonusCoins() != null && request.getBonusCoins() < 0
+                || request.getPrice() != null && request.getPrice() < 0
+                || request.getCurrency() != null && request.getCurrency().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wallet package details are invalid");
+        }
+    }
+
+    private void applyPackage(WalletPackageEntity entity, WalletPackageRequestDto request, boolean partial) {
+        if (request.getName() != null) entity.setName(request.getName());
+        if (request.getAmountCoins() != null) entity.setAmountCoins(request.getAmountCoins());
+        if (request.getBonusCoins() != null) entity.setBonusCoins(request.getBonusCoins());
+        if (request.getPrice() != null) entity.setPrice(request.getPrice());
+        if (request.getCurrency() != null) entity.setCurrency(request.getCurrency());
+        if (request.getTag() != null || !partial) entity.setTag(request.getTag());
+        if (request.getDescription() != null || !partial) entity.setDescription(request.getDescription());
+        if (request.getActive() != null) entity.setActive(request.getActive());
+        if (request.getDisplayOrder() != null) entity.setDisplayOrder(request.getDisplayOrder());
+    }
 
 
     @Override

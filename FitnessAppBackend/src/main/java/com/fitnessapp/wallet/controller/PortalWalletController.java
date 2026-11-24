@@ -3,6 +3,9 @@ package com.fitnessapp.wallet.controller;
 import com.fitnessapp.wallet.model.dto.request.AppUserForWalletResponseDto;
 import com.fitnessapp.wallet.model.dto.request.WalletAdjustmentRequestDto;
 import com.fitnessapp.wallet.model.dto.request.WalletRuleRequestDto;
+import com.fitnessapp.wallet.model.dto.request.WalletPackageRequestDto;
+import com.fitnessapp.wallet.model.dto.request.WalletPackageStatusRequestDto;
+import com.fitnessapp.wallet.model.dto.response.WalletPackageResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletTransactionResponseDto;
 import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
@@ -31,6 +34,42 @@ public class PortalWalletController {
 
     private final PortalService portalService;
 
+    @GetMapping("/packages")
+    public ResponseEntity<List<WalletPackageResponseDto>> getWalletPackages() {
+        return ResponseEntity.ok(portalService.getWalletPackages());
+    }
+
+    @GetMapping("/packages/{id}")
+    public ResponseEntity<WalletPackageResponseDto> getWalletPackage(@PathVariable Long id) {
+        return ResponseEntity.ok(portalService.getWalletPackage(id));
+    }
+
+    @PostMapping("/packages")
+    public ResponseEntity<WalletPackageResponseDto> createWalletPackage(@RequestBody WalletPackageRequestDto request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(portalService.createWalletPackage(request));
+    }
+
+    @PutMapping("/packages/{id}")
+    public ResponseEntity<WalletPackageResponseDto> updateWalletPackage(@PathVariable Long id, @RequestBody WalletPackageRequestDto request) {
+        return ResponseEntity.ok(portalService.updateWalletPackage(id, request));
+    }
+
+    @PatchMapping("/packages/{id}")
+    public ResponseEntity<WalletPackageResponseDto> patchWalletPackage(@PathVariable Long id, @RequestBody WalletPackageRequestDto request) {
+        return ResponseEntity.ok(portalService.patchWalletPackage(id, request));
+    }
+
+    @PatchMapping("/packages/{id}/status")
+    public ResponseEntity<WalletPackageResponseDto> updateWalletPackageStatus(@PathVariable Long id, @Valid @RequestBody WalletPackageStatusRequestDto request) {
+        return ResponseEntity.ok(portalService.updateWalletPackageStatus(id, request.active()));
+    }
+
+    @DeleteMapping("/packages/{id}")
+    public ResponseEntity<Void> deleteWalletPackage(@PathVariable Long id) {
+        portalService.deleteWalletPackage(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/users")
     public ResponseEntity<List<AppUserForWalletResponseDto>> getAppUsers() {
         log.info("Fetching app user for wallet portal");
@@ -55,7 +94,7 @@ public class PortalWalletController {
     }
 
     @PostMapping("/user/adjust")
-    public ResponseEntity<WalletTransactionResponseDto> adjust(
+    public ResponseEntity<WalletTransactionResponseDto> adjustUserWallet(
             @RequestParam String emailId,
             @Valid @RequestBody WalletAdjustmentRequestDto request) {
         return ResponseEntity.ok(portalService.adjustAsAdmin(emailId, request));
@@ -84,22 +123,6 @@ public class PortalWalletController {
         portalService.deleteWalletRule(id);
         return ResponseEntity.noContent().build();
     }
-
-
-
-    @GetMapping("/package")
-
-
-    @PostMapping("/package")
-
-    @DeleteMapping("/package")
-
-    @PatchMapping("/package")
-
-
-    @PatchMapping("/package/status")
-
-
 
     private Pageable pageable(int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
