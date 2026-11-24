@@ -1,9 +1,7 @@
 package com.fitnessapp.analytics.service;
 
 import com.fitnessapp.analytics.model.*;
-import com.fitnessapp.analytics.model.dtos.requestDto.CalculatorCatalogRequestDto;
 import com.fitnessapp.analytics.model.dtos.responseDto.AnalyticsHomeResponseDto;
-import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorCatalogResponseDto;
 import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorCategoryDto;
 import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorHomeResponseDto;
 import com.fitnessapp.analytics.model.entity.BodyMeasurementEntity;
@@ -24,7 +22,6 @@ import com.fitnessapp.gamify.gamification.repository.UserStreakRepository;
 import com.fitnessapp.gamify.gamification.repository.UserXpAccountRepository;
 import com.fitnessapp.nutrition.model.entity.MealEntryEntity;
 import com.fitnessapp.nutrition.repository.MealEntryRepository;
-import com.fitnessapp.utils.appUtil.AppResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -44,7 +41,7 @@ import java.util.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class AnalyticsServiceImpl implements AnalyticsService {
+public class AppAnalyticsServiceImpl implements AppAnalyticsService {
 
     private final CalculatorUtils calculatorUtils;
 
@@ -53,7 +50,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private final MealEntryRepository mealEntryRepository;
     private final UserStreakRepository userStreakRepository;
     private final UserXpAccountRepository userXpAccountRepository;
-    private final CalculatorCatalogRepository catalogRepository;
+    private final CalculatorCatalogRepository calculatorCatalogRepository;
     private final UserDetailsRepo userDetailsRepo;
     private final UserCalculatorHistoryRepository historyRepository;
     private final BodyMeasurementRepository bodyMeasurementRepository;
@@ -112,7 +109,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .action("OPEN_OTHER_MEASUREMENTS")
                 .build();
 
-        List<PopularCalculatorDto> popularCalculators = catalogRepository.findByPopularTrueOrderByDisplayOrderAsc().stream()
+        List<PopularCalculatorDto> popularCalculators = calculatorCatalogRepository.findByPopularTrueOrderByDisplayOrderAsc().stream()
                 .limit(5)
                 .map(this::mapToPopularDto)
                 .toList();
@@ -177,7 +174,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Override
     public CalculatorHomeResponseDto getCalculatorHome() {
         String userId = currentUserId();
-        List<CalculatorCatalogEntity> allCalculators = catalogRepository.findAll();
+        List<CalculatorCatalogEntity> allCalculators = calculatorCatalogRepository.findAll();
 
         // Group by category
         Map<String, List<PopularCalculatorDto>> grouped = new LinkedHashMap<>();
@@ -189,7 +186,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         grouped.forEach((cat, list) -> categories.add(new CalculatorCategoryDto(cat, list)));
 
         // Popular calculators
-        List<PopularCalculatorDto> popular = catalogRepository.findByPopularTrueOrderByDisplayOrderAsc().stream()
+        List<PopularCalculatorDto> popular = calculatorCatalogRepository.findByPopularTrueOrderByDisplayOrderAsc().stream()
                 .map(this::mapToPopularDto)
                 .toList();
 
@@ -197,7 +194,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         List<UserCalculatorHistoryEntity> history = historyRepository.findByUserIdOrderByLastUsedAtDesc(userId, PageRequest.of(0, 10));
         List<PopularCalculatorDto> recentlyUsed = new ArrayList<>();
         for (UserCalculatorHistoryEntity h : history) {
-            catalogRepository.findById(h.getCalculatorKey()).ifPresent(calc -> recentlyUsed.add(mapToPopularDto(calc)));
+            calculatorCatalogRepository.findById(h.getCalculatorKey()).ifPresent(calc -> recentlyUsed.add(mapToPopularDto(calc)));
         }
 
         return CalculatorHomeResponseDto.builder()
@@ -235,7 +232,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public List<Map<String, Object>> getCatalog() {
-        List<CalculatorCatalogEntity> all = catalogRepository.findAll();
+        List<CalculatorCatalogEntity> all = calculatorCatalogRepository.findAll();
         Map<String, List<CalculatorCatalogEntity>> grouped = new LinkedHashMap<>();
         for (CalculatorCatalogEntity item : all)
             grouped.computeIfAbsent(item.getCategory(), _ -> new ArrayList<>()).add(item);
@@ -250,7 +247,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
     private Map<String, Object> calculateInternal(String key, Map<String, Object> input, boolean recordHistory) {
-        CalculatorCatalogEntity def = catalogRepository.findById(key)
+        CalculatorCatalogEntity def = calculatorCatalogRepository.findById(key)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Unknown calculator: " + key));
 
         if (recordHistory) {
@@ -453,54 +450,6 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 Map.entry("components", Map.of("activityConsistency", Math.round(activityConsistency), "workoutVolume", Math.round(workoutVolume), "nutrition", Math.round(nutritionScore), "gamificationXp", Math.round(xpScore), "streak", Math.round(streakScore))),
                 Map.entry("methodology", "Activity consistency 25%, completed workout volume 15%, nutrition logging consistency 25%, accumulated gamification XP 20%, current streak 15%. This is an engagement score, not a medical fitness assessment.")
         );
-    }
-
-    @Override
-    public CalculatorCatalogResponseDto addCatalog(CalculatorCatalogRequestDto request) {
-
-        if (catalogRepository.existsById(request.getKey())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Calculator with key " + request.getKey() + " already exists");
-        }
-
-        CalculatorCatalogEntity entity = CalculatorCatalogEntity.builder()
-                .key(request.getKey())
-                .name(request.getName())
-                .category(request.getCategory())
-                .description(request.getDescription())
-                .requiredInputs(request.getRequiredInputs())
-                .unit(request.getUnit())
-                .requiresSavedData(request.getRequiresSavedData() != null && request.getRequiresSavedData())
-                .build();
-
-        catalogRepository.save(entity);
-
-        return CalculatorCatalogResponseDto.builder()
-                .status(AppResponseStatus.SUCCESS.name())
-                .statusCode(201)
-                .message("Calculator added successfully")
-                .build();
-    }
-
-    @Override
-    public CalculatorCatalogResponseDto patchCatalog(String key, CalculatorCatalogRequestDto request) {
-
-        CalculatorCatalogEntity entity = catalogRepository.findById(key)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Calculator not found: " + key));
-
-        if (request.getName() != null) entity.setName(request.getName());
-        if (request.getCategory() != null) entity.setCategory(request.getCategory());
-        if (request.getDescription() != null) entity.setDescription(request.getDescription());
-        if (request.getRequiredInputs() != null) entity.setRequiredInputs(request.getRequiredInputs());
-        if (request.getUnit() != null) entity.setUnit(request.getUnit());
-        if (request.getRequiresSavedData() != null) entity.setRequiresSavedData(request.getRequiresSavedData());
-
-        catalogRepository.save(entity);
-
-        return CalculatorCatalogResponseDto.builder()
-                .status(AppResponseStatus.SUCCESS.name())
-                .statusCode(200)
-                .message("Calculator updated successfully")
-                .build();
     }
 
     private void recordUsage(String key) {

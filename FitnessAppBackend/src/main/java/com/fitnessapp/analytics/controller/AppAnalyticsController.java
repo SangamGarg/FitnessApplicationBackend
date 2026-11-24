@@ -3,7 +3,7 @@ package com.fitnessapp.analytics.controller;
 import com.fitnessapp.analytics.model.SmartCalculationRequest;
 import com.fitnessapp.analytics.model.dtos.responseDto.AnalyticsHomeResponseDto;
 import com.fitnessapp.analytics.model.dtos.responseDto.CalculatorHomeResponseDto;
-import com.fitnessapp.analytics.service.AnalyticsService;
+import com.fitnessapp.analytics.service.AppAnalyticsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,25 +25,25 @@ import static com.fitnessapp.utils.appUtil.AppUtilEndpoint.APP_ANALYTICS_ENDPOIN
 @RequiredArgsConstructor
 @Slf4j
 public class AppAnalyticsController {
-    private final AnalyticsService analyticsService;
+    private final AppAnalyticsService appAnalyticsService;
 
 
     @GetMapping("/home")
     public ResponseEntity<AnalyticsHomeResponseDto> getAnalyticsHome() {
         log.info("Fetching analytics home screen configuration");
-        return ResponseEntity.ok(analyticsService.getAnalyticsHome());
+        return ResponseEntity.ok(appAnalyticsService.getAnalyticsHome());
     }
 
     @GetMapping("/calculator/home")
     public ResponseEntity<CalculatorHomeResponseDto> getCalculatorHome() {
         log.info("Fetching calculator home screen configuration");
-        return ResponseEntity.ok(analyticsService.getCalculatorHome());
+        return ResponseEntity.ok(appAnalyticsService.getCalculatorHome());
     }
 
     @GetMapping("/catalog")
     public ResponseEntity<?> getCatalog() {
         log.info("Fetching smart calculator catalog");
-        var catalog = analyticsService.getCatalog();
+        var catalog = appAnalyticsService.getCatalog();
         log.debug("Smart calculator catalog fetched successfully");
         return ResponseEntity.ok(catalog);
     }
@@ -57,7 +57,7 @@ public class AppAnalyticsController {
                 calculatorKey, request.inputs() != null ? request.inputs().keySet() : "null");
         log.debug("Smart calculation payload for calculatorKey='{}': {}", calculatorKey, request);
 
-        Map<String, Object> result = analyticsService.calculate(calculatorKey, request.inputs());
+        Map<String, Object> result = appAnalyticsService.calculate(calculatorKey, request.inputs());
 
         log.info("Completed smart calculation for calculatorKey='{}'", calculatorKey);
         log.debug("Calculation result for calculatorKey='{}': {}", calculatorKey, result);
@@ -72,7 +72,7 @@ public class AppAnalyticsController {
         log.info("Fetching fitness score for timeZone='{}'", timeZone);
         try {
             ZoneId zoneId = ZoneId.of(timeZone);
-            Map<String, Object> fitnessScore = analyticsService.getFitnessScore(zoneId);
+            Map<String, Object> fitnessScore = appAnalyticsService.getFitnessScore(zoneId);
             log.info("Successfully calculated fitness score for zoneId='{}'", zoneId);
             return ResponseEntity.ok(fitnessScore);
         } catch (DateTimeException ex) {
