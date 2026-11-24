@@ -37,11 +37,13 @@ public class AppWalletController {
     }
 
     @GetMapping("/earn")
+    //THIS ENDPOINT IS FOR REFERRALS
     public ResponseEntity<WalletEarnResponseDto> getWalletEarn() {
         return ResponseEntity.ok(service.getWalletEarn());
     }
 
     @GetMapping("/buy")
+    //THIS ENDPOINT IS FOR BUY COINS
     public ResponseEntity<WalletBuyResponseDto> getWalletBuyInfo() {
         return ResponseEntity.ok(service.getWalletBuyInfo());
     }
@@ -68,6 +70,7 @@ public class AppWalletController {
     }
 
     @GetMapping("/transactions")
+    //THIS IS FOR GETTING THE HISTORY
     public ResponseEntity<Page<WalletTransactionResponseDto>> getTransactions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

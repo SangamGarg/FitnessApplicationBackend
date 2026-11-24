@@ -35,6 +35,8 @@ build/
 ### Application logs ###
 logs/
 *.log
+!/src/main/java/com/fitnessapp/portal/logs/
+!/src/main/java/com/fitnessapp/portal/logs/**
 
 # Local environment files
 .env

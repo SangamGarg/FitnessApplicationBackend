@@ -4,14 +4,15 @@ import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.portal.audit.service.PortalAuditService;
-import com.fitnessapp.wallet.model.entity.WalletAccountEntity;
-import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
-import com.fitnessapp.wallet.model.entity.WalletTransactionEntity;
 import com.fitnessapp.wallet.model.WalletTransactionType;
+import com.fitnessapp.wallet.model.dto.request.AppUserForWalletResponseDto;
 import com.fitnessapp.wallet.model.dto.request.WalletAdjustmentRequestDto;
 import com.fitnessapp.wallet.model.dto.request.WalletRuleRequestDto;
 import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletTransactionResponseDto;
+import com.fitnessapp.wallet.model.entity.WalletAccountEntity;
+import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
+import com.fitnessapp.wallet.model.entity.WalletTransactionEntity;
 import com.fitnessapp.wallet.repo.WalletAccountRepository;
 import com.fitnessapp.wallet.repo.WalletRulesRepository;
 import com.fitnessapp.wallet.repo.WalletTransactionRepository;
@@ -26,23 +27,35 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PortalServiceImpl {
+public class PortalServiceImpl implements PortalService {
 
-    private final UserRepo users;
+    private final UserRepo userRepo;
     private final WalletAccountRepository wallets;
     private final WalletTransactionRepository transactions;
     private final WalletRulesRepository rulesRepo;
     private final PortalAuditService audit;
 
+
+    @Override
     @Transactional(readOnly = true)
-    public java.util.List<WalletRulesEntity> getAllWalletRules() {
+    public List<AppUserForWalletResponseDto> getAppUsers() {
+        List<UserEntity> list = userRepo.findAll();
+        return list.stream().map(AppUserForWalletResponseDto::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<WalletRulesEntity> getAllWalletRules() {
         return rulesRepo.findAll();
     }
 
     @Transactional
+    @Override
     public WalletRulesEntity saveWalletRule(WalletRuleRequestDto request) {
         WalletRulesEntity rule = WalletRulesEntity.builder()
                 .title(request.getTitle())
@@ -56,6 +69,7 @@ public class PortalServiceImpl {
     }
 
     @Transactional
+    @Override
     public WalletRulesEntity updateWalletRule(Long id, WalletRuleRequestDto request) {
         WalletRulesEntity rule = rulesRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet rule not found"));
@@ -71,6 +85,7 @@ public class PortalServiceImpl {
     }
 
     @Transactional
+    @Override
     public void deleteWalletRule(Long id) {
         if (!rulesRepo.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet rule not found");
@@ -80,22 +95,27 @@ public class PortalServiceImpl {
     }
 
     @Transactional(readOnly = true)
-    public WalletBalanceResponseDto getBalance( String userId ) {
-        UserEntity user = findUser(userId);
+    @Override
+    public WalletBalanceResponseDto getBalance(String emailId) {
+        String userId = getUserIdFromEmail(emailId);
         return wallets.findByUserId(userId)
-                .map(wallet -> new WalletBalanceResponseDto(user.getId(), wallet.getBalanceCoins(), wallet.getUpdatedAt()))
-                .orElseGet(() -> new WalletBalanceResponseDto(user.getId(), 0, null));
+                .map(wallet -> new WalletBalanceResponseDto(userId, wallet.getBalanceCoins(), wallet.getUpdatedAt()))
+                .orElseGet(() -> new WalletBalanceResponseDto(userId, 0, null));
     }
 
 
     @Transactional(readOnly = true)
-    public Page<WalletTransactionResponseDto> getTransactions(String userId,Pageable pageable) {
-        findUser(userId);
+    @Override
+    public Page<WalletTransactionResponseDto> getTransactions(String emailId, Pageable pageable) {
+        String userId = getUserIdFromEmail(emailId);
         return transactions.findAllByWalletUserIdOrderByCreatedAtDesc(userId, pageable).map(this::toResponse);
     }
 
     @Transactional
-    public WalletTransactionResponseDto adjustAsAdmin(String userId, String actorEmail, WalletAdjustmentRequestDto request) {
+    @Override
+    public WalletTransactionResponseDto adjustAsAdmin(String emailId, WalletAdjustmentRequestDto request) {
+        String userId = getUserIdFromEmail(emailId);
+        String actorEmail = getCurrentUserPortal();
         WalletTransactionEntity transaction = apply(
                 userId,
                 request.type(),
@@ -178,7 +198,7 @@ public class PortalServiceImpl {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wallet transaction details are invalid");
         }
 
-        UserEntity user = users.findByIdForUpdate(userId)
+        UserEntity user = userRepo.findByIdForUpdate(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mobile user not found"));
         if (requireActive && user.getAccountStatus() != MobileAccountStatus.ACTIVE) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Inactive mobile users cannot transact");
@@ -224,16 +244,7 @@ public class PortalServiceImpl {
                 normalizedIdempotencyKey,
                 actorEmail == null || actorEmail.isBlank() ? "system" : actorEmail
         );
-        WalletTransactionEntity saved = transactions.saveAndFlush(transaction);
-        return saved;
-    }
-
-    private UserEntity findUser(String userId) {
-        if (userId == null || userId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID is required");
-        }
-        return users.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "App user not found"));
+        return transactions.saveAndFlush(transaction);
     }
 
     private String normalize(String value) {
@@ -253,13 +264,29 @@ public class PortalServiceImpl {
         );
     }
 
-    private String currentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()
-                || authentication.getName() == null || "anonymousUser".equals(authentication.getName())) {
-            log.warn("Unauthorized access attempt without valid authentication principal in SecurityContext");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+    public String getCurrentUserPortal() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication.getName() == null
+                || authentication.getName().isBlank()
+                || "anonymousUser".equals(authentication.getName())) {
+
+            throw new IllegalStateException(
+                    "No authenticated user found"
+            );
         }
+
         return authentication.getName();
+    }
+
+    private String getUserIdFromEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email ID is required");
+        }
+        UserEntity user = userRepo.findByEmailIgnoreCase(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "App user not found"));
+        return user.getId();
     }
 }

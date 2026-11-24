@@ -78,6 +78,15 @@ public class JwtFilter extends OncePerRequestFilter {
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(id);
 
+
+                //TODO ADD IT MANUALLY HAVE TO CHECK
+                if (!userDetails.isEnabled()) {
+                    log.debug("{} User is disabled", userDetails.getUsername());
+                    sendUnauthorized(request, response, "User is disabled");
+                    return;
+                }
+
+
                 if (!jwtTokenService.validToken(token, userDetails)) {
                     sendUnauthorized(request, response, "Invalid JWT");
                     return;

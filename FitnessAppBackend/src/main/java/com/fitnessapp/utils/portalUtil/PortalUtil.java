@@ -33,8 +33,8 @@ public final class PortalUtil {
     public static final String PORTAL_DEV_CHALLENGE_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/challenge";
     public static final String PORTAL_DEV_GAMIFICATION_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/gamification";
     public static final String PORTAL_DEV_NOTIFICATION_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/notification";
-    public static final String PORTAL_DEV_ANALYTICS_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/analytics";
     public static final String PORTAL_DEV_LOGS_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/logs";
+    public static final String PORTAL_DEV_ANALYTICS_ENDPOINT = PORTAL_DEV_BASE_ENDPOINT + "/analytics";
 
 
     public static final String BEARER_PREFIX = "Bearer ";
