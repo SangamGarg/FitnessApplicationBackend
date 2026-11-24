@@ -5,6 +5,11 @@ import com.fitnessapp.appAuth.model.enums.MobileAccountStatus;
 import com.fitnessapp.appAuth.repo.UserRepo;
 import com.fitnessapp.portal.audit.service.PortalAuditService;
 import com.fitnessapp.wallet.model.WalletTransactionType;
+import com.fitnessapp.wallet.model.WalletCashoutStatus;
+import com.fitnessapp.wallet.model.dto.request.WalletCashoutFilterRequestDto;
+import com.fitnessapp.wallet.model.dto.request.WalletCashoutStatusUpdateRequestDto;
+import com.fitnessapp.wallet.model.dto.response.PortalWalletCashoutResponseDto;
+import com.fitnessapp.wallet.model.dto.response.PortalWalletPurchaseResponseDto;
 import com.fitnessapp.wallet.model.dto.request.AppUserForWalletResponseDto;
 import com.fitnessapp.wallet.model.dto.request.WalletAdjustmentRequestDto;
 import com.fitnessapp.wallet.model.dto.request.WalletRuleRequestDto;
@@ -20,6 +25,8 @@ import com.fitnessapp.wallet.repo.WalletAccountRepository;
 import com.fitnessapp.wallet.repo.WalletRulesRepository;
 import com.fitnessapp.wallet.repo.WalletPackageRepository;
 import com.fitnessapp.wallet.repo.WalletTransactionRepository;
+import com.fitnessapp.wallet.repo.WalletCashoutRepository;
+import com.fitnessapp.wallet.repo.WalletPurchaseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -43,7 +50,43 @@ public class PortalServiceImpl implements PortalService {
     private final WalletTransactionRepository transactions;
     private final WalletRulesRepository rulesRepo;
     private final WalletPackageRepository packageRepo;
+    private final WalletCashoutRepository cashoutRepo;
+    private final WalletPurchaseRepository purchaseRepo;
     private final PortalAuditService audit;
+
+    @Override @Transactional(readOnly = true)
+    public Page<PortalWalletCashoutResponseDto> getCashouts(WalletCashoutFilterRequestDto filters, Pageable pageable) {
+        if (filters.getCreatedFrom() != null && filters.getCreatedTo() != null
+                && filters.getCreatedFrom().isAfter(filters.getCreatedTo())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "createdFrom must not be after createdTo");
+        }
+        String transactionId = filters.getTransactionId() == null || filters.getTransactionId().isBlank()
+                ? "" : filters.getTransactionId().trim();
+        String userId = filters.getEmailId() == null || filters.getEmailId().isBlank()
+                ? "" : getUserIdFromEmail(filters.getEmailId());
+
+        return cashoutRepo.searchCashouts(userId, filters.getStatus(), filters.getType(), transactionId,
+                filters.getCreatedFrom(), filters.getCreatedTo(), pageable).map(PortalWalletCashoutResponseDto::from);
+    }
+
+    @Override @Transactional
+    public PortalWalletCashoutResponseDto updateCashoutStatus(Long id, WalletCashoutStatusUpdateRequestDto request) {
+        var cashout = cashoutRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Wallet cashout not found"));
+        cashout.setStatus(request.status());
+        if (request.transactionId() != null) cashout.setTransactionId(request.transactionId().isBlank() ? null : request.transactionId().trim());
+        if (request.remarks() != null) cashout.setRemarks(request.remarks().isBlank() ? null : request.remarks().trim());
+        cashout = cashoutRepo.save(cashout);
+        audit.record("WALLET_CASHOUT_STATUS", "WALLET", cashout.getUser().getId(), "Changed cashout status: " + id + " to " + request.status());
+        return PortalWalletCashoutResponseDto.from(cashout);
+    }
+
+    @Override @Transactional(readOnly = true)
+    public Page<PortalWalletPurchaseResponseDto> getUserPurchases(String emailId, Pageable pageable) {
+        String userId = getUserIdFromEmail(emailId);
+        if (userId == null || userId.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+        return purchaseRepo.findAllByUserIdOrderByCreatedAtDesc(userId.trim(), pageable).map(PortalWalletPurchaseResponseDto::from);
+    }
 
     @Override @Transactional(readOnly = true)
     public List<WalletPackageResponseDto> getWalletPackages() { return packageRepo.findAll().stream().map(WalletPackageResponseDto::from).toList(); }

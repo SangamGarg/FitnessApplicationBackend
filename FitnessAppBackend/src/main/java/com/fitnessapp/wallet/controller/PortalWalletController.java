@@ -8,6 +8,10 @@ import com.fitnessapp.wallet.model.dto.request.WalletPackageStatusRequestDto;
 import com.fitnessapp.wallet.model.dto.response.WalletPackageResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletBalanceResponseDto;
 import com.fitnessapp.wallet.model.dto.response.WalletTransactionResponseDto;
+import com.fitnessapp.wallet.model.dto.request.WalletCashoutFilterRequestDto;
+import com.fitnessapp.wallet.model.dto.request.WalletCashoutStatusUpdateRequestDto;
+import com.fitnessapp.wallet.model.dto.response.PortalWalletCashoutResponseDto;
+import com.fitnessapp.wallet.model.dto.response.PortalWalletPurchaseResponseDto;
 import com.fitnessapp.wallet.model.entity.WalletRulesEntity;
 import com.fitnessapp.wallet.service.PortalService;
 import jakarta.validation.Valid;
@@ -33,6 +37,36 @@ import static com.fitnessapp.utils.portalUtil.PortalUtil.PORTAL_ADMIN_WALLET_END
 public class PortalWalletController {
 
     private final PortalService portalService;
+
+
+    @GetMapping("/users")
+    public ResponseEntity<List<AppUserForWalletResponseDto>> getAppUsers() {
+        log.info("Fetching app user for wallet portal");
+        return ResponseEntity.ok(portalService.getAppUsers());
+    }
+
+
+    @GetMapping("/cashouts")
+    public ResponseEntity<Page<PortalWalletCashoutResponseDto>> getCashouts(
+            @ModelAttribute WalletCashoutFilterRequestDto filters,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(portalService.getCashouts(filters, pageable(page, size)));
+    }
+
+    @PatchMapping("/cashouts/{id}/status")
+    public ResponseEntity<PortalWalletCashoutResponseDto> updateCashoutStatus(
+            @PathVariable Long id, @Valid @RequestBody WalletCashoutStatusUpdateRequestDto request) {
+        return ResponseEntity.ok(portalService.updateCashoutStatus(id, request));
+    }
+
+    @GetMapping("/users/purchases")
+    public ResponseEntity<Page<PortalWalletPurchaseResponseDto>> getUserPurchases(
+            @RequestParam String emailId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(portalService.getUserPurchases(emailId, pageable(page, size)));
+    }
 
     @GetMapping("/packages")
     public ResponseEntity<List<WalletPackageResponseDto>> getWalletPackages() {
@@ -69,13 +103,6 @@ public class PortalWalletController {
         portalService.deleteWalletPackage(id);
         return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/users")
-    public ResponseEntity<List<AppUserForWalletResponseDto>> getAppUsers() {
-        log.info("Fetching app user for wallet portal");
-        return ResponseEntity.ok(portalService.getAppUsers());
-    }
-
 
     @GetMapping("/user/balance")
     public ResponseEntity<WalletBalanceResponseDto> getUserBalance(
