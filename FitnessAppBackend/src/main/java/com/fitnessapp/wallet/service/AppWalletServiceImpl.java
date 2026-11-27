@@ -81,9 +81,9 @@ public class AppWalletServiceImpl implements AppWalletService {
                 .build();
 
         return WalletHomeResponseDto.builder()
-                .title("Fitness Wallet")
-                .subtitle("Manage your earnings")
-                .description("Track your fitness activities and earn MP coins. You can redeem these coins for real money once you reach the threshold.")
+                .title("MP Coins Wallet")
+                .subtitle("Track & redeem MP Coins")
+                .description("You can buy, earn & redeem these coins for real money once you reach the threshold.")
                 .balanceBox(balanceBox)
                 .build();
     }
@@ -99,8 +99,8 @@ public class AppWalletServiceImpl implements AppWalletService {
                 .toList();
 
         return WalletRulesResponseDto.builder()
-                .header("Wallet Rules")
-                .subheader("Terms and conditions for using the fitness wallet")
+                .header("MP Coins Guide & Terms")
+                .subheader("Rules for earning, redeeming, and managing your coin balance")
                 .rules(rules)
                 .build();
     }

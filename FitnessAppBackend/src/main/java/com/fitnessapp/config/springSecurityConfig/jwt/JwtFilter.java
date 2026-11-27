@@ -63,6 +63,9 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        //TODO HAVE TO REMOVE
+        System.out.println(authHeader);
+
         String token = authHeader.substring(7).trim();
 
         try {

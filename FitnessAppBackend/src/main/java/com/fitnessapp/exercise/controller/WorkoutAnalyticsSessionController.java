@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -129,7 +130,7 @@ public class WorkoutAnalyticsSessionController {
     }
 
     @GetMapping("/sessions")
-    public ResponseEntity<?> history(
+    public ResponseEntity<Page<WorkoutSessionResponse>> history(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return ResponseEntity.ok(workoutSessionService.history(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startedAt"))));

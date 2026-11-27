@@ -100,5 +100,9 @@ public class PortalAppInfoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(appInfoService.createCategory(requestDto));
     }
 
-
+    @GetMapping("/faqs/category")
+    public ResponseEntity<List<SupportFaqCategoryDto>> getAppFaqsCategory() {
+        log.info("REST request to get Category FAQs");
+        return ResponseEntity.status(HttpStatus.CREATED).body(appInfoService.getAppFaqCategory());
+    }
 }

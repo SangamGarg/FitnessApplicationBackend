@@ -78,6 +78,27 @@ public class AppInfoServiceImpl implements AppInfoService {
         return faqs;
     }
 
+    @Override
+    public List<SupportFaqCategoryDto> getAppFaqCategory() {
+        log.debug("Fetching all FAQs Categories for portal");
+        List<SupportFaqCategoryDto> categories = supportFaqCategoryRepository
+                .findByActiveTrueOrderBySortOrderAscNameAsc()
+                .stream()
+                .map(category -> SupportFaqCategoryDto.builder()
+                        .id(category.getId())
+                        .categoryKey(category.getCategoryKey())
+                        .name(category.getName())
+                        .description(category.getDescription())
+                        .iconKey(category.getIconKey())
+                        .sortOrder(category.getSortOrder())
+                        .build())
+                .toList();
+
+        log.debug("Fetched {} FAQs Categories for portal", categories.size());
+
+        return categories;
+    }
+
     // ---------------------------------------------------------
     // ABOUT US
     // ---------------------------------------------------------

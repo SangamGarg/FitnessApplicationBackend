@@ -1,9 +1,7 @@
 package com.fitnessapp.dashboard.service;
 
-import com.fitnessapp.dashboard.dto.DashboardResponseDto;
-import org.springframework.http.ResponseEntity;
+import com.fitnessapp.dashboard.dto.response.DashboardResponseDto;
 
 public interface DashboardService {
-
-    ResponseEntity<DashboardResponseDto> getDashboard(String timeZone);
+    DashboardResponseDto getDashboard(String timeZone);
 }

@@ -1,5 +1,6 @@
 package com.fitnessapp.dashboard.service;
 
+import com.fitnessapp.dashboard.repo.AppBannerRepository;
 import com.fitnessapp.exercise.service.ExerciseService;
 import com.fitnessapp.gamify.activity.models.dtos.responseDto.ActivitySummaryResponseDto;
 import com.fitnessapp.gamify.activity.service.ActivityInterface;
@@ -7,7 +8,7 @@ import com.fitnessapp.appAuth.model.entity.UserDetailsEntity;
 import com.fitnessapp.appAuth.model.entity.UserEntity;
 import com.fitnessapp.appAuth.repo.UserDetailsRepo;
 import com.fitnessapp.appAuth.repo.UserRepo;
-import com.fitnessapp.dashboard.dto.DashboardResponseDto;
+import com.fitnessapp.dashboard.dto.response.DashboardResponseDto;
 import com.fitnessapp.exercise.model.dto.response.WorkoutAnalyticsOverviewResponse;
 import com.fitnessapp.exercise.service.WorkoutAnalyticsService;
 import com.fitnessapp.exercise.model.dto.response.WorkoutPlanResponseDto;
@@ -27,7 +28,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -56,13 +56,15 @@ public class DashboardServiceImpl implements DashboardService {
     private final GamificationService gamificationService;
     private final AchievementService achievementService;
     private final ChallengeService challengeService;
+    private final AppBannerRepository appBannerRepository;
+
 
     @Value("${gamification.time-zone:Asia/Kolkata}")
     private String configuredTimeZone;
 
     @Override
     @Transactional(readOnly = true)
-    public ResponseEntity<DashboardResponseDto> getDashboard(String timeZone) {
+    public DashboardResponseDto getDashboard(String timeZone) {
         String userId = currentUserId();
         if (!StringUtils.hasText(userId)) {
             throw new ResponseStatusException(
@@ -117,7 +119,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .limit(3)
                 .toList();
 
-        DashboardResponseDto responseDto = new DashboardResponseDto(
+        DashboardResponseDto responseDto = new DashboardResponseDto(getActiveBanners(),
                 toUserSummary(user, details),
                 activity,
                 nutrition,
@@ -143,7 +145,30 @@ public class DashboardServiceImpl implements DashboardService {
                 Instant.now()
         );
 
-        return ResponseEntity.ok().body(responseDto);
+        return responseDto;
+    }
+
+    private List<DashboardResponseDto.AppBannerResponseDto> getActiveBanners() {
+
+        Instant now = Instant.now();
+
+        return appBannerRepository.findCurrentlyActive(now)
+                .stream()
+                .map(banner -> new DashboardResponseDto.AppBannerResponseDto(
+                        banner.getId(),
+                        banner.getBannerKey(),
+                        banner.getTitle(),
+                        banner.getSubTitle(),
+                        banner.getDescription(),
+                        banner.getImageUrl(),
+                        banner.getMobileImageUrl(),
+                        banner.getActionLabel(),
+                        banner.getActionType(),
+                        banner.getActionValue(),
+                        banner.getDisplayOrder(),
+                        banner.isDismissible()
+                ))
+                .toList();
     }
 
     private DashboardResponseDto.UserSummary toUserSummary(

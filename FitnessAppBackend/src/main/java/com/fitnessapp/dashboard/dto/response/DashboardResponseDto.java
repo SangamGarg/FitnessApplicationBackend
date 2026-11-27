@@ -1,5 +1,6 @@
-package com.fitnessapp.dashboard.dto;
+package com.fitnessapp.dashboard.dto.response;
 
+import com.fitnessapp.dashboard.dto.BannerActionType;
 import com.fitnessapp.gamify.activity.models.dtos.responseDto.ActivitySummaryResponseDto;
 import com.fitnessapp.appAuth.model.enums.ActivityLevel;
 import com.fitnessapp.appAuth.model.enums.FitnessGoal;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record DashboardResponseDto(
+        List<AppBannerResponseDto> banners,
         UserSummary user, ActivitySummaryResponseDto activity,
         DailyNutritionHomeSummaryResponse nutrition,
         WorkoutAnalyticsOverviewResponse workoutAnalytics,
@@ -23,6 +25,21 @@ public record DashboardResponseDto(
         AchievementSummary achievements, ChallengeSummary challenges,
         Instant generatedAt
 ) {
+    public record AppBannerResponseDto(
+            Long id,
+            String bannerKey,
+            String title,
+            String subTitle,
+            String description,
+            String imageUrl,
+            String mobileImageUrl,
+            String actionLabel,
+            BannerActionType actionType,
+            String actionValue,
+            Integer displayOrder,
+            boolean dismissible) {
+    }
+
     public record UserSummary(String userId, String email, String name, String profileImageUrl,
                               Gender gender, Integer age, BigDecimal heightCm, BigDecimal weightKg,
                               ActivityLevel activityLevel, FitnessGoal goal, boolean profileCompleted) {

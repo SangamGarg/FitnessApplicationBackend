@@ -33,4 +33,6 @@ public interface AppInfoService {
     PortalAppInfoResponseDto getInfoForPortal();
 
     List<PortalFaqResponseDto> getAllFaqsForPortal();
+
+    List<SupportFaqCategoryDto> getAppFaqCategory();
 }
